@@ -27,10 +27,7 @@ export class ContentRepository {
   private available = false
   private readonly logger = new Logger(ContentRepository.name)
 
-  constructor(private readonly pool: Pool) {
-    // Idle-client errors must not crash the process when the DB is down.
-    this.pool.on('error', () => undefined)
-  }
+  constructor(private readonly pool: Pool) {}
 
   // Create the schema; on any failure, stay unavailable so the server still boots.
   async init(): Promise<void> {

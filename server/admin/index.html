@@ -49,6 +49,18 @@
     .preview .toolbar { justify-content: space-between; }
     iframe { flex: 1; border: 0; background: #000; }
     .hint { color: var(--muted); font-size: 12px; }
+    .hidden { display: none !important; }
+    .auth-overlay { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+    .auth-card { width: 360px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; }
+    .auth-card h2 { margin: 0 0 4px; font-size: 18px; }
+    .auth-card p.sub { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+    .auth-card label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; }
+    .auth-card input { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; }
+    .auth-card button { width: 100%; margin-top: 18px; }
+    .auth-card .qr { display: block; margin: 12px auto; width: 180px; height: 180px; background: #fff; border-radius: 8px; }
+    .auth-card .secret { font: 12px ui-monospace, monospace; color: var(--accent); word-break: break-all; text-align: center; }
+    .auth-msg { margin-top: 12px; font-size: 13px; min-height: 18px; }
+    .auth-msg.err { color: var(--err); } .auth-msg.ok { color: var(--ok); }
   </style>
 </head>
 <body>
@@ -56,8 +68,41 @@
     <h1>◈ OBSIDIAN CUBE — ADMIN</h1>
     <select id="doc"></select>
     <span class="spacer"></span>
-    <span class="hint">Etapa 3 · local · sin auth</span>
+    <span class="hint" id="whoami"></span>
+    <button id="logout" class="hidden">Salir</button>
   </header>
+
+  <div id="auth" class="auth-overlay hidden">
+    <div class="auth-card">
+      <h2>◈ Obsidian Cube — Admin</h2>
+      <p class="sub" id="authSub">Inicia sesión para editar el contenido.</p>
+
+      <div id="view-login">
+        <label>Usuario</label>
+        <input id="u" autocomplete="username" />
+        <label>Contraseña</label>
+        <input id="p" type="password" autocomplete="current-password" />
+        <button class="primary" id="doLogin">Entrar</button>
+      </div>
+
+      <div id="view-mfa" class="hidden">
+        <label>Código de tu app autenticadora (TOTP)</label>
+        <input id="mfaToken" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" />
+        <button class="primary" id="doMfa">Verificar</button>
+      </div>
+
+      <div id="view-enroll" class="hidden">
+        <p class="sub">Escanea el QR con Google/Microsoft Authenticator y escribe el código para activar MFA.</p>
+        <img id="qr" class="qr" alt="QR TOTP" />
+        <div class="secret" id="secret"></div>
+        <label>Código generado</label>
+        <input id="enrollToken" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" />
+        <button class="primary" id="doEnroll">Activar MFA</button>
+      </div>
+
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+  </div>
 
   <main>
     <section class="editor">
@@ -192,7 +237,57 @@
     $('restore').addEventListener('click', restore);
     $('refreshPreview').addEventListener('click', () => $('preview').contentWindow.location.reload());
 
-    loadDocs().catch((e) => setStatus(`<span class="err">Error: ${e.message}</span>`, ''));
+    // ---- Auth gate ----
+    const authMsg = (t, cls) => { const m = $('authMsg'); m.className = 'auth-msg ' + (cls || ''); m.textContent = t; };
+    const showView = (name) => ['login', 'mfa', 'enroll'].forEach((v) => $('view-' + v).classList.toggle('hidden', v !== name));
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+
+    function showAuth(view) { $('auth').classList.remove('hidden'); $('logout').classList.add('hidden'); showView(view); authMsg(''); }
+
+    async function enterApp() {
+      const me = await (await fetch('/auth/me')).json();
+      $('whoami').textContent = me.username ? `Conectado: ${me.username}` : '';
+      $('auth').classList.add('hidden');
+      $('logout').classList.remove('hidden');
+      await loadDocs();
+    }
+
+    async function startEnroll() {
+      const r = await post('/auth/enroll/start');
+      const out = await r.json();
+      if (!r.ok) return authMsg(out.message || 'Error', 'err');
+      $('qr').src = out.qrDataUrl; $('secret').textContent = out.secret;
+      showView('enroll'); authMsg('');
+    }
+
+    $('doLogin').onclick = async () => {
+      const r = await post('/auth/login', { username: $('u').value, password: $('p').value });
+      const out = await r.json();
+      if (!r.ok) return authMsg(out.message || 'Error', 'err');
+      if (out.mfaRequired) { showView('mfa'); authMsg('Introduce el código de tu app.'); }
+      else if (out.enrollRequired) { authMsg('Primer ingreso: activa MFA.'); await startEnroll(); }
+    };
+    $('doMfa').onclick = async () => {
+      const r = await post('/auth/mfa', { token: $('mfaToken').value });
+      const out = await r.json();
+      if (r.ok && out.ok) return enterApp();
+      authMsg(out.message || 'Código inválido', 'err');
+    };
+    $('doEnroll').onclick = async () => {
+      const r = await post('/auth/enroll/verify', { token: $('enrollToken').value });
+      const out = await r.json();
+      if (r.ok && out.ok) return enterApp();
+      authMsg(out.message || 'Código inválido', 'err');
+    };
+    $('logout').onclick = async () => { await post('/auth/logout'); location.reload(); };
+
+    async function boot() {
+      try {
+        const me = await (await fetch('/auth/me')).json();
+        if (me.authenticated) { await enterApp(); } else { showAuth('login'); }
+      } catch (e) { showAuth('login'); authMsg('No se pudo contactar al servidor.', 'err'); }
+    }
+    boot();
   </script>
 </body>
 </html>

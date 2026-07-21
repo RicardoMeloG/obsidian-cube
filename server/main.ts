@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { existsSync, readFileSync } from 'node:fs'
+import session from 'express-session'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 
@@ -23,6 +24,19 @@ function loadEnv() {
 async function bootstrap() {
   loadEnv()
   const app = await NestFactory.create(AppModule, { logger: ['log', 'error', 'warn'] })
+
+  // Signed httpOnly session cookie holds the auth stage (password → full).
+  // In-memory store: a server restart simply requires re-login (fine for a
+  // single local admin). secure:false because this runs on localhost http.
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || 'dev-insecure-secret-change-me',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 1000 * 60 * 60 * 8 },
+    }),
+  )
+
   await app.listen(PORT, HOST)
   // eslint-disable-next-line no-console
   console.log(`Obsidian Cube admin → http://${HOST}:${PORT}`)

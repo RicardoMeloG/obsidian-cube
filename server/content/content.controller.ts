@@ -1,8 +1,11 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Get, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '../auth/auth.guard'
 import { ContentService } from './content.service'
 import { isDocId } from './docs'
 import type { DocId } from './docs'
 
+// Every content route requires a fully-authenticated session (password + MFA).
+@UseGuards(AuthGuard)
 @Controller('api')
 export class ContentController {
   constructor(private readonly content: ContentService) {}
