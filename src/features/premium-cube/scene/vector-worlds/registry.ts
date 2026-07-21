@@ -1,5 +1,6 @@
-import type { CubeSectionId } from '../../cubeSections'
 import type { WorldEntry } from './types'
+import { WORLD_LABELS } from './catalog'
+import type { WorldId } from './catalog'
 import { AgenticWorld } from './worlds/agenticWorld'
 import { ArrowShieldWorld } from './worlds/arrowShieldWorld'
 import { ContactWorld } from './worlds/contactWorld'
@@ -7,14 +8,15 @@ import { ProductsWorld } from './worlds/productsWorld'
 import { ResearchWorld } from './worlds/researchWorld'
 import { SystemsWorld } from './worlds/systemsWorld'
 
-// Adding a new background = (1) create file in worlds/, (2) register it here.
-// Showcase config is used by ?bg=<id> standalone preview. Embedded defaults
-// live inside each world component so the cube scene can render them with a
-// single <VectorWorldStage activeSectionId={...} />.
-export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
+// World identifiers and labels are the pure catalog (./catalog). Adding a new
+// world = (1) create file in worlds/, (2) register its Component here, (3) add
+// its id/label to ./catalog. This registry maps a WorldId to its 3D Component +
+// showcase config; the catalog stays free of React/Three so the backend can
+// share it. Showcase config is used by the ?bg=<id> standalone preview.
+export const WORLD_REGISTRY: Record<WorldId, WorldEntry> = {
   agentic: {
     id: 'agentic',
-    label: 'AGENTIC PLEXUS',
+    label: WORLD_LABELS.agentic,
     caption: 'plexus wave field — signature ambient',
     Component: AgenticWorld,
     showcase: {
@@ -25,7 +27,7 @@ export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
   },
   products: {
     id: 'products',
-    label: 'PRODUCT BOX FIELD',
+    label: WORLD_LABELS.products,
     caption: 'transparent product modules — oblique network field',
     Component: ProductsWorld,
     showcase: {
@@ -36,7 +38,7 @@ export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
   },
   systems: {
     id: 'systems',
-    label: 'CITY CORRIDOR',
+    label: WORLD_LABELS.systems,
     caption: 'vector street with lamp glow',
     Component: SystemsWorld,
     showcase: {
@@ -47,7 +49,7 @@ export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
   },
   security: {
     id: 'security',
-    label: 'ARROW SHIELD',
+    label: WORLD_LABELS.security,
     caption: 'DDoS deflected — arrows arc in and bounce off the force field',
     Component: ArrowShieldWorld,
     showcase: {
@@ -58,7 +60,7 @@ export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
   },
   research: {
     id: 'research',
-    label: 'PARAMO VALLEY',
+    label: WORLD_LABELS.research,
     caption: 'vector meadow valley + distant mountain cordillera, sky reserved',
     Component: ResearchWorld,
     showcase: {
@@ -76,7 +78,7 @@ export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
   },
   contact: {
     id: 'contact',
-    label: 'CONTACT SIGNAL',
+    label: WORLD_LABELS.contact,
     caption: 'placeholder — design pending',
     Component: ContactWorld,
     showcase: {
@@ -86,6 +88,6 @@ export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
   },
 }
 
-export function isWorldId(value: string): value is CubeSectionId {
+export function isWorldId(value: string): value is WorldId {
   return value in WORLD_REGISTRY
 }

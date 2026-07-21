@@ -6,6 +6,9 @@ import { CUBE_FACE_ORDER } from './cubeSections'
 import type { CubeSection, CubeSectionDetail, CubeSectionId } from './cubeSections'
 import { CubeSectionNav } from './CubeSectionNav'
 import { useSiteContent } from './content/useSiteContent'
+import { useVisualContent } from './content/useVisualContent'
+import { resolveSections } from './content/visualContent'
+import { RichText } from './content/RichText'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
 import type { CubeSceneHandle } from './scene/CubeScene'
@@ -125,7 +128,7 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
               <span className="obsidian-card__shine" aria-hidden="true" />
               <small>{String(index + 1).padStart(2, '0')}</small>
               <h3>{link.label}</h3>
-              {link.description && <p>{link.description}</p>}
+              {link.description && <RichText as="p" html={link.description} />}
             </article>
           ))}
         </div>
@@ -227,6 +230,8 @@ export function PremiumCubePrototype() {
   const displayedSectionIdRef = useRef(displayedSectionId)
   const sectionPanelRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
+  const visual = useVisualContent()
+  const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
   const syncSectionUrl = useCallback((id: CubeSectionId) => {
     if (typeof window === 'undefined') return
 
@@ -253,12 +258,12 @@ export function PremiumCubePrototype() {
     effects.vignette ? <Vignette key="vignette" eskil={false} offset={0.18} darkness={0.72} /> : null,
   ].filter((effect): effect is ReactElement => effect !== null)
   const activeSection = useMemo(
-    () => sections.find((section) => section.id === activeSectionId) ?? null,
-    [activeSectionId, sections],
+    () => resolvedSections.find((section) => section.id === activeSectionId) ?? null,
+    [activeSectionId, resolvedSections],
   )
   const displayedSection = useMemo(
-    () => sections.find((section) => section.id === displayedSectionId) ?? activeSection,
-    [activeSection, displayedSectionId, sections],
+    () => resolvedSections.find((section) => section.id === displayedSectionId) ?? activeSection,
+    [activeSection, displayedSectionId, resolvedSections],
   )
   const activeSectionIndex = activeSection ? sections.findIndex((section) => section.id === activeSection.id) + 1 : 0
   const activeDetail = useMemo(() => {
@@ -492,7 +497,7 @@ export function PremiumCubePrototype() {
                 setActiveSectionId(sectionId)
               }}
               sectionOpen={fullscreenActive}
-              sections={sections}
+              sections={resolvedSections}
               handleRef={cubeSceneRef}
             />
             {postProcessingEffects.length > 0 && (
@@ -561,11 +566,11 @@ export function PremiumCubePrototype() {
             </button>
             <p className="detail-modal__eyebrow">{activeSection?.label}</p>
             <h2 id="detail-modal-title">{activeDetail.title}</h2>
-            <p className="detail-modal__summary">{activeDetail.summary}</p>
+            <RichText as="p" className="detail-modal__summary" html={activeDetail.summary} />
             {activeDetail.points && activeDetail.points.length > 0 && (
               <ul className="detail-modal__points">
                 {activeDetail.points.map((point) => (
-                  <li key={point}>{point}</li>
+                  <RichText as="li" key={point} html={point} />
                 ))}
               </ul>
             )}
@@ -575,12 +580,12 @@ export function PremiumCubePrototype() {
                   link.href ? (
                     <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
                       <strong>{link.label}</strong>
-                      {link.description && <span>{link.description}</span>}
+                      {link.description && <RichText as="span" html={link.description} />}
                     </a>
                   ) : (
                     <span key={link.label}>
                       <strong>{link.label}</strong>
-                      {link.description && <small>{link.description}</small>}
+                      {link.description && <RichText as="small" html={link.description} />}
                     </span>
                   ),
                 )}
@@ -605,7 +610,7 @@ export function PremiumCubePrototype() {
               </div>
               <div className="section-panel__summary-block">
                 <p className="section-panel__section-label">{activeSection.label}</p>
-                <p className="section-panel__summary">{activeSection.summary}</p>
+                <RichText as="p" className="section-panel__summary" html={activeSection.summary} />
                 <div className="section-panel__signal">
                   <span>{sectionCopy.signal}</span>
                   <div>
@@ -624,7 +629,7 @@ export function PremiumCubePrototype() {
               <div className="section-panel__rail" aria-hidden="true" />
               <div className="section-panel__narrative">
                 <FaceArtifact copy={sectionCopy} section={activeSection} />
-                {activeSection.intro && <p className="section-panel__intro">{activeSection.intro}</p>}
+                {activeSection.intro && <RichText as="p" className="section-panel__intro" html={activeSection.intro} />}
                 {activeSection.highlights && activeSection.highlights.length > 0 && (
                   <section className="section-panel__chapter" aria-label="Highlights">
                     <h2>{sectionCopy.highlights}</h2>
@@ -633,7 +638,7 @@ export function PremiumCubePrototype() {
                         <article className="obsidian-card section-panel__highlight" key={highlight}>
                           <span className="obsidian-card__shine" aria-hidden="true" />
                           <span>{String(index + 1).padStart(2, '0')}</span>
-                          <p>{highlight}</p>
+                          <RichText as="p" html={highlight} />
                         </article>
                       ))}
                     </div>
@@ -644,7 +649,7 @@ export function PremiumCubePrototype() {
                     <h2>{sectionCopy.proof}</h2>
                     <ul>
                       {activeSection.proofPoints.map((proofPoint) => (
-                        <li key={proofPoint}>{proofPoint}</li>
+                        <RichText as="li" key={proofPoint} html={proofPoint} />
                       ))}
                     </ul>
                   </section>
@@ -658,13 +663,13 @@ export function PremiumCubePrototype() {
                           <a className="obsidian-card" href={link.href} key={link.label} rel="noreferrer" target="_blank">
                             <span className="obsidian-card__shine" aria-hidden="true" />
                             <span>{link.label}</span>
-                            {link.description && <p>{link.description}</p>}
+                            {link.description && <RichText as="p" html={link.description} />}
                           </a>
                         ) : (
                           <article className="obsidian-card" key={link.label}>
                             <span className="obsidian-card__shine" aria-hidden="true" />
                             <span>{link.label}</span>
-                            {link.description && <p>{link.description}</p>}
+                            {link.description && <RichText as="p" html={link.description} />}
                           </article>
                         ),
                       )}

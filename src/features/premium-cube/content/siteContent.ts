@@ -7,6 +7,11 @@ export type SiteLocale = 'en' | 'es'
 const SectionIdSchema = z.enum(CUBE_FACE_ORDER as [CubeSectionId, ...CubeSectionId[]])
 const FeatureGlyphSchema = z.enum(FEATURE_GLYPHS as unknown as [FeatureGlyphId, ...FeatureGlyphId[]])
 
+// Rich prose fields are rendered through `sanitizeRichText` (inline HTML
+// whitelist) via the <RichText/> component. Still a plain string at the schema
+// level — the sanitization boundary lives at render time, not validation.
+const RichTextSchema = z.string().min(1)
+
 const CtaSchema = z.object({
   label: z.string().min(1),
   href: z.string().min(1).optional(),
@@ -14,27 +19,27 @@ const CtaSchema = z.object({
 
 const LinkSchema = z.object({
   label: z.string().min(1),
-  description: z.string().min(1).optional(),
+  description: RichTextSchema.optional(),
   href: z.string().min(1).optional(),
 })
 
 const FeatureSchema = z.object({
   glyph: FeatureGlyphSchema,
   label: z.string().min(1),
-  description: z.string().min(1),
+  description: RichTextSchema,
 })
 
 const FlowStepSchema = z.object({
   label: z.string().min(1),
-  description: z.string().min(1),
+  description: RichTextSchema,
 })
 
 const ResearchConceptSchema = z.object({
   key: z.string().min(1),
   label: z.string().min(1),
   axis: z.string().min(1),
-  summary: z.string().min(1),
-  detail: z.string().min(1),
+  summary: RichTextSchema,
+  detail: RichTextSchema,
 })
 
 const SiteSectionSchema = z.object({
@@ -42,10 +47,10 @@ const SiteSectionSchema = z.object({
   label: z.string().min(1),
   title: z.string().min(1),
   eyebrow: z.string().min(1).optional(),
-  summary: z.string().min(1),
-  intro: z.string().min(1).optional(),
-  highlights: z.array(z.string().min(1)).optional(),
-  proofPoints: z.array(z.string().min(1)).optional(),
+  summary: RichTextSchema,
+  intro: RichTextSchema.optional(),
+  highlights: z.array(RichTextSchema).optional(),
+  proofPoints: z.array(RichTextSchema).optional(),
   links: z.array(LinkSchema).optional(),
   cta: CtaSchema.optional(),
   features: z.array(FeatureSchema).optional(),
@@ -56,15 +61,15 @@ const SiteSectionSchema = z.object({
   detail: z
     .object({
       title: z.string().min(1),
-      summary: z.string().min(1),
-      points: z.array(z.string().min(1)).optional(),
+      summary: RichTextSchema,
+      points: z.array(RichTextSchema).optional(),
       links: z.array(LinkSchema).optional(),
     })
     .optional(),
   researchConcepts: z.array(ResearchConceptSchema).optional(),
 })
 
-const SiteContentSchema = z.object({
+export const SiteContentSchema = z.object({
   locale: z.enum(['en', 'es']),
   identity: z.object({
     displayName: z.string().min(1),
@@ -78,7 +83,7 @@ const SiteContentSchema = z.object({
   }),
   hero: z.object({
     headline: z.string().min(1),
-    summary: z.string().min(1),
+    summary: RichTextSchema,
   }),
   sections: z.array(SiteSectionSchema).length(CUBE_FACE_ORDER.length),
 })

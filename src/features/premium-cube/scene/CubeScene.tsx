@@ -12,7 +12,7 @@ import {
   updateCubeDragSound,
 } from '../audio/cubeAudio'
 import type { CubeSectionId } from '../cubeSections'
-import type { CubeSection } from '../cubeSections'
+import type { ResolvedCubeSection } from '../content/visualContent'
 import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { PremiumCube } from './PremiumCube'
@@ -27,7 +27,7 @@ type CubeSceneProps = {
   onCursorModeChange: (mode: 'default' | 'grab' | 'grabbing') => void
   onSectionEnter: (sectionId: CubeSectionId) => void
   sectionOpen: boolean
-  sections: CubeSection[]
+  sections: ResolvedCubeSection[]
   activeSectionId: CubeSectionId
   handleRef?: RefObject<CubeSceneHandle | null>
 }
@@ -542,7 +542,7 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
         <PlatformTicks radius={2.5} count={120} faint />
       </group>
 
-      <VectorWorldStage activeSectionId={activeSectionId} />
+      <VectorWorldStage worldId={sections.find((section) => section.id === activeSectionId)?.worldId ?? null} />
 
       <mesh position={[0, 4.6, -0.4]}>
         <planeGeometry args={[0.9, 5]} />
