@@ -1,0 +1,25 @@
+# Local Postgres for the admin backend (Etapa 4 — persistencia).
+# Start: docker compose up -d   ·   Stop: docker compose down
+# Host port 5433 (not 5432) to avoid colliding with any Postgres already installed.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: obsidian-cube-db
+    environment:
+      POSTGRES_USER: obsidian
+      POSTGRES_PASSWORD: obsidian
+      POSTGRES_DB: obsidian_cube
+    ports:
+      - "5433:5432"
+    volumes:
+      - obsidian-cube-pgdata:/var/lib/postgresql/data
+      # Convenience only: the server also creates the schema on boot (idempotent).
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U obsidian -d obsidian_cube"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  obsidian-cube-pgdata:

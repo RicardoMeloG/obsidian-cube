@@ -64,8 +64,14 @@
       <div class="toolbar">
         <button id="reload">Recargar</button>
         <button id="validate">Validar</button>
+        <button id="saveDraft">Guardar borrador</button>
         <button id="publish" class="primary">Publicar</button>
         <span class="hint" id="source"></span>
+      </div>
+      <div class="toolbar">
+        <span class="hint">Versiones:</span>
+        <select id="versions"><option value="">— sin BD / sin versiones —</option></select>
+        <button id="restore">Restaurar</button>
       </div>
       <textarea id="content" spellcheck="false"></textarea>
       <div id="status" class="hint">Cargando…</div>
@@ -114,6 +120,40 @@
       ta.value = JSON.stringify(body.data, null, 2);
       source.textContent = `origen: ${body.source}`;
       setStatus('Cargado. Edita y valida antes de publicar.', 'hint');
+      await loadVersions();
+    }
+
+    async function loadVersions() {
+      const sel = $('versions');
+      const res = await fetch(`/api/content/${currentDoc}/versions`);
+      if (!res.ok) { sel.innerHTML = '<option value="">— sin BD / sin versiones —</option>'; return; }
+      const list = await res.json();
+      sel.innerHTML = list.length
+        ? list.map((v) => `<option value="${v.id}">#${v.id} · ${new Date(v.publishedAt).toLocaleString()}</option>`).join('')
+        : '<option value="">— aún sin versiones —</option>';
+    }
+
+    async function saveDraft() {
+      const parsed = parseEditor();
+      if (!parsed.ok) return setStatus(`<span class="err">✗ JSON malformado:</span> ${parsed.error}`, '');
+      const res = await fetch(`/api/content/${currentDoc}/draft`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed.data),
+      });
+      const out = await res.json();
+      if (res.ok && out.ok) return setStatus('<span class="ok">✓ Borrador guardado en la BD.</span>', '');
+      setStatus(`<span class="err">✗ ${out.message || 'No se pudo guardar'}</span>`, '');
+    }
+
+    async function restore() {
+      const id = $('versions').value;
+      if (!id) return setStatus('<span class="err">✗ No hay versión seleccionada.</span>', '');
+      const res = await fetch(`/api/content/${currentDoc}/restore/${id}`, { method: 'POST' });
+      const out = await res.json();
+      if (res.ok && out.data) {
+        ta.value = JSON.stringify(out.data, null, 2);
+        return setStatus(`<span class="ok">✓ Versión #${id} restaurada al borrador.</span>`, '');
+      }
+      setStatus(`<span class="err">✗ ${out.message || 'No se pudo restaurar'}</span>`, '');
     }
 
     async function validate() {
@@ -135,8 +175,10 @@
       });
       const out = await res.json();
       if (res.ok && out.ok) {
-        setStatus(`<span class="ok">✓ Publicado en ${out.file}.</span> Recargando preview…`, '');
+        const v = out.version ? ` · versión #${out.version.id}` : ' · (sin BD: sin versión)';
+        setStatus(`<span class="ok">✓ Publicado en ${out.file}${v}.</span> Recargando preview…`, '');
         $('preview').contentWindow.location.reload();
+        await loadVersions();
       } else {
         renderErrors((out.errors) || (out.message && out.message.errors) || []);
       }
@@ -145,7 +187,9 @@
     docSel.addEventListener('change', loadDoc);
     $('reload').addEventListener('click', loadDoc);
     $('validate').addEventListener('click', validate);
+    $('saveDraft').addEventListener('click', saveDraft);
     $('publish').addEventListener('click', publish);
+    $('restore').addEventListener('click', restore);
     $('refreshPreview').addEventListener('click', () => $('preview').contentWindow.location.reload());
 
     loadDocs().catch((e) => setStatus(`<span class="err">Error: ${e.message}</span>`, ''));

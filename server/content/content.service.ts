@@ -1,7 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import type { ZodError } from 'zod'
+import { ContentRepository } from './content.repository'
+import type { VersionSummary } from './content.repository'
 import { DOCS } from './docs'
 import type { DocId } from './docs'
 
@@ -13,15 +20,26 @@ type ValidationError = { path: string; message: string }
 
 @Injectable()
 export class ContentService {
+  constructor(private readonly repository: ContentRepository) {}
+
   listDocs() {
     return Object.values(DOCS).map(({ id, label }) => ({ id, label }))
   }
 
-  // Load the private/published file if it exists, else fall back to the committed
-  // example so the editor always opens with valid starting content.
+  // Prefer the DB draft when available; otherwise fall back to the published /
+  // example file so the editor always opens with something valid.
   async read(docId: DocId): Promise<{ data: unknown; source: string }> {
-    const doc = DOCS[docId]
+    if (this.repository.isAvailable()) {
+      const draft = await this.repository.getDraft(docId)
+      if (draft !== null) {
+        return { data: draft, source: 'borrador (db)' }
+      }
+    }
+    return this.readFromFile(docId)
+  }
 
+  private async readFromFile(docId: DocId): Promise<{ data: unknown; source: string }> {
+    const doc = DOCS[docId]
     for (const filename of [doc.file, doc.example]) {
       try {
         const raw = await fs.readFile(path.join(CONTENT_DIR, filename), 'utf8')
@@ -30,7 +48,6 @@ export class ContentService {
         // try the next candidate
       }
     }
-
     throw new NotFoundException(`No content file found for ${docId}`)
   }
 
@@ -42,9 +59,18 @@ export class ContentService {
     return { ok: false, errors: formatIssues(result.error) }
   }
 
-  // Publish = validate against the schema, then write the JSON to the static
-  // path. Invalid content is rejected (400) and never written.
-  async publish(docId: DocId, data: unknown): Promise<{ ok: true; file: string }> {
+  // Persist a work-in-progress draft (no schema enforcement — drafts may be
+  // mid-edit). Requires the DB.
+  async saveDraft(docId: DocId, data: unknown): Promise<{ ok: true }> {
+    this.requireDb()
+    await this.repository.upsertDraft(docId, data)
+    return { ok: true }
+  }
+
+  // Publish = validate, write the static JSON the site reads, and (if the DB is
+  // up) append an immutable version + sync the draft. Invalid content is never
+  // written.
+  async publish(docId: DocId, data: unknown): Promise<{ ok: true; file: string; version: VersionSummary | null }> {
     const check = this.validate(docId, data)
     if (!check.ok) {
       throw new BadRequestException({ ok: false, errors: check.errors })
@@ -52,7 +78,37 @@ export class ContentService {
 
     const target = path.join(CONTENT_DIR, DOCS[docId].file)
     await fs.writeFile(target, `${JSON.stringify(data, null, 2)}\n`, 'utf8')
-    return { ok: true, file: DOCS[docId].file }
+
+    let version: VersionSummary | null = null
+    if (this.repository.isAvailable()) {
+      version = await this.repository.insertVersion(docId, data)
+      await this.repository.upsertDraft(docId, data)
+    }
+    return { ok: true, file: DOCS[docId].file, version }
+  }
+
+  async listVersions(docId: DocId): Promise<VersionSummary[]> {
+    this.requireDb()
+    return this.repository.listVersions(docId)
+  }
+
+  // Load an old version back into the draft and return it for the editor.
+  async restore(docId: DocId, versionId: string): Promise<{ data: unknown }> {
+    this.requireDb()
+    const data = await this.repository.getVersion(docId, versionId)
+    if (data === null) {
+      throw new NotFoundException(`Version ${versionId} not found for ${docId}`)
+    }
+    await this.repository.upsertDraft(docId, data)
+    return { data }
+  }
+
+  private requireDb() {
+    if (!this.repository.isAvailable()) {
+      throw new ServiceUnavailableException(
+        'Base de datos no disponible. Levanta Postgres (docker compose up -d) y reinicia el server.',
+      )
+    }
   }
 }
 

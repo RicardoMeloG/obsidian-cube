@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local env (DB credentials)
+.env
+
 # Private site content for personal deployments
 public/content/site.en.json
 public/content/site.es.json
