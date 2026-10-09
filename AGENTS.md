@@ -167,6 +167,7 @@ Phase 1 ships when:
 ## Other References (load on demand)
 
 - `docs/visual-direction.md` — design system (materials, color, motion, layout, tokens)
+- `docs/project-memory.md` — owner direction that must survive across sessions (future-state positioning, presentation layer, market reframing)
 - `docs/roadmap.md` — phase tracking, future components, future admin panel
 - `docs/decisions/` — architectural decision records (ADRs)
 - `specs/NNN-*/` — feature specs (spec-kit, created on demand)
