@@ -5,8 +5,9 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 
 const PORT = 5182
-// Localhost-only on purpose: this admin has NO authentication yet. Auth/MFA is
-// Etapa 4. Never bind to 0.0.0.0 until that lands.
+// Localhost-only on purpose. Password + TOTP MFA are enforced, but there is no
+// login rate limiting, the cookie is not `secure` and sessions are in-memory.
+// Never bind to 0.0.0.0 until those land (see AGENTS.md, admin rules).
 const HOST = '127.0.0.1'
 
 // Minimal .env loader (no dependency): populate process.env before Nest builds

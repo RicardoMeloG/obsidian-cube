@@ -2,16 +2,15 @@
 
 Future product milestones should be described here before implementation.
 
-Recommended next specs:
+Recommended next specs, in the order set by `docs/roadmap.md` (001–003 are taken by the rescued drafts below):
 
-1. `001-content-system`
-2. `002-static-pages`
-3. `003-tailwind-design-system`
-4. `004-contact-channel`
-5. `005-admin-content-panel`
-6. `006-aws-production-deploy`
+1. `004-publish-real-content` — private content files with real identity, first deploy, publish → S3 + invalidation.
+2. `005-evidence-per-face` — one inspectable artifact per face; content shape with a mandatory `href`; rewrite of the generic copy.
+3. `006-methodology-deep-dive` — a router, the site as its own case study, static SEO and JSON-LD.
+4. `007-presentation-state` — thesis / opening state (see `docs/project-memory.md`, 2026-06-11).
+5. `008-admin-hardening` — login rate limit, secure cookies, persistent sessions, backend tests.
 
-Use this directory for Spec Kit or compatible spec-driven development artifacts.
+Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). Spec Kit tooling exists only on the `codex/*` branches; adopting it is an open decision (see `docs/roadmap.md`, Phase 2).
 
 ## Rescued drafts (June 2026, from the `codex/*` branches)
 
