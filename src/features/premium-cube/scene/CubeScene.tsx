@@ -26,7 +26,6 @@ type CubeSceneProps = {
   effects: DiagnosticFx
   onCursorModeChange: (mode: 'default' | 'grab' | 'grabbing') => void
   onSectionEnter: (sectionId: CubeSectionId) => void
-  sectionOpen: boolean
   sections: ResolvedCubeSection[]
   activeSectionId: CubeSectionId
   handleRef?: RefObject<CubeSceneHandle | null>
@@ -153,7 +152,7 @@ function PlatformTicks({ radius, count, faint = false }: PlatformTicksProps) {
   )
 }
 
-export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSectionEnter, sectionOpen, sections, handleRef }: CubeSceneProps) {
+export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSectionEnter, sections, handleRef }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
   const platformGlowTexture = useMemo(
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
@@ -210,9 +209,6 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
   }, [])
 
   const enterSection = useCallback((sectionId: CubeSectionId) => {
-    if (sectionOpen) {
-      return
-    }
     // Leave free-mode and hand control back to the resting pose, which slerps the
     // cube toward FACE_QUATERNION[activeSectionId] once the section updates.
     const drag = dragRef.current
@@ -223,7 +219,7 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
     onCursorModeChange('default')
     void playCubeTransitionSound()
     onSectionEnter(sectionId)
-  }, [onCursorModeChange, onSectionEnter, sectionOpen])
+  }, [onCursorModeChange, onSectionEnter])
 
   useImperativeHandle(handleRef, () => ({ enterSection }), [enterSection])
 
@@ -286,7 +282,7 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
     function continueDrag(event: PointerEvent) {
       const drag = dragRef.current
 
-      if (!drag.active || drag.pointerId !== event.pointerId || sectionOpen) {
+      if (!drag.active || drag.pointerId !== event.pointerId) {
         return
       }
 
@@ -349,13 +345,10 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
       window.removeEventListener('pointerup', endDrag)
       window.removeEventListener('pointercancel', endDrag)
     }
-  }, [enterSection, onCursorModeChange, sectionOpen])
+  }, [enterSection, onCursorModeChange])
 
   function handlePointerDown(event: PointerEventLike) {
     event.stopPropagation?.()
-    if (sectionOpen) {
-      return
-    }
 
     const drag = dragRef.current
     drag.active = true

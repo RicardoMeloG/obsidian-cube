@@ -19,10 +19,6 @@ dist-ssr
 public/content/site.en.json
 public/content/site.es.json
 public/content/visual.json
-content.local/
-
-# Local Sites deployment metadata
-.openai/hosting.json
 
 # Editor directories and files
 .vscode/*
@@ -34,7 +30,3 @@ content.local/
 *.njsproj
 *.sln
 *.sw?
-
-# Playwright MCP tool output
-.playwright-mcp/
-p12-*.jpeg

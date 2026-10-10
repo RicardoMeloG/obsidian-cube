@@ -19,3 +19,13 @@ CREATE TABLE IF NOT EXISTS content_versions (
 
 CREATE INDEX IF NOT EXISTS idx_content_versions_doc
   ON content_versions (doc_id, published_at DESC);
+
+-- Admin users (password as bcrypt hash; TOTP secret enrolled on first login).
+-- Seeded by the server from ADMIN_USERNAME / ADMIN_PASSWORD when empty.
+CREATE TABLE IF NOT EXISTS admin_users (
+  username      TEXT PRIMARY KEY,
+  password_hash TEXT NOT NULL,
+  totp_secret   TEXT,
+  totp_enabled  BOOLEAN     NOT NULL DEFAULT false,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);

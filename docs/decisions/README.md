@@ -14,7 +14,7 @@ Write one when:
 
 ## Naming
 
-`NNN-short-decision-title.md` — e.g. `001-unified-vector-worlds.md`, `002-bilingual-content-loader.md`.
+`NNN-short-decision-title.md` — e.g. `001-spectacle-as-retention.md`, `002-evidence-before-spectacle.md`.
 
 Numbers are sequential and never reused. Once written, ADRs are append-only — corrections come as new ADRs that supersede the old one (mark the old one with a "Superseded by" note at the top).
 

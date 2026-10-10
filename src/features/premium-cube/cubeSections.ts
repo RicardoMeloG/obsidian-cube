@@ -4,7 +4,7 @@ export const CUBE_FACE_ORDER: CubeSectionId[] = ['agentic', 'products', 'systems
 
 // Per-face accent palette (PoC). A muted, harmonized set over the obsidian
 // field — each face gets a quiet distinctive hue for its title and cube glyph.
-// Recovered from the original `FACE_ACCENTS` (commit 87c5fc8) and re-tuned
+// Recovered from an earlier iteration of the prototype and re-tuned
 // toward the documented obsidian tokens (ice / copper / steel / mint / violet /
 // sand). Per-face accent + inner glyph is the rule since ADR 003
 // (docs/decisions/003-per-face-accent-and-glyph.md); the shared frame never

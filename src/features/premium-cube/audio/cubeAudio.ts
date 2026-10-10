@@ -185,16 +185,6 @@ export function playCubeDragTickSound(pointerSpeed: number) {
   playGlassResonance(GLASS_FUNDAMENTAL + intensity * 96, 0.42 + intensity * 0.42, 0.62)
 }
 
-export async function playCubeFaceClickSound() {
-  const context = await unlockAudio()
-
-  if (!context || !masterGain) {
-    return
-  }
-
-  playGlassResonance(GLASS_FUNDAMENTAL * 1.18, 0.94, 0.88)
-}
-
 export async function playCubeTransitionSound() {
   const context = await unlockAudio()
 

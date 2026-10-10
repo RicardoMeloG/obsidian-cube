@@ -1,4 +1,4 @@
-# Agentic Cube Prototype
+# Obsidian Cube
 
 Open-source agentic portfolio prototype for Ricardo Melo.
 

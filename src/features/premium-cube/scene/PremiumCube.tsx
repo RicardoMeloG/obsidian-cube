@@ -8,7 +8,7 @@ import type { ResolvedCubeSection } from '../content/visualContent'
 
 const FACE_ACCENT_SOFT = 'rgba(170, 160, 255, 0.6)'
 
-// Per-face glyph (PoC) — recovered from commit 87c5fc8 and re-tuned. Every face
+// Per-face glyph (ADR 003) — recovered from an earlier iteration. Every face
 // keeps the shared "double-diamond" frame (the cube grammar) but carries its own
 // quiet geometric symbol in the section accent, so each face reads as distinct
 // without abandoning the obsidian language. Drawn at scale `s` (≈ the old single

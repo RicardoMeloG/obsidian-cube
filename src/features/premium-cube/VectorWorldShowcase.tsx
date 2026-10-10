@@ -196,7 +196,9 @@ export function VectorWorldShowcase() {
             {effectiveLookAt && (
               <ResponsiveCameraLookAt target={effectiveLookAt} composition={showcase.composition} />
             )}
-            <Component {...effectiveShowcaseProps} {...extraProps} />
+            <Suspense fallback={null}>
+              <Component {...effectiveShowcaseProps} {...extraProps} />
+            </Suspense>
           </Suspense>
         </Canvas>
       </div>

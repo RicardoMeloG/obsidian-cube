@@ -74,7 +74,7 @@ Full reasoning: `docs/decisions/001-spectacle-as-retention.md`.
 The cube has six faces, each with a stable semantic identity:
 
 1. **AGENTIC** — Agentic workflows, product building with AI agents, this site as process evidence.
-2. **PRODUCTS** — Selected public products (e.g. OpenMenu GDEMU Manager). Exclude old projects that do not support the new positioning.
+2. **PRODUCTS** — Selected public products that support the current positioning (agentic tools, this site). Exclude old projects that do not.
 3. **SYSTEMS** — Production systems, legacy modernization, databases, architecture, reliability.
 4. **SECURITY** — Security mindset, MFA, rate limiting, ethical hacking readiness, secure production defaults.
 5. **RESEARCH** — AI, philosophy of thought, truth, representation, papers, novels, independent research.
@@ -200,4 +200,5 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - `docs/roadmap.md` — phase status, known gaps, priority order
 - `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
+- `docs/research-philosophy.md` — content brief for the RESEARCH face (what of the private archive may be shown)
 - `specs/NNN-*/` — feature specs (lightweight markdown; Spec Kit drafts 002/003 kept as input)
