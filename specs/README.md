@@ -10,11 +10,11 @@ Recommended next specs, in the order set by `docs/roadmap.md` (001–003 are tak
 4. `007-presentation-state` — thesis / opening state (see `docs/project-memory.md`, 2026-06-11).
 5. `008-admin-hardening` — login rate limit, secure cookies, persistent sessions, backend tests.
 
-Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). Spec Kit tooling exists only on the `codex/*` branches; adopting it is an open decision (see `docs/roadmap.md`, Phase 2).
+Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). The Spec Kit tooling tried in June 2026 now lives in its own repository, `OlemOdracir/spec-kit-study` (see `docs/roadmap.md`, Phase 2).
 
-## Rescued drafts (June 2026, from the `codex/*` branches)
+## Rescued drafts (June 2026, Spec Kit)
 
-Two specs were written on the `codex/001-spec-driven-gates` branch with GitHub Spec Kit and never implemented (0 tasks done). They are kept here as **input**, not as approved work. They reference `$speckit-*` commands and `npm run quality`, which only exist on that branch — the Spec Kit tooling itself was not adopted into this line.
+Two specs were written with GitHub Spec Kit and never implemented (0 tasks done). They are kept here as **input**, not as approved work. They reference `$speckit-*` commands, `npm run quality` and `.specify/memory/constitution.md`, which exist in the `spec-kit-study` repository, not here.
 
 - `002-personal-data-layer/` — public code vs removable personal layer. Partly superseded: the private/example JSON split, Zod validation and loader fallback already exist (`public/content/`, `src/features/premium-cube/content/`). Still open from it: the automated privacy gate (`privacy:check`) and generalizing owner data out of `AGENTS.md` / `docs/project-memory.md`.
 - `003-agentic-flow-hardening/` — required code/security review evidence, design-token lint, Playwright visual regression. Fully open.
