@@ -1199,7 +1199,13 @@ button.side-panels__cta {
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  padding-right: 2.9rem; /* keep the first lines clear of the close button */
+}
+
+/* Only the first lines share the top-right corner with the 44px close button;
+   the rest of the body keeps the full width. */
+.detail-modal__eyebrow,
+.detail-modal h2 {
+  padding-right: 2.9rem;
 }
 
 .detail-modal__close {
