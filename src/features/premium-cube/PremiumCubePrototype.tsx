@@ -33,6 +33,12 @@ export function PremiumCubePrototype() {
   const [focusedDetail, setFocusedDetail] = useState<CubeSectionDetail | null>(null)
   const cubeSceneRef = useRef<CubeSceneHandle | null>(null)
   const displayedSectionIdRef = useRef(displayedSectionId)
+  const shellRef = useRef<HTMLElement | null>(null)
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const dialogPanelRef = useRef<HTMLElement | null>(null)
+  const dialogTitleRef = useRef<HTMLHeadingElement | null>(null)
+  // The control that opened the detail dialog; focus returns to it on close.
+  const restoreFocusRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
   const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
@@ -122,21 +128,77 @@ export function PremiumCubePrototype() {
     }
   }, [activeSectionId])
 
+  // Dialog behaviour while open: everything behind it is `inert` (no focus, no
+  // assistive-tech reading, no pointer), the document scroll is locked, focus
+  // lands on the title, Tab cycles inside the panel, Escape closes. On close by
+  // any path (Escape, scrim, close button) the background is restored and focus
+  // returns to the control that opened the dialog.
   useEffect(() => {
     if (!detailOpen) {
       return
     }
 
-    function closeOnEscape(event: KeyboardEvent) {
+    const dialog = dialogRef.current
+    const panel = dialogPanelRef.current
+    const shell = shellRef.current
+    const inerted: Element[] = []
+    if (shell && dialog) {
+      for (const child of Array.from(shell.children)) {
+        if (child !== dialog && !child.hasAttribute('inert')) {
+          child.setAttribute('inert', '')
+          inerted.push(child)
+        }
+      }
+    }
+    const root = document.documentElement
+    const previousOverflow = root.style.overflow
+    root.style.overflow = 'hidden'
+
+    dialogTitleRef.current?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        event.preventDefault()
         setDetailOpen(false)
+        return
+      }
+      if (event.key !== 'Tab' || !panel) {
+        return
+      }
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])'),
+      ).filter((element) => !element.hasAttribute('disabled'))
+      if (focusables.length === 0) {
+        event.preventDefault()
+        dialogTitleRef.current?.focus()
+        return
+      }
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement
+      // Focus on the title, on the scrim, on <body> or anywhere outside the
+      // panel counts as a boundary in both directions.
+      const outside = !(active instanceof Element) || !panel.contains(active) || active === dialogTitleRef.current
+      if (event.shiftKey && (active === first || outside)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || outside)) {
+        event.preventDefault()
+        first.focus()
       }
     }
 
-    window.addEventListener('keydown', closeOnEscape)
+    window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      window.removeEventListener('keydown', closeOnEscape)
+      window.removeEventListener('keydown', handleKeyDown)
+      root.style.overflow = previousOverflow
+      inerted.forEach((element) => element.removeAttribute('inert'))
+      const restore = restoreFocusRef.current
+      restoreFocusRef.current = null
+      if (restore && restore.isConnected) {
+        restore.focus()
+      }
     }
   }, [detailOpen])
 
@@ -171,6 +233,7 @@ export function PremiumCubePrototype() {
     <main
       className={`prototype-shell is-${cursorMode}`}
       aria-label="Premium cube prototype"
+      ref={shellRef}
       onDoubleClick={import.meta.env.DEV ? handleBackgroundDoubleClick : undefined}
       style={{ width: viewport.width || '100vw', height: isMobileViewport ? undefined : viewport.height || '100vh' }}
     >
@@ -240,7 +303,9 @@ export function PremiumCubePrototype() {
         <SidePanels
           activeSection={displayedSection}
           locale={locale}
-          onOpenDetail={(detail) => {
+          onOpenDetail={(detail, trigger) => {
+            restoreFocusRef.current =
+              trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
             setFocusedDetail(detail ?? null)
             setDetailOpen(true)
           }}
@@ -259,39 +324,50 @@ export function PremiumCubePrototype() {
       )}
 
       {detailOpen && activeDetail && (
-        <div className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
-          <button className="detail-modal__scrim" type="button" aria-label="Close detail" onClick={() => setDetailOpen(false)} />
-          <article className="detail-modal__panel">
-            <button className="detail-modal__close" type="button" onClick={() => setDetailOpen(false)}>
-              ×
+        <div className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title" ref={dialogRef}>
+          {/* Pointer-only backdrop: not focusable, not announced. Keyboard and
+              assistive tech close through the labelled button or Escape. */}
+          <div className="detail-modal__scrim" aria-hidden="true" onClick={() => setDetailOpen(false)} />
+          <article className="detail-modal__panel" ref={dialogPanelRef}>
+            <button
+              className="detail-modal__close"
+              type="button"
+              aria-label={locale === 'es' ? 'Cerrar' : 'Close'}
+              onClick={() => setDetailOpen(false)}
+            >
+              <span aria-hidden="true">×</span>
             </button>
-            <p className="detail-modal__eyebrow">{activeSection?.label}</p>
-            <h2 id="detail-modal-title">{activeDetail.title}</h2>
-            <RichText as="p" className="detail-modal__summary" html={activeDetail.summary} />
-            {activeDetail.points && activeDetail.points.length > 0 && (
-              <ul className="detail-modal__points">
-                {activeDetail.points.map((point) => (
-                  <RichText as="li" key={point} html={point} />
-                ))}
-              </ul>
-            )}
-            {activeDetail.links && activeDetail.links.length > 0 && (
-              <div className="detail-modal__links">
-                {activeDetail.links.map((link) =>
-                  link.href ? (
-                    <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
-                      <strong>{link.label}</strong>
-                      {link.description && <RichText as="span" html={link.description} />}
-                    </a>
-                  ) : (
-                    <span key={link.label}>
-                      <strong>{link.label}</strong>
-                      {link.description && <RichText as="small" html={link.description} />}
-                    </span>
-                  ),
-                )}
-              </div>
-            )}
+            <div className="detail-modal__body">
+              <p className="detail-modal__eyebrow">{activeSection?.label}</p>
+              <h2 id="detail-modal-title" ref={dialogTitleRef} tabIndex={-1}>
+                {activeDetail.title}
+              </h2>
+              <RichText as="p" className="detail-modal__summary" html={activeDetail.summary} />
+              {activeDetail.points && activeDetail.points.length > 0 && (
+                <ul className="detail-modal__points">
+                  {activeDetail.points.map((point) => (
+                    <RichText as="li" key={point} html={point} />
+                  ))}
+                </ul>
+              )}
+              {activeDetail.links && activeDetail.links.length > 0 && (
+                <div className="detail-modal__links">
+                  {activeDetail.links.map((link) =>
+                    link.href ? (
+                      <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                        <strong>{link.label}</strong>
+                        {link.description && <RichText as="span" html={link.description} />}
+                      </a>
+                    ) : (
+                      <span key={link.label}>
+                        <strong>{link.label}</strong>
+                        {link.description && <RichText as="small" html={link.description} />}
+                      </span>
+                    ),
+                  )}
+                </div>
+              )}
+            </div>
           </article>
         </div>
       )}

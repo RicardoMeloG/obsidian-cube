@@ -772,10 +772,25 @@ button.side-panels__cta {
   color: rgba(244, 246, 255, 0.96);
 }
 
-.cube-section-nav a:focus-visible {
+.cube-section-nav a:focus-visible,
+.side-panels__cta:focus-visible,
+.side-panels__research-node:focus-visible,
+.detail-modal__close:focus-visible,
+.detail-modal__links > a:focus-visible {
   outline: 1px solid rgba(184, 174, 255, 0.82);
   outline-offset: 4px;
   box-shadow: 0 0 0 4px rgba(122, 109, 255, 0.16);
+}
+
+/* The dialog title receives focus programmatically on open (tabindex=-1):
+   no ring after a tap/click, a quiet one when reached by keyboard. */
+.detail-modal h2:focus {
+  outline: none;
+}
+
+.detail-modal h2:focus-visible {
+  outline: 1px solid rgba(184, 174, 255, 0.55);
+  outline-offset: 4px;
 }
 
 .cube-section-nav a.is-active span {
@@ -1138,9 +1153,11 @@ button.side-panels__cta {
 
 .detail-modal__panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: min(46rem, 100%);
   max-height: min(76vh, 46rem);
-  overflow: auto;
+  overflow: hidden;
   padding: clamp(1.25rem, 3vw, 2.2rem);
   border: 1px solid rgba(184, 174, 255, 0.34);
   border-radius: 10px;
@@ -1178,14 +1195,21 @@ button.side-panels__cta {
   border-bottom: 1px solid rgba(184, 174, 255, 0.76);
 }
 
+.detail-modal__body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 2.9rem; /* keep the first lines clear of the close button */
+}
+
 .detail-modal__close {
   position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
+  top: 0.6rem;
+  right: 0.6rem;
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.75rem; /* 44px tap target */
+  height: 2.75rem;
   border: 1px solid rgba(184, 174, 255, 0.22);
   border-radius: 999px;
   color: rgba(244, 246, 255, 0.78);

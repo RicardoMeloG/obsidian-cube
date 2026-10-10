@@ -8,7 +8,8 @@ import { RichText } from './content/RichText'
 type SidePanelsProps = {
   activeSection: ResolvedCubeSection
   locale: SiteLocale
-  onOpenDetail: (detail?: CubeSectionDetail) => void
+  // `trigger` is the control that opened the detail; the dialog returns focus to it on close.
+  onOpenDetail: (detail?: CubeSectionDetail, trigger?: HTMLElement) => void
   transitionState?: 'idle' | 'exiting' | 'entering'
 }
 
@@ -131,7 +132,7 @@ export function SidePanels({
     }
 
     return (
-      <button className={`side-panels__cta ${modifier}`} type="button" onClick={() => onOpenDetail()}>
+      <button className={`side-panels__cta ${modifier}`} type="button" onClick={(event) => onOpenDetail(undefined, event.currentTarget)}>
         <span>{cta.label}</span>
         {CHEVRON}
       </button>
@@ -165,7 +166,7 @@ export function SidePanels({
                   className="side-panels__research-node"
                   key={concept.key}
                   type="button"
-                  onClick={() => onOpenDetail(createResearchConceptDetail(concept))}
+                  onClick={(event) => onOpenDetail(createResearchConceptDetail(concept), event.currentTarget)}
                 >
                   <span>{concept.axis}</span>
                   <strong>{concept.label}</strong>
