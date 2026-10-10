@@ -1472,3 +1472,42 @@ button.side-panels__cta {
   font-size: 0.62rem;
   line-height: 1.45;
 }
+@media (max-width: 680px) {
+  /* Phones (the Spanish labels need ~650px for one row): six faces in two rows
+     of three, so nothing is clipped
+     and there is nothing to scroll. The active dot stays; the "·" separators go. */
+  .cube-section-nav {
+    padding-top: 0.5rem;
+  }
+
+  .cube-section-nav ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 0.3rem;
+    column-gap: 0.2rem;
+    overflow: visible;
+  }
+
+  .cube-section-nav li {
+    display: flex;
+    min-width: 0;
+  }
+
+  .cube-section-nav a {
+    width: 100%;
+    justify-content: center;
+    padding: 0.22rem 0.1rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+  }
+
+  .cube-section-nav li + li a::before {
+    content: none;
+  }
+
+  /* Two rows of chrome at the bottom: reserve the extra height under the panels. */
+  .side-panels {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
+}
