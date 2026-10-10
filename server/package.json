@@ -1,0 +1,4 @@
+{
+  "//": "Marks the server subtree as CommonJS so NestJS decorators + emitDecoratorMetadata work. The root package.json is ESM (Vite); deps still resolve from the root node_modules.",
+  "type": "commonjs"
+}

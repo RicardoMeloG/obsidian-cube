@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // `server/` (NestJS admin) and `infra/` (AWS CDK) are separate Node/CommonJS
+  // projects with their own tsconfigs — not linted by the browser app config.
+  globalIgnores(['dist', 'server', 'infra']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

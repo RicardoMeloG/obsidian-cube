@@ -29,7 +29,8 @@ The design should read as premium because it is precise, not because it is decor
 - The cube is the **persistent focal element** of the entire experience, always visible at screen center on desktop.
 - The cube is not a one-shot portal. Selecting a face updates the surrounding side panels in place; the cube does not disappear, navigate, or fade out.
 - The cube rotates on drag and snaps to the selected face on click. Audio cues stay subtle and gesture-driven.
-- All six faces share the same visual grammar: inset bevel, corner brackets, central diamond glyph, section label, "OBSIDIAN CUBE" subtitle, three accent dots. No per-face glyph divergence.
+- All six faces share the same frame: inset bevel, corner brackets, double-diamond, section label, "OBSIDIAN CUBE" subtitle, three accent dots. Inside the frame each face carries its own accent color and a quiet inner glyph in that accent (ADR 003). The frame, bevel, brackets and typography never change per face.
+- Per-face accents (from `visual.json`, defaults in `cubeSections.ts`): agentic violet `#b8aeff`, products copper `#c08b5a`, systems steel blue `#8bb4dd`, security mint `#89d6c7`, research lavender `#9fa9ef`, contact sand `#f0d2b4`. The same accent drives the second title line and the eyebrow in the side panels.
 - Material direction: deep obsidian (`#010208`), high metalness (≈0.92), low-to-mid roughness (≈0.13), strong clearcoat. Edges should catch a clean top rim highlight; the underside should bathe in violet underglow.
 - Avoid postprocessing that creates instability.
 - `Bloom` is prohibited for production because it caused visible flicker.
@@ -42,6 +43,15 @@ Default field (always present):
 - A vertical light beam descends onto the cube from above as ambient continuity.
 - A wide, soft violet volumetric glow surrounds the cube and platform — this is the signature ambient. It should read as nebula/aurora, never as a generic SaaS purple gradient.
 - The platform under the cube has concentric rings with chronometer-style tick marks and a small bright center point.
+
+### Visibility rule for the vector worlds
+
+The retention bet (`docs/decisions/001-spectacle-as-retention.md`) only works if the world is perceived. The 2026-10-09 audit found that, behind the cube and under the fog, four of the five finished worlds read as faint texture. Rules:
+
+- Each world's primary structure must be recognizable in a static frame of the main composition, not only in the `?bg=<world>` showcase. A world that only reads in showcase mode is not finished.
+- Tune fog distance, line brightness and density per world against the main camera, not against the showcase camera.
+- The cube remains the focal element, but "focal" means brightest and sharpest, not "the only thing visible".
+- Entering a face may give the world a short moment of prominence (a brief fog or exposure change) before settling, so the visitor registers that the scene changed.
 
 ### Wave-Field Background (Target)
 
@@ -68,7 +78,7 @@ The experience is a single-viewport composition. Selecting a face never navigate
 Desktop composition (≈1440-1920px):
 
 - **Center**: the cube, occupying roughly 40-50% of the horizontal frame, vertically centered.
-- **Top-left**: identity block — display name and role (e.g. "Ricardo Melo / Ingeniero de Productos Agénticos").
+- **Top-left**: identity block — display name and role (e.g. "Ricardo Melo / Ingeniero de Productos Agénticos"). This block is the top of the visual hierarchy: the most legible text on screen, AA contrast, never muted. The cube's own label must not outrank the owner's name.
 - **Top-right**: language toggle (EN / ES).
 - **Left rail**: the selected face's primary narrative — eyebrow (e.g. "Ingeniería de"), large two-line headline, a short paragraph, then a vertical list of 3-5 named features with a small glyph and one-sentence description each. End with a single primary action (e.g. "EXPLORAR ENFOQUE").
 - **Right rail**: the supporting structure for that face — a numbered flow or metric stack (e.g. "FLUJO AGÉNTICO 04" with steps `01 ESPECIFICAR`, `02 PROTOTIPAR`, `03 VALIDAR`, `04 PUBLICAR`), each with a brief one-line description. End with a secondary action (e.g. "VER METODOLOGÍA →").
@@ -123,6 +133,7 @@ Working palette:
 - Avoid oversized marketing headlines except on true section entrances.
 - Use tight, readable editorial blocks.
 - Letter spacing should be restrained.
+- Contrast: body text and any label that carries meaning (identity block, eyebrows, face strip, CTAs) must meet WCAG AA, 4.5:1 against the obsidian field. Muted tones are allowed only for secondary, non-essential text at 14px or larger with at least 3:1.
 - On high-density desktops, prefer editorial density over spectacle. A 5K display at 250% scaling behaves like a roughly 2048px CSS viewport; the page must not look zoomed-in at that size.
 - Desktop content should use wide containers before oversized typography. Keep section H1s below roughly 94px on large CSS viewports unless a specific visual review approves a larger scale.
 
@@ -154,7 +165,8 @@ Working palette:
 - Stock-like imagery that does not reveal useful meaning.
 - Gold ornament used as luxury decoration without structural purpose.
 - Icon styles that do not match the cube glyph geometry.
-- Per-face cube glyph divergence: all six faces share the same diamond glyph and surface grammar; only the section label changes.
+- Per-face divergence beyond accent color and inner glyph: the frame, bevel, brackets and typography are shared by all six faces (ADR 003).
+- Six identical compositions. The side-panel layout may vary in at least two faces (for example the research concept map) so the walk across the cube does not feel like the same poster six times.
 - Full-page section overlays that hide the cube (the cube must remain visible in the primary experience).
 
 ## Tailwind Implementation

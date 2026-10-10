@@ -1,211 +1,19 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing'
 import { CUBE_FACE_ORDER } from './cubeSections'
-import type { CubeSection, CubeSectionDetail, CubeSectionId } from './cubeSections'
+import type { CubeSectionDetail, CubeSectionId } from './cubeSections'
 import { CubeSectionNav } from './CubeSectionNav'
 import { useSiteContent } from './content/useSiteContent'
+import { useVisualContent } from './content/useVisualContent'
+import { resolveSections } from './content/visualContent'
+import { RichText } from './content/RichText'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
 import type { CubeSceneHandle } from './scene/CubeScene'
 import { SidePanels } from './SidePanels'
 
-const ENABLE_FULLSCREEN_SECTION = false
 type PanelTransitionState = 'idle' | 'exiting' | 'entering'
-
-function SectionGlyph({ className = 'section-panel__glyph', sectionId }: { className?: string; sectionId: CubeSectionId }) {
-  const accentBySection: Record<CubeSectionId, string> = {
-    agentic: '#9fa5e1',
-    products: '#9fa5e1',
-    systems: '#b8c7ff',
-    security: '#8ea7ff',
-    research: '#b9a7ff',
-    contact: '#d2d8ff',
-  }
-  const accent = accentBySection[sectionId]
-
-  return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 160 160">
-      <defs>
-        <radialGradient cx="50%" cy="50%" id={`glyph-glow-${sectionId}`} r="62%">
-          <stop offset="0%" stopColor={accent} stopOpacity="0.55" />
-          <stop offset="46%" stopColor={accent} stopOpacity="0.12" />
-          <stop offset="100%" stopColor={accent} stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <circle cx="80" cy="80" fill={`url(#glyph-glow-${sectionId})`} r="76" />
-      <path d="M80 18 142 80 80 142 18 80Z" fill="none" stroke={accent} strokeOpacity="0.52" />
-      <path d="M80 38 122 80 80 122 38 80Z" fill="none" stroke="rgba(240,248,255,0.5)" />
-      {sectionId === 'agentic' && (
-        <>
-          <path d="M48 80h64M80 48v64" stroke={accent} strokeLinecap="round" strokeOpacity="0.82" />
-          <circle cx="80" cy="80" fill={accent} r="4" />
-        </>
-      )}
-      {sectionId === 'products' && (
-        <>
-          <path d="M54 58h52v44H54Z" fill="none" stroke={accent} strokeOpacity="0.82" />
-          <path d="M64 72h32M64 86h22" stroke={accent} strokeLinecap="round" strokeOpacity="0.72" />
-        </>
-      )}
-      {sectionId === 'systems' && (
-        <>
-          <circle cx="55" cy="62" fill="none" r="12" stroke={accent} strokeOpacity="0.82" />
-          <circle cx="105" cy="98" fill="none" r="12" stroke={accent} strokeOpacity="0.82" />
-          <path d="M65 69 95 91M80 50v60" stroke={accent} strokeLinecap="round" strokeOpacity="0.72" />
-        </>
-      )}
-      {sectionId === 'security' && (
-        <>
-          <path d="M80 48 108 60v22c0 22-13 35-28 43-15-8-28-21-28-43V60Z" fill="none" stroke={accent} />
-          <path d="M68 80l8 8 18-20" stroke={accent} strokeLinecap="round" strokeLinejoin="round" />
-        </>
-      )}
-      {sectionId === 'research' && (
-        <>
-          <path d="M52 96c18-42 38-42 56 0M54 66c17 14 35 14 52 0" fill="none" stroke={accent} />
-          <circle cx="80" cy="80" fill="none" r="7" stroke={accent} />
-        </>
-      )}
-      {sectionId === 'contact' && (
-        <>
-          <path d="M50 64h60v42H50Z" fill="none" stroke={accent} />
-          <path d="m52 66 28 24 28-24" fill="none" stroke={accent} strokeLinecap="round" strokeLinejoin="round" />
-        </>
-      )}
-    </svg>
-  )
-}
-
-type FaceArtifactProps = {
-  copy: {
-    artifacts: Record<CubeSectionId, string>
-    capabilities: string[]
-    contactState: string
-    researchNodes: string[]
-    securityControls: string[]
-    systemNodes: string[]
-  }
-  section: CubeSection
-}
-
-function FaceArtifact({ copy, section }: FaceArtifactProps) {
-  if (section.id === 'agentic') {
-    return (
-      <div className="obsidian-card face-artifact face-artifact--agentic" aria-label={copy.artifacts.agentic}>
-        <span className="obsidian-card__shine" aria-hidden="true" />
-        <div className="face-artifact__header">
-          <span>{copy.artifacts.agentic}</span>
-          <strong>04</strong>
-        </div>
-        <div className="agentic-flow">
-          {copy.capabilities.map((capability, index) => (
-            <div className="agentic-flow__node" key={capability}>
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <p>{capability}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (section.id === 'products') {
-    return (
-      <div className="obsidian-card face-artifact face-artifact--products" aria-label={copy.artifacts.products}>
-        <span className="obsidian-card__shine" aria-hidden="true" />
-        <div className="face-artifact__header">
-          <span>{copy.artifacts.products}</span>
-          <strong>{String(section.links?.length ?? 0).padStart(2, '0')}</strong>
-        </div>
-        <div className="product-preview-grid">
-          {(section.links ?? []).slice(0, 3).map((link, index) => (
-            <article className="obsidian-card product-preview" key={link.label}>
-              <span className="obsidian-card__shine" aria-hidden="true" />
-              <small>{String(index + 1).padStart(2, '0')}</small>
-              <h3>{link.label}</h3>
-              {link.description && <p>{link.description}</p>}
-            </article>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (section.id === 'systems') {
-    return (
-      <div className="obsidian-card face-artifact face-artifact--systems" aria-label={copy.artifacts.systems}>
-        <span className="obsidian-card__shine" aria-hidden="true" />
-        <div className="face-artifact__header">
-          <span>{copy.artifacts.systems}</span>
-          <strong>OPS</strong>
-        </div>
-        <div className="systems-map">
-          {copy.systemNodes.map((node, index) => (
-            <span className={`systems-map__node systems-map__node--${index + 1}`} key={node}>
-              {node}
-            </span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (section.id === 'security') {
-    return (
-      <div className="obsidian-card face-artifact face-artifact--security" aria-label={copy.artifacts.security}>
-        <span className="obsidian-card__shine" aria-hidden="true" />
-        <div className="face-artifact__header">
-          <span>{copy.artifacts.security}</span>
-          <strong>SAFE</strong>
-        </div>
-        <div className="security-grid">
-          {copy.securityControls.map((control) => (
-            <span key={control}>{control}</span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (section.id === 'research') {
-    return (
-      <div className="obsidian-card face-artifact face-artifact--research" aria-label={copy.artifacts.research}>
-        <span className="obsidian-card__shine" aria-hidden="true" />
-        <div className="face-artifact__header">
-          <span>{copy.artifacts.research}</span>
-          <strong>R&D</strong>
-        </div>
-        <div className="research-orbit">
-          {copy.researchNodes.map((node, index) => (
-            <span className={`research-orbit__node research-orbit__node--${index + 1}`} key={node}>
-              {node}
-            </span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="obsidian-card face-artifact face-artifact--contact" aria-label={copy.artifacts.contact}>
-      <span className="obsidian-card__shine" aria-hidden="true" />
-      <div className="face-artifact__header">
-        <span>{copy.artifacts.contact}</span>
-        <strong>OPEN</strong>
-      </div>
-      <div className="contact-stack">
-        {(section.links ?? []).slice(0, 3).map((link) => (
-          <span key={link.label}>
-            {link.label}
-            <small>{copy.contactState}</small>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 function readInitialSectionId(): CubeSectionId {
   if (typeof window === 'undefined') {
@@ -225,8 +33,15 @@ export function PremiumCubePrototype() {
   const [focusedDetail, setFocusedDetail] = useState<CubeSectionDetail | null>(null)
   const cubeSceneRef = useRef<CubeSceneHandle | null>(null)
   const displayedSectionIdRef = useRef(displayedSectionId)
-  const sectionPanelRef = useRef<HTMLElement | null>(null)
+  const shellRef = useRef<HTMLElement | null>(null)
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const dialogPanelRef = useRef<HTMLElement | null>(null)
+  const dialogTitleRef = useRef<HTMLHeadingElement | null>(null)
+  // The control that opened the detail dialog; focus returns to it on close.
+  const restoreFocusRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
+  const visual = useVisualContent()
+  const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
   const syncSectionUrl = useCallback((id: CubeSectionId) => {
     if (typeof window === 'undefined') return
 
@@ -247,20 +62,16 @@ export function PremiumCubePrototype() {
     width: typeof window === 'undefined' ? 0 : window.innerWidth,
     height: typeof window === 'undefined' ? 0 : window.innerHeight,
   }))
-  const postProcessingEffects = [
-    effects.bloom ? <Bloom key="bloom" intensity={0.58} luminanceThreshold={0.3} luminanceSmoothing={0.62} /> : null,
-    effects.noise ? <Noise key="noise" opacity={0.025} /> : null,
-    effects.vignette ? <Vignette key="vignette" eskil={false} offset={0.18} darkness={0.72} /> : null,
-  ].filter((effect): effect is ReactElement => effect !== null)
   const activeSection = useMemo(
-    () => sections.find((section) => section.id === activeSectionId) ?? null,
-    [activeSectionId, sections],
+    () => resolvedSections.find((section) => section.id === activeSectionId) ?? null,
+    [activeSectionId, resolvedSections],
   )
   const displayedSection = useMemo(
-    () => sections.find((section) => section.id === displayedSectionId) ?? activeSection,
-    [activeSection, displayedSectionId, sections],
+    () => resolvedSections.find((section) => section.id === displayedSectionId) ?? activeSection,
+    [activeSection, displayedSectionId, resolvedSections],
   )
-  const activeSectionIndex = activeSection ? sections.findIndex((section) => section.id === activeSection.id) + 1 : 0
+  // The modal shows the face's `detail`; faces without one fall back to the
+  // long-form fields (intro / highlights / proofPoints / links).
   const activeDetail = useMemo(() => {
     if (focusedDetail) return focusedDetail
     if (!activeSection) return null
@@ -276,50 +87,6 @@ export function PremiumCubePrototype() {
       links: activeSection.links,
     }
   }, [activeSection, focusedDetail])
-  const sectionCopy =
-    locale === 'es'
-      ? {
-          highlights: 'Enfoque',
-          proof: 'Evidencia',
-          links: 'Enlaces',
-          faces: 'Caras',
-          signal: 'Señal',
-          back: 'Volver al cubo',
-          capabilities: ['Especificar', 'Prototipar', 'Validar', 'Publicar'],
-          contactState: 'Listo',
-          researchNodes: ['Verdad', 'Pensamiento', 'IA', 'Texto', 'Modelo'],
-          securityControls: ['MFA', 'Límite', 'Secretos', 'Auditoría', 'WAF', 'Mínimo'],
-          systemNodes: ['Legacy', 'Datos', 'API', 'Cloud', 'Observar'],
-          artifacts: {
-            agentic: 'Flujo agéntico',
-            products: 'Prueba pública',
-            systems: 'Arquitectura',
-            security: 'Controles',
-            research: 'Mapa conceptual',
-            contact: 'Canales',
-          },
-        }
-      : {
-          highlights: 'Focus',
-          proof: 'Evidence',
-          links: 'Links',
-          faces: 'Faces',
-          signal: 'Signal',
-          back: 'Back to cube',
-          capabilities: ['Specify', 'Prototype', 'Verify', 'Ship'],
-          contactState: 'Ready',
-          researchNodes: ['Truth', 'Thought', 'AI', 'Text', 'Model'],
-          securityControls: ['MFA', 'Rate', 'Secrets', 'Audit', 'WAF', 'Least'],
-          systemNodes: ['Legacy', 'Data', 'API', 'Cloud', 'Observe'],
-          artifacts: {
-            agentic: 'Agentic flow',
-            products: 'Public proof',
-            systems: 'Architecture',
-            security: 'Controls',
-            research: 'Concept map',
-            contact: 'Channels',
-          },
-        }
 
   useEffect(() => {
     function syncViewport() {
@@ -338,10 +105,6 @@ export function PremiumCubePrototype() {
       window.removeEventListener('orientationchange', syncViewport)
     }
   }, [])
-
-  useEffect(() => {
-    sectionPanelRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [activeSectionId])
 
   useEffect(() => {
     displayedSectionIdRef.current = displayedSectionId
@@ -365,74 +128,83 @@ export function PremiumCubePrototype() {
     }
   }, [activeSectionId])
 
+  // Dialog behaviour while open: everything behind it is `inert` (no focus, no
+  // assistive-tech reading, no pointer), the document scroll is locked, focus
+  // lands on the title, Tab cycles inside the panel, Escape closes. On close by
+  // any path (Escape, scrim, close button) the background is restored and focus
+  // returns to the control that opened the dialog.
   useEffect(() => {
     if (!detailOpen) {
       return
     }
 
-    function closeOnEscape(event: KeyboardEvent) {
+    const dialog = dialogRef.current
+    const panel = dialogPanelRef.current
+    const shell = shellRef.current
+    const inerted: Element[] = []
+    if (shell && dialog) {
+      for (const child of Array.from(shell.children)) {
+        if (child !== dialog && !child.hasAttribute('inert')) {
+          child.setAttribute('inert', '')
+          inerted.push(child)
+        }
+      }
+    }
+    const root = document.documentElement
+    const previousOverflow = root.style.overflow
+    root.style.overflow = 'hidden'
+
+    dialogTitleRef.current?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        event.preventDefault()
         setDetailOpen(false)
+        return
+      }
+      if (event.key !== 'Tab' || !panel) {
+        return
+      }
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])'),
+      ).filter((element) => !element.hasAttribute('disabled'))
+      if (focusables.length === 0) {
+        event.preventDefault()
+        dialogTitleRef.current?.focus()
+        return
+      }
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement
+      // Focus on the title, on the scrim, on <body> or anywhere outside the
+      // panel counts as a boundary in both directions.
+      const outside = !(active instanceof Element) || !panel.contains(active) || active === dialogTitleRef.current
+      if (event.shiftKey && (active === first || outside)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || outside)) {
+        event.preventDefault()
+        first.focus()
       }
     }
 
-    window.addEventListener('keydown', closeOnEscape)
+    window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      window.removeEventListener('keydown', closeOnEscape)
+      window.removeEventListener('keydown', handleKeyDown)
+      root.style.overflow = previousOverflow
+      inerted.forEach((element) => element.removeAttribute('inert'))
+      const restore = restoreFocusRef.current
+      restoreFocusRef.current = null
+      if (restore && restore.isConnected) {
+        restore.focus()
+      }
     }
   }, [detailOpen])
 
-  useEffect(() => {
-    const panel = sectionPanelRef.current
-
-    if (!panel) {
-      return
-    }
-
-    function syncCardLight(event: PointerEvent) {
-      const target = event.target instanceof Element ? event.target.closest<HTMLElement>('.obsidian-card') : null
-
-      if (!target) {
-        return
-      }
-
-      const rect = target.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
-      const normalizedX = (x / rect.width - 0.5) * 2
-      const normalizedY = (y / rect.height - 0.5) * 2
-
-      target.style.setProperty('--spotlight-x', `${x}px`)
-      target.style.setProperty('--spotlight-y', `${y}px`)
-      target.style.setProperty('--tilt-x', `${(-normalizedY * 1.15).toFixed(2)}deg`)
-      target.style.setProperty('--tilt-y', `${(normalizedX * 1.15).toFixed(2)}deg`)
-    }
-
-    function resetCardLight(event: PointerEvent) {
-      const target = event.target instanceof Element ? event.target.closest<HTMLElement>('.obsidian-card') : null
-
-      if (!target) {
-        return
-      }
-
-      target.style.setProperty('--tilt-x', '0deg')
-      target.style.setProperty('--tilt-y', '0deg')
-    }
-
-    panel.addEventListener('pointermove', syncCardLight)
-    panel.addEventListener('pointerout', resetCardLight)
-
-    return () => {
-      panel.removeEventListener('pointermove', syncCardLight)
-      panel.removeEventListener('pointerout', resetCardLight)
-    }
-  }, [activeSectionId])
-
-  const fullscreenActive = ENABLE_FULLSCREEN_SECTION && activeSection !== null
-
-  // Double-click on the background (not on the panels / nav / toggles) opens the
-  // standalone wave-field showcase for the active face, e.g. ?bg=agentic.
+  // Dev only: double-click on the background (not on the panels / nav / toggles)
+  // opens the standalone world showcase for the active face (?bg=<world>). The
+  // visitor-facing "fullscreen art mode" from ADR 001 is still pending.
   const handleBackgroundDoubleClick = useCallback(
     (event: ReactMouseEvent<HTMLElement>) => {
       const target = event.target as HTMLElement
@@ -459,9 +231,10 @@ export function PremiumCubePrototype() {
 
   return (
     <main
-      className={`prototype-shell is-${cursorMode} ${fullscreenActive ? 'has-section' : ''}`}
+      className={`prototype-shell is-${cursorMode}`}
       aria-label="Premium cube prototype"
-      onDoubleClick={handleBackgroundDoubleClick}
+      ref={shellRef}
+      onDoubleClick={import.meta.env.DEV ? handleBackgroundDoubleClick : undefined}
       style={{ width: viewport.width || '100vw', height: isMobileViewport ? undefined : viewport.height || '100vh' }}
     >
       <div
@@ -491,13 +264,9 @@ export function PremiumCubePrototype() {
                 syncSectionUrl(sectionId)
                 setActiveSectionId(sectionId)
               }}
-              sectionOpen={fullscreenActive}
-              sections={sections}
+              sections={resolvedSections}
               handleRef={cubeSceneRef}
             />
-            {postProcessingEffects.length > 0 && (
-              <EffectComposer multisampling={4}>{postProcessingEffects}</EffectComposer>
-            )}
           </Suspense>
         </Canvas>
       </div>
@@ -530,11 +299,13 @@ export function PremiumCubePrototype() {
         </button>
       </div>
 
-      {!ENABLE_FULLSCREEN_SECTION && displayedSection && (
+      {displayedSection && (
         <SidePanels
           activeSection={displayedSection}
           locale={locale}
-          onOpenDetail={(detail) => {
+          onOpenDetail={(detail, trigger) => {
+            restoreFocusRef.current =
+              trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
             setFocusedDetail(detail ?? null)
             setDetailOpen(true)
           }}
@@ -542,7 +313,7 @@ export function PremiumCubePrototype() {
         />
       )}
 
-      {!ENABLE_FULLSCREEN_SECTION && displayedSection && (
+      {displayedSection && (
         <CubeSectionNav
           activeSectionId={activeSectionId}
           fullName={content.identity.fullName}
@@ -553,139 +324,53 @@ export function PremiumCubePrototype() {
       )}
 
       {detailOpen && activeDetail && (
-        <div className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
-          <button className="detail-modal__scrim" type="button" aria-label="Close detail" onClick={() => setDetailOpen(false)} />
-          <article className="detail-modal__panel">
-            <button className="detail-modal__close" type="button" onClick={() => setDetailOpen(false)}>
-              ×
+        <div className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title" ref={dialogRef}>
+          {/* Pointer-only backdrop: not focusable, not announced. Keyboard and
+              assistive tech close through the labelled button or Escape. */}
+          <div className="detail-modal__scrim" aria-hidden="true" onClick={() => setDetailOpen(false)} />
+          <article className="detail-modal__panel" ref={dialogPanelRef}>
+            <button
+              className="detail-modal__close"
+              type="button"
+              aria-label={locale === 'es' ? 'Cerrar' : 'Close'}
+              onClick={() => setDetailOpen(false)}
+            >
+              <span aria-hidden="true">×</span>
             </button>
-            <p className="detail-modal__eyebrow">{activeSection?.label}</p>
-            <h2 id="detail-modal-title">{activeDetail.title}</h2>
-            <p className="detail-modal__summary">{activeDetail.summary}</p>
-            {activeDetail.points && activeDetail.points.length > 0 && (
-              <ul className="detail-modal__points">
-                {activeDetail.points.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-            )}
-            {activeDetail.links && activeDetail.links.length > 0 && (
-              <div className="detail-modal__links">
-                {activeDetail.links.map((link) =>
-                  link.href ? (
-                    <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
-                      <strong>{link.label}</strong>
-                      {link.description && <span>{link.description}</span>}
-                    </a>
-                  ) : (
-                    <span key={link.label}>
-                      <strong>{link.label}</strong>
-                      {link.description && <small>{link.description}</small>}
-                    </span>
-                  ),
-                )}
-              </div>
-            )}
+            <div className="detail-modal__body">
+              <p className="detail-modal__eyebrow">{activeSection?.label}</p>
+              <h2 id="detail-modal-title" ref={dialogTitleRef} tabIndex={-1}>
+                {activeDetail.title}
+              </h2>
+              <RichText as="p" className="detail-modal__summary" html={activeDetail.summary} />
+              {activeDetail.points && activeDetail.points.length > 0 && (
+                <ul className="detail-modal__points">
+                  {activeDetail.points.map((point) => (
+                    <RichText as="li" key={point} html={point} />
+                  ))}
+                </ul>
+              )}
+              {activeDetail.links && activeDetail.links.length > 0 && (
+                <div className="detail-modal__links">
+                  {activeDetail.links.map((link) =>
+                    link.href ? (
+                      <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                        <strong>{link.label}</strong>
+                        {link.description && <RichText as="span" html={link.description} />}
+                      </a>
+                    ) : (
+                      <span key={link.label}>
+                        <strong>{link.label}</strong>
+                        {link.description && <RichText as="small" html={link.description} />}
+                      </span>
+                    ),
+                  )}
+                </div>
+              )}
+            </div>
           </article>
         </div>
       )}
-
-      <section className="section-panel" aria-hidden={!fullscreenActive} ref={sectionPanelRef}>
-        {ENABLE_FULLSCREEN_SECTION && activeSection && (
-          <div className="section-panel__inner">
-            <span className="section-panel__aperture" aria-hidden="true" />
-
-            <div className="section-panel__masthead">
-              <div className="section-panel__index" aria-hidden="true">
-                {String(activeSectionIndex).padStart(2, '0')}
-              </div>
-              <div className="section-panel__title-block">
-                <p className="section-panel__eyebrow">{activeSection.eyebrow}</p>
-                <h1>{activeSection.title}</h1>
-              </div>
-              <div className="section-panel__summary-block">
-                <p className="section-panel__section-label">{activeSection.label}</p>
-                <p className="section-panel__summary">{activeSection.summary}</p>
-                <div className="section-panel__signal">
-                  <span>{sectionCopy.signal}</span>
-                  <div>
-                    {sectionCopy.capabilities.map((capability, index) => (
-                      <small key={capability}>
-                        {String(index + 1).padStart(2, '0')} {capability}
-                      </small>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <SectionGlyph sectionId={activeSection.id} />
-            </div>
-
-            <div className="section-panel__body">
-              <div className="section-panel__rail" aria-hidden="true" />
-              <div className="section-panel__narrative">
-                <FaceArtifact copy={sectionCopy} section={activeSection} />
-                {activeSection.intro && <p className="section-panel__intro">{activeSection.intro}</p>}
-                {activeSection.highlights && activeSection.highlights.length > 0 && (
-                  <section className="section-panel__chapter" aria-label="Highlights">
-                    <h2>{sectionCopy.highlights}</h2>
-                    <div className="section-panel__content-grid">
-                      {activeSection.highlights.map((highlight, index) => (
-                        <article className="obsidian-card section-panel__highlight" key={highlight}>
-                          <span className="obsidian-card__shine" aria-hidden="true" />
-                          <span>{String(index + 1).padStart(2, '0')}</span>
-                          <p>{highlight}</p>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                )}
-                {activeSection.proofPoints && activeSection.proofPoints.length > 0 && (
-                  <section className="section-panel__proof" aria-label="Proof points">
-                    <h2>{sectionCopy.proof}</h2>
-                    <ul>
-                      {activeSection.proofPoints.map((proofPoint) => (
-                        <li key={proofPoint}>{proofPoint}</li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-                {activeSection.links && activeSection.links.length > 0 && (
-                  <section className="section-panel__links" aria-label={sectionCopy.links}>
-                    <h2>{sectionCopy.links}</h2>
-                    <div>
-                      {activeSection.links.map((link) =>
-                        link.href ? (
-                          <a className="obsidian-card" href={link.href} key={link.label} rel="noreferrer" target="_blank">
-                            <span className="obsidian-card__shine" aria-hidden="true" />
-                            <span>{link.label}</span>
-                            {link.description && <p>{link.description}</p>}
-                          </a>
-                        ) : (
-                          <article className="obsidian-card" key={link.label}>
-                            <span className="obsidian-card__shine" aria-hidden="true" />
-                            <span>{link.label}</span>
-                            {link.description && <p>{link.description}</p>}
-                          </article>
-                        ),
-                      )}
-                    </div>
-                  </section>
-                )}
-                <div className="section-panel__actions">
-                  {activeSection.cta?.href && (
-                    <a className="section-panel__cta" href={activeSection.cta.href} rel="noreferrer" target="_blank">
-                      {activeSection.cta.label}
-                    </a>
-                  )}
-                  <button type="button" onClick={() => setActiveSectionId('agentic')}>
-                    {sectionCopy.back}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
     </main>
   )
 }

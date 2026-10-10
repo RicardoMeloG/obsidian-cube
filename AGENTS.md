@@ -4,6 +4,18 @@ This is the **single source of truth** for the agentic-cube-prototype project. R
 
 The project is an open-source, public, agentic portfolio prototype for Ricardo Melo. It is **not** a CV — it is visible proof of a transition from senior software engineering into Agentic Product Engineering.
 
+## Direction (reset 2026-10-09)
+
+A review on 2026-10-09 found the engineering well ahead of the product: the site was not yet published and no face linked to a real artifact, so the priority moved from the container to the content. Full reasoning in `docs/decisions/002-evidence-before-spectacle.md`.
+
+- **Evidence before spectacle.** The cube is the invitation, not the proof. What makes the owner stand out is inspectable work: every face must link to at least one concrete artifact (repo, demo, write-up) with one line of result.
+- **Publish before building more.** No further infrastructure, admin features or 3D worlds until the site is live with real identity and real links.
+- **The site is its own case study.** The methodology deep-dive explains how this site was built with agents: decisions, gates, what went wrong. It is the one page that aligns the cube with the positioning.
+- **Name and thesis at the top of the hierarchy.** The owner's name and role must be the most prominent text on screen, above the cube's own label.
+- **Backgrounds must be perceivable.** A world that cannot be seen in a static frame behind the cube is not doing its retention job.
+
+Priority order: (1) real content and publish, (2) one artifact per face, (3) methodology page and static SEO, (4) thesis/presentation state, (5) admin hardening and admin-to-deploy-target publishing, (6) cleanup. `docs/roadmap.md` carries the detail.
+
 ## Identity
 
 - Public display name: Ricardo Melo
@@ -62,13 +74,15 @@ Full reasoning: `docs/decisions/001-spectacle-as-retention.md`.
 The cube has six faces, each with a stable semantic identity:
 
 1. **AGENTIC** — Agentic workflows, product building with AI agents, this site as process evidence.
-2. **PRODUCTS** — Selected public products (e.g. OpenMenu GDEMU Manager). Exclude old projects that do not support the new positioning.
+2. **PRODUCTS** — Selected public products that support the current positioning (agentic tools, this site). Exclude old projects that do not.
 3. **SYSTEMS** — Production systems, legacy modernization, databases, architecture, reliability.
 4. **SECURITY** — Security mindset, MFA, rate limiting, ethical hacking readiness, secure production defaults.
 5. **RESEARCH** — AI, philosophy of thought, truth, representation, papers, novels, independent research.
 6. **CONTACT** — Email, GitHub, LinkedIn, collaboration signal.
 
-All six faces share the same visual grammar (diamond glyph, inset bevel, corner brackets); only the section label changes.
+All six faces share the same frame (double-diamond, inset bevel, corner brackets, label, three dots). Inside the frame each face carries its own accent color and inner glyph, assigned from `public/content/visual.json` (see `docs/decisions/003-per-face-accent-and-glyph.md`).
+
+Every face must point at least one real, inspectable artifact through its CTAs or `detail.links`. Whether CONTACT keeps a face or becomes persistent chrome is an open decision (see `docs/project-memory.md`, 2026-06-11).
 
 ## Hard Rules
 
@@ -84,7 +98,9 @@ Design:
 
 - The cube is the persistent focal element; selecting a face updates side panels in place — the cube does not disappear.
 - Each face's primary content must fit a single viewport on desktop without scroll, and collapse responsively on narrow viewports.
-- All six cube faces share the same visual grammar; only the section label changes.
+- All six cube faces share the same frame; accent color and inner glyph vary per face, nothing else.
+- The owner's name and role are the top of the visual hierarchy on every face and must meet AA contrast.
+- Fixed chrome (face strip, identity block, language toggle) never overlaps scrolling content on narrow viewports.
 - Do **not** use `Bloom` in production — it caused visible flicker.
 - Do **not** add auto-playing audio. Audio is gesture-driven and subtle.
 - Avoid design drift: no generic SaaS gradients, no decorative cards, no landing-page templates, no bokeh backgrounds.
@@ -95,17 +111,26 @@ Design:
 
 Stack (do not change without a spec justifying it):
 
-- React + TypeScript + Vite
+- React + TypeScript + Vite (public site, `src/`)
 - Three.js / @react-three/fiber for 3D
 - Tailwind v4 with project tokens (see `docs/visual-direction.md`)
-- Zod for content schema validation
+- Zod for content schema validation — the same schemas are shared by the site and the admin
+- NestJS admin API plus a vanilla admin page (`server/`), Postgres via `docker-compose.yml` for drafts, versions and admin users; `npm run server` on `127.0.0.1:5182`
+- AWS CDK (`infra/`): private S3 + CloudFront with OAC, deployed by GitHub Actions over OIDC (`docs/deploy-aws.md`)
 
 Before reporting a change complete:
 
 1. Run `npm run build` (passes).
 2. Run `npm run lint` (passes).
-3. Verify visually with Playwright when the change is visual.
-4. Keep changes scoped to one product hito per commit.
+3. Run `npm test` (passes).
+4. Verify visually with Playwright when the change is visual: desktop at 1440px or wider and a 390px phone.
+5. Keep changes scoped to one product hito per commit.
+
+Admin and backend rules:
+
+- The admin binds to `127.0.0.1` and stays there until it has login rate limiting, `secure` cookies behind HTTPS and a persistent session store. Password + TOTP MFA are already required.
+- "Publish" must reach the deploy target. Today it writes `public/content/*.json` on the server's disk, which only the local dev site reads. Before the admin is called production, publish must also upload to the static bucket and invalidate the CDN.
+- Backend changes ship with tests against `pg-mem` (installed, unused as of 2026-10-09).
 
 ## Content Strategy
 
@@ -121,15 +146,19 @@ Content files (paths):
 
 - Public examples (committed): `public/content/site.example.en.json`, `public/content/site.example.es.json`
 - Private deploy (gitignored): `public/content/site.en.json`, `public/content/site.es.json`
+- Visual layer, world and accent per face: `public/content/visual.example.json` (committed) / `public/content/visual.json` (gitignored)
 
-Loading order: try private → fall back to example → fall back to embedded defaults. Validate shape (Zod) before rendering.
+Loading order: try private → fall back to example → fall back to embedded defaults. Validate shape (Zod) before rendering. Prose fields accept inline HTML only, sanitized at render time by `sanitizeRichText` (no block tags, no Markdown).
 
 Face content shape (primary scene, must stay minimal):
 
 - `title` (2-4 strong words), `summary` (one thesis line)
 - `features`: 3-4 named signals for the left rail
 - `flowTitle` + `flow`: 4 short procedural steps for the right rail
-- `ctaPrimary` + `ctaSecondary`
+- `ctaPrimary` + `ctaSecondary` — at least one of them, or one `detail.links` entry, must carry a real `href` to an artifact
+- `label` (the face name on the cube and the bottom strip): 13 characters at most — "INVESTIGACIÓN" is the ceiling that fits the 320px strip without clipping
+- `researchConcepts` (RESEARCH face only): the side panel shows the first 4; extra entries are silently ignored
+- Copy must name concrete things (a tool, a system, a result). Generic consultancy phrasing ("real impact", "practical vision") is a defect, not content.
 
 Extended content (`detail.title`, `detail.summary`, `detail.points`, `detail.links`) is for the modal — not the rails. Full essays and project archives belong on future deep-dive routes.
 
@@ -153,20 +182,25 @@ Privacy:
 
 ## MVP Definition
 
-Phase 1 ships when:
+Phase 1 ships when (status as of the 2026-10-09 audit):
 
-- The cube is the persistent focal element of the home experience.
-- Each face reveals minimal content on the surrounding side panels in a single viewport (no overlay routing, no scroll on desktop).
-- The same composition adapts gracefully to narrow viewports.
-- Content is loaded from the structured bilingual content system.
-- Public repo contains example content only; private content is supplied at deploy.
-- At least one deep-dive page exists (methodology) reached from a side-panel CTA.
-- README explains the agentic process and architecture.
-- `npm run build` and `npm run lint` pass.
+- [x] The cube is the persistent focal element of the home experience.
+- [x] Each face reveals minimal content on the surrounding side panels in a single viewport (no overlay routing, no scroll on desktop).
+- [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, stacked rails, fixed face strip at the viewport bottom with the content padded above it.
+- [x] Content is loaded from the structured bilingual content system.
+- [x] Public repo contains example content only; private content is supplied at deploy.
+- [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet.
+- [ ] Static SEO in `index.html` (`<title>`, description, JSON-LD) — the title is still the scaffold placeholder, fixed at runtime only.
+- [ ] README explains the agentic process and architecture — it covers the site, not the admin or the infra.
+- [ ] Real identity and at least one real artifact per face, live at a public URL.
+- [x] `npm run build`, `npm run lint` and `npm test` pass.
 
 ## Other References (load on demand)
 
 - `docs/visual-direction.md` — design system (materials, color, motion, layout, tokens)
-- `docs/roadmap.md` — phase tracking, future components, future admin panel
-- `docs/decisions/` — architectural decision records (ADRs)
-- `specs/NNN-*/` — feature specs (spec-kit, created on demand)
+- `docs/project-memory.md` — owner direction that must survive across sessions (future-state positioning, presentation layer, market reframing)
+- `docs/roadmap.md` — phase status, known gaps, priority order
+- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph)
+- `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
+- `docs/research-philosophy.md` — content brief for the RESEARCH face (what of the private archive may be shown)
+- `specs/NNN-*/` — feature specs (lightweight markdown; Spec Kit drafts 002/003 kept as input)

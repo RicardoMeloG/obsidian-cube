@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Obsidian Cube — Admin</title>
+  <style>
+    :root {
+      --bg: #08050d; --panel: #12101b; --panel-2: #1a1726; --line: #2a2740;
+      --text: #e4eff8; --muted: #9a94b8; --accent: #b8aeff;
+      --ok: #89d6c7; --err: #ff7a7a; --sidebar: 250px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+      font: 14px/1.5 "Inter", system-ui, sans-serif; height: 100vh; overflow: hidden; }
+    button, select, input { font: inherit; }
+    button { background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: var(--accent); color: #0b0713; border-color: var(--accent); font-weight: 600; }
+    select { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+    .hidden { display: none !important; }
+
+    .app { display: grid; grid-template-columns: var(--sidebar) 1fr; height: 100vh; }
+    .sidebar { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+    .brand { padding: 18px 20px; font-weight: 700; letter-spacing: 0.5px; font-size: 15px; border-bottom: 1px solid var(--line); }
+    nav { display: flex; flex-direction: column; padding: 6px 10px; gap: 1px; overflow-y: auto; }
+    .nav-group { padding: 16px 12px 6px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
+    .nav-group:first-child { padding-top: 6px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; text-align: left; width: 100%;
+      background: transparent; border: 0; border-radius: 8px; padding: 9px 12px; color: var(--text); }
+    .nav-item:hover { background: var(--panel-2); }
+    .nav-item.active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent); }
+    .nav-item svg { width: 18px; height: 18px; flex: none; opacity: 0.9; }
+    .nav-item .badge { width: 20px; height: 20px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line);
+      display: grid; place-items: center; font-size: 11px; color: var(--muted); flex: none; }
+    .nav-item.active .badge { background: var(--accent); color: #0b0713; border-color: var(--accent); }
+    .sidebar-foot { margin-top: auto; padding: 14px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+    .sidebar-foot .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+
+    .workarea { display: flex; flex-direction: column; min-height: 0; }
+    .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--panel); }
+    .topbar h1 { margin: 0; font-size: 16px; font-weight: 600; }
+    .topbar .spacer { flex: 1; }
+    .hint { color: var(--muted); font-size: 12px; }
+    .lang-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .lang-switch button { border: 0; border-radius: 0; padding: 6px 12px; background: var(--panel-2); }
+    .lang-switch button.active { background: var(--accent); color: #0b0713; font-weight: 600; }
+
+    .content { display: flex; min-height: 0; flex: 1; }
+    .editor { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+    .preview { display: flex; flex-direction: column; min-height: 0; width: 45%; border-left: 1px solid var(--line); }
+    .toolbar { display: flex; gap: 8px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+    .toolbar label { color: var(--muted); font-size: 12px; }
+    textarea { flex: 1; resize: none; border: 0; outline: none; padding: 16px; background: var(--bg); color: var(--text); font: 13px/1.6 "JetBrains Mono", ui-monospace, monospace; }
+    #status { padding: 10px 16px; border-top: 1px solid var(--line); font-size: 13px; max-height: 26vh; overflow: auto; background: var(--panel); }
+    #status .ok { color: var(--ok); } #status .err { color: var(--err); }
+    #status ul { margin: 6px 0 0; padding-left: 18px; } #status code { color: var(--accent); }
+    .preview .toolbar { justify-content: space-between; }
+    iframe { flex: 1; border: 0; background: #000; }
+
+    .auth-overlay { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+    .auth-card { width: 360px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; }
+    .auth-card h2 { margin: 0 0 4px; font-size: 18px; }
+    .auth-card p.sub { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+    .auth-card label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; }
+    .auth-card input { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+    .auth-card button { width: 100%; margin-top: 18px; }
+    .auth-card .qr { display: block; margin: 12px auto; width: 180px; height: 180px; background: #fff; border-radius: 8px; }
+    .auth-card .secret { font: 12px ui-monospace, monospace; color: var(--accent); word-break: break-all; text-align: center; }
+    .auth-msg { margin-top: 12px; font-size: 13px; min-height: 18px; }
+    .auth-msg.err { color: var(--err); } .auth-msg.ok { color: var(--ok); }
+  </style>
+</head>
+<body>
+  <div id="auth" class="auth-overlay hidden">
+    <div class="auth-card">
+      <h2>◈ Obsidian Cube — Admin</h2>
+      <p class="sub" id="authSub">Inicia sesión para editar el contenido.</p>
+      <div id="view-login">
+        <label>Usuario</label><input id="u" autocomplete="username" />
+        <label>Contraseña</label><input id="p" type="password" autocomplete="current-password" />
+        <button class="primary" id="doLogin">Entrar</button>
+      </div>
+      <div id="view-mfa" class="hidden">
+        <label>Código de tu app autenticadora (TOTP)</label>
+        <input id="mfaToken" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" />
+        <button class="primary" id="doMfa">Verificar</button>
+      </div>
+      <div id="view-enroll" class="hidden">
+        <p class="sub">Escanea el QR con Google/Microsoft Authenticator y escribe el código para activar MFA.</p>
+        <img id="qr" class="qr" alt="QR TOTP" />
+        <div class="secret" id="secret"></div>
+        <label>Código generado</label>
+        <input id="enrollToken" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" />
+        <button class="primary" id="doEnroll">Activar MFA</button>
+      </div>
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+  </div>
+
+  <div class="app hidden" id="app">
+    <aside class="sidebar">
+      <div class="brand">◈ OBSIDIAN CUBE</div>
+      <nav id="nav"></nav>
+      <div class="sidebar-foot">
+        <span class="who" id="whoami"></span>
+        <button id="logout">Salir</button>
+      </div>
+    </aside>
+
+    <div class="workarea">
+      <header class="topbar">
+        <h1 id="docTitle">—</h1>
+        <div class="lang-switch hidden" id="langSwitch">
+          <button data-lang="en" class="active">EN</button>
+          <button data-lang="es">ES</button>
+        </div>
+        <span class="spacer"></span>
+        <span class="hint" id="source"></span>
+        <button id="togglePreview">Vista previa</button>
+      </header>
+
+      <div class="content">
+        <section class="editor">
+          <div class="toolbar">
+            <button id="reload">Recargar</button>
+            <button id="validate">Validar</button>
+            <button id="saveDraft">Guardar borrador</button>
+            <button id="publish" class="primary">Publicar</button>
+          </div>
+          <div class="toolbar">
+            <label>Versiones</label>
+            <select id="versions"><option value="">— sin versiones —</option></select>
+            <button id="restore">Restaurar</button>
+          </div>
+          <textarea id="content" spellcheck="false"></textarea>
+          <div id="status" class="hint">Cargando…</div>
+        </section>
+
+        <section class="preview hidden" id="previewPane">
+          <div class="toolbar">
+            <span class="hint">Preview · localhost:5180 (requiere <code>npm run dev</code>)</span>
+            <button id="refreshPreview">↻</button>
+          </div>
+          <iframe id="preview" src="http://localhost:5180/?lang=es"></iframe>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const ta = $('content'), status = $('status'), source = $('source');
+    const setStatus = (html, cls) => { status.className = cls || 'hint'; status.innerHTML = html; };
+    const malformed = (e) => `<span class="err">✗ JSON malformado:</span> ${e}`;
+    const parseEditor = () => { try { return { ok: true, data: JSON.parse(ta.value) }; } catch (e) { return { ok: false, error: e.message }; } };
+    const renderErrors = (errors) => {
+      const items = (errors || []).map((e) => `<li><code>${e.path}</code> — ${e.message}</li>`).join('');
+      setStatus(`<span class="err">✗ Inválido (${(errors || []).length})</span><ul>${items}</ul>`, '');
+    };
+
+    // ---- Icons ----
+    const ICONS = {
+      doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/></svg>',
+      layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 9l10 6 10-6-10-6z"/><path d="m2 15 10 6 10-6"/></svg>',
+    };
+
+    // The six FIXED cube faces. The number is their position in the immutable
+    // CUBE_FACE_ORDER (backend enum) — it is not editable. The label is cosmetic;
+    // the id is the internal, fixed identifier.
+    const FACES = [
+      { n: 1, id: 'agentic',  label: 'Cara Agéntica' },
+      { n: 2, id: 'products', label: 'Cara Productos' },
+      { n: 3, id: 'systems',  label: 'Cara Sistemas' },
+      { n: 4, id: 'security', label: 'Cara Seguridad' },
+      { n: 5, id: 'research', label: 'Cara Investigación' },
+      { n: 6, id: 'contact',  label: 'Cara Contacto' },
+    ];
+
+    // ---- Editing state ----
+    let currentTarget = null;  // { kind: 'face'|'general'|'visual', id? }
+    let currentLang = 'en';
+    let heldDoc = null;        // whole site.{lang} doc backing a face/general edit
+
+    const underlyingDocId = () => currentTarget.kind === 'visual' ? 'visual' : 'site.' + currentLang;
+    const faceSlice = (doc, id) => (doc.sections || []).find((s) => s.id === id) || { id };
+    const generalSlice = (doc) => { const { sections, ...rest } = doc; return rest; };
+
+    function targetTitle() {
+      if (currentTarget.kind === 'visual') return 'Presentación — fondos y acentos';
+      if (currentTarget.kind === 'general') return 'General del sitio (hero · SEO · identidad)';
+      return (FACES.find((f) => f.id === currentTarget.id) || {}).label || currentTarget.id;
+    }
+
+    function buildNav() {
+      let html = '<div class="nav-group">Caras del cubo</div>';
+      html += FACES.map((f) => `<button class="nav-item" data-kind="face" data-id="${f.id}"><span class="badge">${f.n}</span><span>${f.label}</span></button>`).join('');
+      html += '<div class="nav-group">Sitio</div>';
+      html += `<button class="nav-item" data-kind="general">${ICONS.doc}<span>General</span></button>`;
+      html += '<div class="nav-group">Presentación</div>';
+      html += `<button class="nav-item" data-kind="visual">${ICONS.layers}<span>Fondos y acentos</span></button>`;
+      $('nav').innerHTML = html;
+      $('nav').querySelectorAll('.nav-item').forEach((b) =>
+        b.addEventListener('click', () => selectTarget({ kind: b.dataset.kind, id: b.dataset.id })));
+    }
+
+    async function selectTarget(target) {
+      currentTarget = target;
+      $('nav').querySelectorAll('.nav-item').forEach((b) =>
+        b.classList.toggle('active', b.dataset.kind === target.kind && (b.dataset.id || '') === (target.id || '')));
+      $('docTitle').textContent = targetTitle();
+      $('langSwitch').classList.toggle('hidden', target.kind === 'visual');
+      await loadTarget();
+    }
+
+    async function loadTarget() {
+      const res = await fetch('/api/content/' + underlyingDocId());
+      const body = await res.json();
+      if (currentTarget.kind === 'visual') {
+        heldDoc = null;
+        ta.value = JSON.stringify(body.data, null, 2);
+        source.textContent = 'origen: ' + body.source;
+      } else {
+        heldDoc = body.data;
+        const slice = currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id);
+        ta.value = JSON.stringify(slice, null, 2);
+        source.textContent = `origen: ${body.source} · ${currentLang.toUpperCase()}`;
+      }
+      setStatus('Cargado. Edita y valida antes de publicar.', 'hint');
+      await loadVersions();
+    }
+
+    // Merge the edited slice back into the full document the backend validates.
+    function reconstructDoc() {
+      const parsed = parseEditor();
+      if (!parsed.ok) return parsed;
+      if (currentTarget.kind === 'visual') return { ok: true, data: parsed.data };
+      if (currentTarget.kind === 'general') return { ok: true, data: Object.assign({}, parsed.data, { sections: heldDoc.sections }) };
+      const doc = JSON.parse(JSON.stringify(heldDoc));
+      const idx = (doc.sections || []).findIndex((s) => s.id === currentTarget.id);
+      if (idx >= 0) doc.sections[idx] = parsed.data; else (doc.sections = doc.sections || []).push(parsed.data);
+      return { ok: true, data: doc };
+    }
+
+    function applyLoadedDoc(data) {
+      if (currentTarget.kind === 'visual') { ta.value = JSON.stringify(data, null, 2); return; }
+      heldDoc = data;
+      const slice = currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id);
+      ta.value = JSON.stringify(slice, null, 2);
+    }
+
+    async function loadVersions() {
+      const sel = $('versions');
+      const res = await fetch('/api/content/' + underlyingDocId() + '/versions');
+      if (!res.ok) { sel.innerHTML = '<option value="">— sin BD / sin versiones —</option>'; return; }
+      const list = await res.json();
+      sel.innerHTML = list.length
+        ? list.map((v) => `<option value="${v.id}">#${v.id} · ${new Date(v.publishedAt).toLocaleString()}</option>`).join('')
+        : '<option value="">— aún sin versiones —</option>';
+    }
+
+    async function validate() {
+      const rec = reconstructDoc();
+      if (!rec.ok) return setStatus(malformed(rec.error), '');
+      const res = await fetch('/api/content/' + underlyingDocId() + '/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec.data) });
+      const out = await res.json();
+      if (out.ok) return setStatus('<span class="ok">✓ Válido contra el schema.</span>', '');
+      renderErrors(out.errors);
+    }
+
+    async function saveDraft() {
+      const rec = reconstructDoc();
+      if (!rec.ok) return setStatus(malformed(rec.error), '');
+      const res = await fetch('/api/content/' + underlyingDocId() + '/draft', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec.data) });
+      const out = await res.json();
+      if (res.ok && out.ok) { if (currentTarget.kind !== 'visual') heldDoc = rec.data; return setStatus('<span class="ok">✓ Borrador guardado en la BD.</span>', ''); }
+      setStatus(`<span class="err">✗ ${out.message || 'No se pudo guardar'}</span>`, '');
+    }
+
+    async function publish() {
+      const rec = reconstructDoc();
+      if (!rec.ok) return setStatus(malformed(rec.error), '');
+      const res = await fetch('/api/content/' + underlyingDocId() + '/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec.data) });
+      const out = await res.json();
+      if (res.ok && out.ok) {
+        if (currentTarget.kind !== 'visual') heldDoc = rec.data;
+        const v = out.version ? ` · versión #${out.version.id}` : ' · (sin BD: sin versión)';
+        setStatus(`<span class="ok">✓ Publicado en ${out.file}${v}.</span>`, '');
+        if (!$('previewPane').classList.contains('hidden')) $('preview').contentWindow.location.reload();
+        await loadVersions();
+      } else { renderErrors(out.errors || (out.message && out.message.errors)); }
+    }
+
+    async function restore() {
+      const id = $('versions').value;
+      if (!id) return setStatus('<span class="err">✗ No hay versión seleccionada.</span>', '');
+      const res = await fetch('/api/content/' + underlyingDocId() + '/restore/' + id, { method: 'POST' });
+      const out = await res.json();
+      if (res.ok && out.data) { applyLoadedDoc(out.data); return setStatus(`<span class="ok">✓ Versión #${id} restaurada al borrador.</span>`, ''); }
+      setStatus(`<span class="err">✗ ${out.message || 'No se pudo restaurar'}</span>`, '');
+    }
+
+    $('reload').addEventListener('click', loadTarget);
+    $('validate').addEventListener('click', validate);
+    $('saveDraft').addEventListener('click', saveDraft);
+    $('publish').addEventListener('click', publish);
+    $('restore').addEventListener('click', restore);
+    $('refreshPreview').addEventListener('click', () => $('preview').contentWindow.location.reload());
+    $('togglePreview').addEventListener('click', () => {
+      const pane = $('previewPane'); pane.classList.toggle('hidden');
+      if (!pane.classList.contains('hidden')) $('preview').contentWindow.location.reload();
+    });
+    $('langSwitch').querySelectorAll('button').forEach((b) => b.addEventListener('click', async () => {
+      currentLang = b.dataset.lang;
+      $('langSwitch').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+      if (currentTarget && currentTarget.kind !== 'visual') await loadTarget();
+    }));
+
+    // ---- Auth gate ----
+    const authMsg = (t, cls) => { const m = $('authMsg'); m.className = 'auth-msg ' + (cls || ''); m.textContent = t; };
+    const showView = (name) => ['login', 'mfa', 'enroll'].forEach((v) => $('view-' + v).classList.toggle('hidden', v !== name));
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+
+    function showAuth(view) { $('app').classList.add('hidden'); $('auth').classList.remove('hidden'); showView(view); authMsg(''); }
+
+    async function enterApp() {
+      const me = await (await fetch('/auth/me')).json();
+      $('whoami').textContent = me.username || '';
+      $('auth').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      buildNav();
+      await selectTarget({ kind: 'face', id: 'agentic' });
+    }
+
+    async function startEnroll() {
+      const r = await post('/auth/enroll/start'); const out = await r.json();
+      if (!r.ok) return authMsg(out.message || 'Error', 'err');
+      $('qr').src = out.qrDataUrl; $('secret').textContent = out.secret; showView('enroll'); authMsg('');
+    }
+
+    $('doLogin').onclick = async () => {
+      const r = await post('/auth/login', { username: $('u').value, password: $('p').value });
+      const out = await r.json();
+      if (!r.ok) return authMsg(out.message || 'Error', 'err');
+      if (out.mfaRequired) { showView('mfa'); authMsg('Introduce el código de tu app.'); }
+      else if (out.enrollRequired) { authMsg('Primer ingreso: activa MFA.'); await startEnroll(); }
+    };
+    $('doMfa').onclick = async () => {
+      const r = await post('/auth/mfa', { token: $('mfaToken').value }); const out = await r.json();
+      if (r.ok && out.ok) return enterApp(); authMsg(out.message || 'Código inválido', 'err');
+    };
+    $('doEnroll').onclick = async () => {
+      const r = await post('/auth/enroll/verify', { token: $('enrollToken').value }); const out = await r.json();
+      if (r.ok && out.ok) return enterApp(); authMsg(out.message || 'Código inválido', 'err');
+    };
+    $('logout').onclick = async () => { await post('/auth/logout'); location.reload(); };
+
+    async function boot() {
+      try {
+        const me = await (await fetch('/auth/me')).json();
+        if (me.authenticated) { await enterApp(); } else { showAuth('login'); }
+      } catch (e) { showAuth('login'); authMsg('No se pudo contactar al servidor.', 'err'); }
+    }
+    boot();
+  </script>
+</body>
+</html>

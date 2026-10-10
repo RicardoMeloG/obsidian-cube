@@ -19,7 +19,7 @@
       "id": "agentic",
       "label": "AGENTIC",
       "title": "Agentic Product Engineering",
-      "summary": "Design and construction of autonomous systems that perceive, decide, and act to deliver real impact.",
+      "summary": "Design and construction of <strong>autonomous systems</strong> that perceive, decide, and act to deliver <em>real impact</em>.",
       "features": [
         { "glyph": "eye", "label": "Practical Vision", "description": "Agents that turn intent into measurable results." },
         { "glyph": "shield", "label": "Verifiable Systems", "description": "Real constraints, observability, auditable decisions." },

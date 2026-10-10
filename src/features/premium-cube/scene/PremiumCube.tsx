@@ -3,12 +3,12 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
-import { SECTION_ACCENTS } from '../cubeSections'
-import type { CubeSection, CubeSectionId } from '../cubeSections'
+import type { CubeSectionId } from '../cubeSections'
+import type { ResolvedCubeSection } from '../content/visualContent'
 
 const FACE_ACCENT_SOFT = 'rgba(170, 160, 255, 0.6)'
 
-// Per-face glyph (PoC) — recovered from commit 87c5fc8 and re-tuned. Every face
+// Per-face glyph (ADR 003) — recovered from an earlier iteration. Every face
 // keeps the shared "double-diamond" frame (the cube grammar) but carries its own
 // quiet geometric symbol in the section accent, so each face reads as distinct
 // without abandoning the obsidian language. Drawn at scale `s` (≈ the old single
@@ -17,11 +17,11 @@ const FACE_ACCENT_SOFT = 'rgba(170, 160, 255, 0.6)'
 function drawFaceGlyph(
   ctx: CanvasRenderingContext2D,
   sectionId: CubeSectionId,
+  accent: string,
   x: number,
   y: number,
   s: number,
 ) {
-  const accent = SECTION_ACCENTS[sectionId]
   const k = s / 90
 
   ctx.save()
@@ -140,7 +140,7 @@ function getFaceLabelTypography(label: string) {
   return { fontSize: 116, letterSpacing: 28 }
 }
 
-function createFaceTexture(section: CubeSection) {
+function createFaceTexture(section: ResolvedCubeSection) {
   const size = 1536
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -217,7 +217,7 @@ function createFaceTexture(section: CubeSection) {
   ctx.fillStyle = innerGlow
   ctx.fillRect(innerInset, innerInset, innerW, innerH)
 
-  drawFaceGlyph(ctx, section.id, size * 0.5, size * 0.38, 150)
+  drawFaceGlyph(ctx, section.id, section.accent, size * 0.5, size * 0.38, 150)
 
   const faceTypography = getFaceLabelTypography(section.label)
 
@@ -228,7 +228,7 @@ function createFaceTexture(section: CubeSection) {
   ctx.letterSpacing = `${faceTypography.letterSpacing}px`
   ctx.shadowBlur = 28
   // Subtle per-face tint on the label glow ties the title to its accent.
-  ctx.shadowColor = SECTION_ACCENTS[section.id]
+  ctx.shadowColor = section.accent
   ctx.fillText(section.label, size * 0.5, size * 0.6)
 
   ctx.shadowBlur = 0
@@ -367,7 +367,7 @@ function ShineGlints({ animate }: ShineGlintsProps) {
 
 type PremiumCubeProps = {
   animateGlints: boolean
-  sections: CubeSection[]
+  sections: ResolvedCubeSection[]
   shadows: boolean
 }
 

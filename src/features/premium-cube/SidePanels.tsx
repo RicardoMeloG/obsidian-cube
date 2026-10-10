@@ -1,13 +1,15 @@
 import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
-import { SECTION_ACCENTS } from './cubeSections'
 import type { CubeSection, CubeSectionDetail, CubeSectionId, CubeSectionResearchConcept, FeatureGlyphId } from './cubeSections'
+import type { ResolvedCubeSection } from './content/visualContent'
 import type { SiteLocale } from './content/siteContent'
+import { RichText } from './content/RichText'
 
 type SidePanelsProps = {
-  activeSection: CubeSection
+  activeSection: ResolvedCubeSection
   locale: SiteLocale
-  onOpenDetail: (detail?: CubeSectionDetail) => void
+  // `trigger` is the control that opened the detail; the dialog returns focus to it on close.
+  onOpenDetail: (detail?: CubeSectionDetail, trigger?: HTMLElement) => void
   transitionState?: 'idle' | 'exiting' | 'entering'
 }
 
@@ -105,9 +107,9 @@ export function SidePanels({
 }: SidePanelsProps) {
   const eyebrowLabel = getEyebrowLabel(activeSection, locale)
   const titleLines = useMemo(() => splitTitleIntoTwoLines(activeSection.title), [activeSection.title])
-  // Per-face accent (PoC): exposed as a CSS variable so the title picks up the
-  // section hue. See SECTION_ACCENTS in cubeSections.ts.
-  const accentStyle = { '--section-accent': SECTION_ACCENTS[activeSection.id] } as CSSProperties
+  // Per-face accent: exposed as a CSS variable so the title picks up the section
+  // hue. Resolved from visual.json (falls back to SECTION_ACCENTS defaults).
+  const accentStyle = { '--section-accent': activeSection.accent } as CSSProperties
   const flowCountLabel = useMemo(
     () => String(activeSection.flow?.length ?? 0).padStart(2, '0'),
     [activeSection.flow],
@@ -130,7 +132,7 @@ export function SidePanels({
     }
 
     return (
-      <button className={`side-panels__cta ${modifier}`} type="button" onClick={() => onOpenDetail()}>
+      <button className={`side-panels__cta ${modifier}`} type="button" onClick={(event) => onOpenDetail(undefined, event.currentTarget)}>
         <span>{cta.label}</span>
         {CHEVRON}
       </button>
@@ -154,7 +156,7 @@ export function SidePanels({
             <span className="side-panels__title-line side-panels__title-line--accent">{titleLines[0]}</span>
           )}
         </h1>
-        <p className="side-panels__summary">{activeSection.summary}</p>
+        <RichText as="p" className="side-panels__summary" html={activeSection.summary} />
 
         {activeSection.features && activeSection.features.length > 0 && (
           activeSection.id === 'research' && activeSection.researchConcepts?.length ? (
@@ -164,11 +166,11 @@ export function SidePanels({
                   className="side-panels__research-node"
                   key={concept.key}
                   type="button"
-                  onClick={() => onOpenDetail(createResearchConceptDetail(concept))}
+                  onClick={(event) => onOpenDetail(createResearchConceptDetail(concept), event.currentTarget)}
                 >
                   <span>{concept.axis}</span>
                   <strong>{concept.label}</strong>
-                  <small>{concept.summary}</small>
+                  <RichText as="small" html={concept.summary} />
                 </button>
               ))}
             </div>
@@ -181,7 +183,7 @@ export function SidePanels({
                   </span>
                   <div className="side-panels__feature-body">
                     <strong>{feature.label}</strong>
-                    <p>{feature.description}</p>
+                    <RichText as="p" html={feature.description} />
                   </div>
                 </li>
               ))}
@@ -205,7 +207,7 @@ export function SidePanels({
                 <span className="side-panels__flow-index" aria-hidden>{String(index + 1).padStart(2, '0')}</span>
                 <div className="side-panels__flow-body">
                   <strong>{step.label}</strong>
-                  <p>{step.description}</p>
+                  <RichText as="p" html={step.description} />
                 </div>
               </li>
             ))}

@@ -1,0 +1,18 @@
+{
+  "worlds": [
+    { "id": "agentic", "label": "AGENTIC PLEXUS", "enabled": true },
+    { "id": "products", "label": "PRODUCT BOX FIELD", "enabled": true },
+    { "id": "systems", "label": "CITY CORRIDOR", "enabled": true },
+    { "id": "security", "label": "ARROW SHIELD", "enabled": true },
+    { "id": "research", "label": "PARAMO VALLEY", "enabled": true },
+    { "id": "contact", "label": "CONTACT SIGNAL", "enabled": true }
+  ],
+  "faces": {
+    "agentic": { "worldId": "agentic", "accent": "#b8aeff" },
+    "products": { "worldId": "products", "accent": "#c08b5a" },
+    "systems": { "worldId": "systems", "accent": "#8bb4dd" },
+    "security": { "worldId": "security", "accent": "#89d6c7" },
+    "research": { "worldId": "research", "accent": "#9fa9ef" },
+    "contact": { "worldId": "contact", "accent": "#f0d2b4" }
+  }
+}

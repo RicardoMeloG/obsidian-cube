@@ -4,11 +4,11 @@ export const CUBE_FACE_ORDER: CubeSectionId[] = ['agentic', 'products', 'systems
 
 // Per-face accent palette (PoC). A muted, harmonized set over the obsidian
 // field — each face gets a quiet distinctive hue for its title and cube glyph.
-// Recovered from the original `FACE_ACCENTS` (commit 87c5fc8) and re-tuned
+// Recovered from an earlier iteration of the prototype and re-tuned
 // toward the documented obsidian tokens (ice / copper / steel / mint / violet /
-// sand). NOTE: this deliberately diverges from the "single diamond glyph, no
-// per-face color" rule in docs/visual-direction.md — kept undocumented on
-// purpose so the experiment is easy to roll back.
+// sand). Per-face accent + inner glyph is the rule since ADR 003
+// (docs/decisions/003-per-face-accent-and-glyph.md); the shared frame never
+// varies. These are the defaults; public/content/visual.json overrides them.
 export const SECTION_ACCENTS: Record<CubeSectionId, string> = {
   agentic: '#b8aeff', // violeta — la cara de entrada (plato fuerte): violeta
   // monocromo sobre el fondo violeta = la lectura más premium del sistema.

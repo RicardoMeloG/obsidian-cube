@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Own port, so it does not collide with other local Vite servers on the default 5173.
+  // Puerto propio para no chocar con otros proyectos que usan el 5173 por defecto.
   // strictPort evita que Vite salte a otro puerto en silencio si el 5180 está ocupado.
   server: {
     // host: true → escucha en 0.0.0.0 (toda la red local), no solo en localhost,

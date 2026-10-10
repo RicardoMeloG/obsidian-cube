@@ -1,11 +1,11 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { MathUtils, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
-import { CUBE_FACE_ORDER } from './cubeSections'
-import type { CubeSectionId } from './cubeSections'
 import { useSiteContent } from './content/useSiteContent'
 import { VECTOR_WORLD_THEME } from './scene/vector-worlds/base/theme'
 import { isWorldId, WORLD_REGISTRY } from './scene/vector-worlds/registry'
+import { WORLD_IDS } from './scene/vector-worlds/catalog'
+import type { WorldId } from './scene/vector-worlds/catalog'
 import type { WorldComposition } from './scene/vector-worlds/types'
 
 type ProductTuneState = {
@@ -61,7 +61,7 @@ function ResponsiveCameraLookAt({
 }
 
 type ResponsiveShowcaseCameraProps = {
-  worldId: CubeSectionId
+  worldId: WorldId
   baseCamera: { position: readonly [number, number, number]; fov: number; near: number; far: number }
   composition?: WorldComposition
 }
@@ -101,7 +101,7 @@ function ResponsiveShowcaseCamera({ worldId, baseCamera, composition }: Responsi
   return null
 }
 
-function readWorldId(): CubeSectionId {
+function readWorldId(): WorldId {
   if (typeof window === 'undefined') return 'agentic'
   const bg = new URLSearchParams(window.location.search).get('bg')
   if (bg && isWorldId(bg)) return bg
@@ -127,18 +127,18 @@ export function VectorWorldShowcase() {
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-      const currentIndex = CUBE_FACE_ORDER.indexOf(worldId)
+      const currentIndex = WORLD_IDS.indexOf(worldId)
       if (currentIndex === -1) return
       const delta = event.key === 'ArrowRight' ? 1 : -1
-      const nextIndex = (currentIndex + delta + CUBE_FACE_ORDER.length) % CUBE_FACE_ORDER.length
-      window.location.search = `?bg=${CUBE_FACE_ORDER[nextIndex]}`
+      const nextIndex = (currentIndex + delta + WORLD_IDS.length) % WORLD_IDS.length
+      window.location.search = `?bg=${WORLD_IDS[nextIndex]}`
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [worldId])
 
   const worldOptions = useMemo(
-    () => CUBE_FACE_ORDER.map((id) => ({ id, label: WORLD_REGISTRY[id].label })),
+    () => WORLD_IDS.map((id) => ({ id, label: WORLD_REGISTRY[id].label })),
     [],
   )
 
@@ -196,7 +196,9 @@ export function VectorWorldShowcase() {
             {effectiveLookAt && (
               <ResponsiveCameraLookAt target={effectiveLookAt} composition={showcase.composition} />
             )}
-            <Component {...effectiveShowcaseProps} {...extraProps} />
+            <Suspense fallback={null}>
+              <Component {...effectiveShowcaseProps} {...extraProps} />
+            </Suspense>
           </Suspense>
         </Canvas>
       </div>

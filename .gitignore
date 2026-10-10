@@ -12,13 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Local env (DB credentials)
+.env
+
 # Private site content for personal deployments
 public/content/site.en.json
 public/content/site.es.json
-content.local/
-
-# Local Sites deployment metadata
-.openai/hosting.json
+public/content/visual.json
 
 # Editor directories and files
 .vscode/*
@@ -30,7 +30,3 @@ content.local/
 *.njsproj
 *.sln
 *.sw?
-
-# Playwright MCP tool output
-.playwright-mcp/
-p12-*.jpeg

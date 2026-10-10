@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, LazyExoticComponent } from 'react'
 
 export type WorldProps = {
   position?: [number, number, number]
@@ -52,6 +52,6 @@ export type WorldEntry = {
   id: string
   label: string
   caption: string
-  Component: ComponentType<WorldProps>
+  Component: ComponentType<WorldProps> | LazyExoticComponent<ComponentType<WorldProps>>
   showcase: WorldShowcaseConfig
 }

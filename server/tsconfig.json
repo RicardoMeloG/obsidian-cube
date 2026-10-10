@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2021",
+    "lib": ["ES2021"],
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "rootDir": "..",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "types": ["node"]
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true,
+    "moduleTypes": {
+      "../src/**/*.ts": "cjs",
+      "src/**/*.ts": "cjs"
+    }
+  },
+  "include": ["**/*.ts"]
+}

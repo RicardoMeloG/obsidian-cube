@@ -19,7 +19,7 @@
       "id": "agentic",
       "label": "AGÉNTICO",
       "title": "Productos Agénticos",
-      "summary": "Diseño y construcción de sistemas autónomos que perciben, deciden y ejecutan acciones para generar impacto real.",
+      "summary": "Diseño y construcción de <strong>sistemas autónomos</strong> que perciben, deciden y ejecutan acciones para generar <em>impacto real</em>.",
       "features": [
         { "glyph": "eye", "label": "Visión Práctica", "description": "Agentes no para improvisar más, sino para convertir intención en resultados." },
         { "glyph": "shield", "label": "Sistemas Verificables", "description": "Diseño con restricciones reales, observabilidad y decisiones auditables." },
