@@ -184,7 +184,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 
 - [x] The cube is the persistent focal element of the home experience.
 - [x] Each face reveals minimal content on the surrounding side panels in a single viewport (no overlay routing, no scroll on desktop).
-- [~] The same composition adapts gracefully to narrow viewports — it stacks correctly, but the fixed face strip overlaps content mid-scroll (bug).
+- [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, stacked rails, fixed face strip at the viewport bottom with the content padded above it.
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet.
