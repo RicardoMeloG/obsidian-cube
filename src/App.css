@@ -759,6 +759,7 @@ button.side-panels__cta {
 }
 
 .cube-section-nav a span {
+  flex: 0 0 0.32rem;
   width: 0.32rem;
   height: 0.32rem;
   border-radius: 999px;
@@ -862,7 +863,7 @@ button.side-panels__cta {
     padding:
       clamp(1.1rem, 3.4vw, 1.6rem)
       clamp(1.2rem, 4.6vw, 2.2rem)
-      calc(4.4rem + env(safe-area-inset-bottom, 0px));
+      calc(5.5rem + env(safe-area-inset-bottom, 0px));
     overflow: visible;
     background: none;
     --scrim-edge: 0;
@@ -904,6 +905,22 @@ button.side-panels__cta {
 
   .cube-section-nav ul::-webkit-scrollbar {
     display: none;
+  }
+
+  .cube-section-nav a {
+    min-height: 2.25rem; /* tap target on the single-row (681-900px) strip */
+    gap: 0.32rem;
+    padding: 0.16rem 0.28rem;
+    color: rgba(184, 174, 255, 0.68); /* >= 4.5:1 on the mobile bar */
+    /* Compact labels whenever the mobile layout applies: the desktop sizing
+       (0.62rem / 0.28em) needs ~890px for the six Spanish labels and clipped
+       CONTACTO on tablets (768-820px) and squarish desktop windows. */
+    font-size: 0.52rem;
+    letter-spacing: 0.16em;
+  }
+
+  .cube-section-nav li + li a::before {
+    margin-right: 0.52rem;
   }
 
   .cube-section-nav__name {
@@ -961,7 +978,7 @@ button.side-panels__cta {
   }
 
   .side-panels {
-    padding: 1rem 1rem calc(4.6rem + env(safe-area-inset-bottom, 0px));
+    padding: 1rem 1rem calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .side-panels__rail--left {
@@ -1008,7 +1025,9 @@ button.side-panels__cta {
 
   .side-panels__research-node strong {
     font-size: 0.68rem;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-wrap: balance;
   }
 
   .side-panels__research-node small {
@@ -1085,7 +1104,7 @@ button.side-panels__cta {
   }
 
   .side-panels__cta {
-    min-height: 2.25rem;
+    min-height: 2.75rem; /* 44px tap target */
     padding: 0.55rem 0.85rem;
     font-size: 0.62rem;
   }
@@ -1483,7 +1502,7 @@ button.side-panels__cta {
   .cube-section-nav ul {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 0.3rem;
+    row-gap: 0.1rem;
     column-gap: 0.2rem;
     overflow: visible;
   }
@@ -1495,8 +1514,10 @@ button.side-panels__cta {
 
   .cube-section-nav a {
     width: 100%;
+    min-height: 2.5rem; /* tap target: two rows of 40px */
     justify-content: center;
     padding: 0.22rem 0.1rem;
+    color: rgba(184, 174, 255, 0.68); /* >= 4.5:1 on the bar (0.58 gave ~3.9:1) */
     font-size: 0.5rem;
     letter-spacing: 0.14em;
     white-space: nowrap;
@@ -1506,8 +1527,34 @@ button.side-panels__cta {
     content: none;
   }
 
-  /* Two rows of chrome at the bottom: reserve the extra height under the panels. */
+  /* Two tappable rows of chrome at the bottom (~100px): reserve it under the panels. */
   .side-panels {
-    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 340px) {
+  /* 320-340px, Spanish: INVESTIGACIÓN (13 glyphs) needs ~86px but the cell has
+     ~84px; tighter tracking and dot gap buy the missing room without clipping. */
+  .cube-section-nav a {
+    gap: 0.22rem;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (max-width: 389px) {
+  /* Phones up to 389px: two columns leave 119px (320px) to 138px (389px) per
+     concept title; "PROPÓSITO PROPIO" needs ~123px in Segoe UI and ~135px in
+     Arial-width fonts (Inter is declared but not shipped, so the device font
+     decides). One column keeps every title on a single line with margin to
+     spare; the cards stay compact (summary hidden) but tap-safe (48px). */
+  .side-panels__research-map {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+  }
+
+  .side-panels__research-node {
+    min-height: 3rem;
+    padding: 0.5rem 0.7rem;
   }
 }

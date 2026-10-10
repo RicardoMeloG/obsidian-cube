@@ -156,6 +156,8 @@ Face content shape (primary scene, must stay minimal):
 - `features`: 3-4 named signals for the left rail
 - `flowTitle` + `flow`: 4 short procedural steps for the right rail
 - `ctaPrimary` + `ctaSecondary` — at least one of them, or one `detail.links` entry, must carry a real `href` to an artifact
+- `label` (the face name on the cube and the bottom strip): 13 characters at most — "INVESTIGACIÓN" is the ceiling that fits the 320px strip without clipping
+- `researchConcepts` (RESEARCH face only): the side panel shows the first 4; extra entries are silently ignored
 - Copy must name concrete things (a tool, a system, a result). Generic consultancy phrasing ("real impact", "practical vision") is a defect, not content.
 
 Extended content (`detail.title`, `detail.summary`, `detail.points`, `detail.links`) is for the modal — not the rails. Full essays and project archives belong on future deep-dive routes.
