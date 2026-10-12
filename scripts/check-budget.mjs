@@ -12,7 +12,7 @@
 //
 // Requires `npm run build` first.
 
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
@@ -28,7 +28,12 @@ const referenced = [
   ...html.matchAll(/<link[^>]+rel="(?:modulepreload|stylesheet|preload)"[^>]+href="\/([^"]+)"/g),
 ].map((match) => match[1])
 
-const files = ['index.html', ...new Set(referenced), ...budget.alwaysLoaded]
+// alwaysLoaded entries may use * for the hash in a built file name.
+const builtFiles = readdirSync(join(DIST, 'assets')).map((name) => `assets/${name}`)
+const resolve = (pattern) =>
+  pattern.includes('*') ? builtFiles.filter((file) => new RegExp(`^${pattern.replace(/[.]/g, '\\.').replace('*', '[^/]+')}$`).test(file)) : [pattern]
+
+const files = ['index.html', ...new Set(referenced), ...budget.alwaysLoaded.flatMap(resolve)]
 const sizes = files.map((file) => ({ file, gzip: gzipSync(readFileSync(join(DIST, file))).length }))
 const total = sizes.reduce((sum, entry) => sum + entry.gzip, 0)
 const kb = (bytes) => `${(bytes / 1024).toFixed(1)} KB`

@@ -12,6 +12,7 @@ import {
   updateCubeDragSound,
 } from '../audio/cubeAudio'
 import type { CubeSectionId } from '../../../kernel/faces'
+import { useLayoutMode } from '../../../styles/layoutModes'
 import type { ResolvedCubeSection } from '../../../kernel/visualContent'
 import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
@@ -237,10 +238,8 @@ export function CubeScene({
     () => (intro.play ? [INTRO.firstTurn, INTRO.secondTurn] : intro.turns),
     [intro.play, intro.turns],
   )
-  const { camera, size, gl } = useThree()
-  const aspectRatio = size.width / Math.max(size.height, 1)
-  const isNarrow = size.width < 720
-  const isStackedFrame = size.width < 900 || aspectRatio <= 4 / 3
+  const { camera, gl } = useThree()
+  const { narrow: isNarrow, stacked: isStackedFrame } = useLayoutMode()
   const cubeScale = isNarrow ? 0.96 : isStackedFrame ? 0.9 : 0.92
   const cubeBaseY = isNarrow ? 0.28 : isStackedFrame ? 0.42 : 0.34
   const platformScale = isNarrow ? 0.96 : isStackedFrame ? 0.9 : 0.98

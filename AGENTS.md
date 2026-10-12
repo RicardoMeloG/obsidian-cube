@@ -148,9 +148,9 @@ The overview, the module map and the status of every rule (in force, or the phas
 - **Content kernel** (`src/kernel/`): schemas, catalog, defaults, example content, SEO renderer, layout budgets. Pure TypeScript, no DOM, depends on `zod` only. The admin server imports the kernel and nothing else from `src/`.
 - **Scene and DOM are separate.** Scene code (R3F, three) and DOM features never import each other; they meet in the experience store (from P3).
 - **Styling.** Tailwind utilities and tokens; hand-written CSS only for what utilities express poorly, commented with why. `App.css` is legacy being migrated (P2b–P4): do not grow it except for the P2a short-screen fix.
-- **Layout modes** come from one source, `src/styles/layoutModes.ts` (from P2a). No numeric breakpoints in components.
-- **Content budgets** (lengths, counts, link rules) are schema constraints, so content that would not fit is rejected at publish.
-- **No blank page.** Error boundaries keep the name, rails and strip visible when WebGL or a scene chunk fails (from P2a).
+- **Layout modes** come from one source, `src/styles/layoutModes.ts`: `stacked`, `desktop`, `desktop-short` (height ≤ 900px, compact rhythm). No numeric breakpoints in components; the CSS repeats the same queries and a test keeps them equal.
+- **Content budgets** (`src/kernel/layoutBudgets.json`, visible characters and item counts) and link rules are publish rules: the admin refuses content that would not fit or links nowhere; the site renders with the tolerant schema. Change a budget only with a layout check run that proves the stress content still fits.
+- **No blank page.** Without WebGL the scene is replaced by a still image (`hasWebGL`); a scene or world error is contained by `src/lib/ErrorBoundary`. The name, rails and strip are DOM and always stay.
 - **Unchecked rules** (review only) say so where they are written.
 
 ## Content Strategy

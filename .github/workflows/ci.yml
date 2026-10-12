@@ -45,6 +45,8 @@ jobs:
       - run: npm run build
       - name: Layout check (PR matrix, full matrix at night)
         run: npm run check:layout -- ${{ github.event_name == 'schedule' && '--full' || '' }}
+      - name: Layout check with every field at its budget
+        run: npm run check:layout -- --content=stress ${{ github.event_name == 'schedule' && '--full' || '' }}
 
   infra:
     name: CDK synth

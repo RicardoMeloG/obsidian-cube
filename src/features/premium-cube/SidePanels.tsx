@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import type { CubeSection, CubeSectionDetail, CubeSectionResearchConcept, FeatureGlyphId } from '../../kernel/faces'
 import type { ResolvedCubeSection } from '../../kernel/visualContent'
@@ -102,6 +102,10 @@ export function SidePanels({
   onOpenDetail,
   transitionState = 'idle',
 }: SidePanelsProps) {
+  // Each rail is a landmark named by its own heading, so screen readers can
+  // tell them apart.
+  const titleId = useId()
+  const flowTitleId = useId()
   const titleLines = useMemo(() => splitTitleIntoTwoLines(activeSection.title), [activeSection.title])
   // Per-face accent: exposed as a CSS variable so the title picks up the section
   // hue. Resolved from visual.json (falls back to SECTION_ACCENTS defaults).
@@ -137,12 +141,12 @@ export function SidePanels({
 
   return (
     <div className={`side-panels is-${transitionState}`} style={accentStyle} data-section={activeSection.id}>
-      <aside className="side-panels__rail side-panels__rail--left" key={`L-${activeSection.id}`}>
+      <aside className="side-panels__rail side-panels__rail--left" key={`L-${activeSection.id}`} aria-labelledby={titleId}>
         <p className="side-panels__eyebrow">
           <span aria-hidden />
           {activeSection.eyebrow}
         </p>
-        <h2 className="side-panels__title">
+        <h2 className="side-panels__title" id={titleId}>
           {titleLines[1] ? (
             <>
               <span className="side-panels__title-line">{titleLines[0]}</span>
@@ -166,7 +170,7 @@ export function SidePanels({
                 >
                   <span>{concept.axis}</span>
                   <strong>{concept.label}</strong>
-                  <RichText as="small" html={concept.summary} />
+                  <RichText as="small" html={concept.summary} priority="secondary" />
                 </button>
               ))}
             </div>
@@ -190,9 +194,9 @@ export function SidePanels({
         {renderCta(activeSection.ctaPrimary, 'side-panels__cta--primary')}
       </aside>
 
-      <aside className="side-panels__rail side-panels__rail--right" key={`R-${activeSection.id}`}>
+      <aside className="side-panels__rail side-panels__rail--right" key={`R-${activeSection.id}`} aria-labelledby={flowTitleId}>
         <header className="side-panels__rail-header">
-          <span>{activeSection.flowTitle ?? activeSection.label}</span>
+          <span id={flowTitleId}>{activeSection.flowTitle ?? activeSection.label}</span>
           <strong aria-hidden>{flowCountLabel}</strong>
         </header>
 

@@ -85,6 +85,13 @@
   touch-action: none;
 }
 
+.cube-canvas__poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .prototype-chrome {
   position: absolute;
   inset: 0;
@@ -920,6 +927,115 @@ button.side-panels__cta {
 
   .side-panels__title {
     font-size: clamp(2.1rem, 4vw, 3.4rem);
+  }
+}
+
+/* Layout modes (src/styles/layoutModes.ts is the source of these queries;
+   layoutModes.test.ts keeps them identical). Written here until the rails
+   move to Tailwind (spec 010, P2b). */
+
+/* desktop: a rail never grows past the space between the header and the face
+   strip. Content that still does not fit scrolls inside the rail instead of
+   covering the strip; the schema budgets keep that the exception. The padding
+   and the equal negative margin leave room for the glows inside the clip. */
+@media (not ((max-width: 900px) or (max-aspect-ratio: 4 / 3))) {
+  .side-panels {
+    grid-template-rows: clamp(4rem, 9vh, 6.5rem) minmax(0, 1fr);
+  }
+
+  .side-panels__rail {
+    max-height: calc(100% + 2rem);
+    margin-block: -1rem;
+    padding-block: 1rem;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-line) transparent;
+  }
+
+  /* If a rail does scroll, its call to action stays in view at the bottom. */
+  .side-panels__cta {
+    position: sticky;
+    bottom: 0;
+  }
+
+  /* The strip stays one line, so the rails can rely on its height; the
+     owner's full name gives way first (it is already the page's h1). */
+  .cube-section-nav {
+    flex-wrap: nowrap;
+  }
+
+  .cube-section-nav ul {
+    flex: none;
+  }
+
+  .cube-section-nav__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* desktop-short: the same layout with a compact vertical rhythm. Sizes follow
+   the height, gaps tighten, and secondary lines (data-priority) give way: today
+   the one-line summary of each research concept, which its dialog repeats.
+   Measured to fit 1280x720 to 1536x864 with the example content. */
+@media (not ((max-width: 900px) or (max-aspect-ratio: 4 / 3))) and (max-height: 900px) {
+  .side-panels {
+    grid-template-rows: clamp(3.6rem, 8vh, 5rem) minmax(0, 1fr);
+    padding-bottom: clamp(4.6rem, 10vh, 5.6rem);
+  }
+
+  .side-panels__rail {
+    gap: clamp(0.6rem, 1.3vh, 0.9rem);
+  }
+
+  .side-panels__title {
+    font-size: clamp(2rem, min(4.2vw, 7vh), 4.2rem);
+  }
+
+  .side-panels [data-priority='secondary'] {
+    display: none;
+  }
+
+  .side-panels__features,
+  .side-panels__flow {
+    gap: clamp(0.45rem, 1.1vh, 0.75rem);
+  }
+
+  /* The feature glyph is a square turned 45°, so its column keeps room for
+     the diagonal. */
+  .side-panels__feature {
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .side-panels__feature-glyph {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  .side-panels__flow-step {
+    grid-template-columns: 2rem minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .side-panels__flow-index {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .side-panels__flow-step::before {
+    left: 1rem;
+    top: 2rem;
+  }
+
+  .side-panels__research-node {
+    min-height: 0;
+    padding: 0.5rem 0.75rem;
   }
 }
 

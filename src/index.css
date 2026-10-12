@@ -8,7 +8,7 @@
   --color-ice-100: #eef7ff;
   --color-mineral-500: #8a97a6;
   --color-copper-400: #c08b5a;
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 :root {
@@ -20,11 +20,13 @@
   --cool: #92c7e9;
   --violet: #8f7ad6;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
   color: var(--ink);
   background: var(--paper);
-  font-synthesis: none;
+  /* Only Inter's upright file is served (first-view budget); the browser slants
+     it for the few <em> in rich text. Bold is never synthesised. */
+  font-synthesis: style;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

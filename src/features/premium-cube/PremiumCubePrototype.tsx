@@ -2,6 +2,9 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { CUBE_FACE_ORDER } from '../../kernel/faces'
+import { ErrorBoundary } from '../../lib/ErrorBoundary'
+import { hasWebGL } from '../../lib/hasWebGL'
+import { useLayoutMode } from '../../styles/layoutModes'
 import type { CubeSectionDetail, CubeSectionId } from '../../kernel/faces'
 import { CubeSectionNav } from './CubeSectionNav'
 import { useSiteContent } from '../content/useSiteContent'
@@ -82,7 +85,9 @@ export function PremiumCubePrototype() {
   const { content, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
   const [introPlan] = useState(readIntroPlan)
-  const [introStage, setIntroStage] = useState<IntroStage>(introPlan.play ? 'pending' : 'done')
+  const [webglAvailable] = useState(hasWebGL)
+  // Without WebGL there is no scene to land, so the interface shows at once.
+  const [introStage, setIntroStage] = useState<IntroStage>(introPlan.play && webglAvailable ? 'pending' : 'done')
   const [hintVisible, setHintVisible] = useState(introPlan.showHint)
   const [isTouch] = useState(
     () => typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches ?? false),
@@ -324,12 +329,10 @@ export function PremiumCubePrototype() {
     [activeSectionId],
   )
 
-  // Match the CSS mobile breakpoint (max-width: 900px or portrait-ish aspect).
-  // On mobile the page scrolls and the cube hero takes its height from CSS, so we
-  // stop pinning the shell and canvas to the viewport height.
-  const isMobileViewport =
-    viewport.width > 0 &&
-    (viewport.width <= 900 || viewport.width / Math.max(1, viewport.height) <= 4 / 3)
+  // In the stacked layout the page scrolls and the cube hero takes its height
+  // from CSS, so the shell and canvas stop being pinned to the viewport height.
+  const { stacked: isMobileViewport } = useLayoutMode()
+  const scenePoster = <img className="cube-canvas__poster" src="/og-image.jpg" alt="" />
 
   return (
     <main
@@ -345,37 +348,45 @@ export function PremiumCubePrototype() {
         aria-hidden="true"
         style={{ width: viewport.width || '100vw', height: isMobileViewport ? undefined : viewport.height || '100vh' }}
       >
-        <Canvas
-          camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
-          dpr={[1.5, 2]}
-          gl={{
-            antialias: true,
-            alpha: false,
-            powerPreference: 'high-performance',
-            stencil: true,
-          }}
-          shadows={effects.shadows}
-        >
-          <Suspense fallback={null}>
-            <CubeScene
-              activeSectionId={activeSectionId}
-              effects={effects}
-              onCursorModeChange={setCursorMode}
-              onSectionEnter={(sectionId) => {
-                setFocusedDetail(null)
-                setDetailOpen(false)
-                syncSectionUrl(sectionId)
-                setActiveSectionId(sectionId)
+        {/* Without WebGL, or if the scene fails, a still of the cube replaces
+            the canvas; the name, rails and strip are DOM and stay (ADR 006). */}
+        {!webglAvailable ? (
+          scenePoster
+        ) : (
+          <ErrorBoundary label="3D scene" fallback={scenePoster} onError={() => setIntroStage('done')}>
+            <Canvas
+              camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
+              dpr={[1.5, 2]}
+              gl={{
+                antialias: true,
+                alpha: false,
+                powerPreference: 'high-performance',
+                stencil: true,
               }}
-              sections={resolvedSections}
-              handleRef={cubeSceneRef}
-              intro={introConfig}
-              onIntroPhase={handleIntroPhase}
-              onEngaged={handleEngaged}
-            />
-          </Suspense>
-        </Canvas>
-        {introPlan.showHint && (
+              shadows={effects.shadows}
+            >
+              <Suspense fallback={null}>
+                <CubeScene
+                  activeSectionId={activeSectionId}
+                  effects={effects}
+                  onCursorModeChange={setCursorMode}
+                  onSectionEnter={(sectionId) => {
+                    setFocusedDetail(null)
+                    setDetailOpen(false)
+                    syncSectionUrl(sectionId)
+                    setActiveSectionId(sectionId)
+                  }}
+                  sections={resolvedSections}
+                  handleRef={cubeSceneRef}
+                  intro={introConfig}
+                  onIntroPhase={handleIntroPhase}
+                  onEngaged={handleEngaged}
+                />
+              </Suspense>
+            </Canvas>
+          </ErrorBoundary>
+        )}
+        {introPlan.showHint && webglAvailable && (
           <p className="cube-hint" data-visible={hintVisible}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4.5 13.5a8 4.5 0 0 0 15 0" />

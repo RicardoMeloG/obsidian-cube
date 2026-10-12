@@ -1,38 +1,4 @@
 {
-  "layout": [
-    "1280x720 en research cta-0-outside",
-    "1280x720 en research rail-left-over-strip",
-    "1280x720 es agentic rail-left-over-strip",
-    "1280x720 es research cta-0-outside",
-    "1280x720 es research rail-left-over-strip",
-    "1366x768 en research cta-0-outside",
-    "1366x768 en research rail-left-over-strip",
-    "1366x768 es research cta-0-outside",
-    "1366x768 es research rail-left-over-strip",
-    "1600x725 en agentic cta-0-outside",
-    "1600x725 en agentic rail-left-over-strip",
-    "1600x725 en research cta-0-outside",
-    "1600x725 en research rail-left-over-strip",
-    "1600x725 es agentic rail-left-over-strip",
-    "1600x725 es research cta-0-outside",
-    "1600x725 es research rail-left-over-strip"
-  ],
-  "axe": [
-    "1280x720 en landmark-unique",
-    "1280x720 es landmark-unique",
-    "1366x768 en landmark-unique",
-    "1366x768 es landmark-unique",
-    "1440x900 en landmark-unique",
-    "1440x900 es landmark-unique",
-    "1600x725 en landmark-unique",
-    "1600x725 es landmark-unique",
-    "1920x1080 en landmark-unique",
-    "1920x1080 es landmark-unique",
-    "2048x1152 en landmark-unique",
-    "2048x1152 es landmark-unique",
-    "390x844 en landmark-unique",
-    "390x844 es landmark-unique",
-    "768x1024 en landmark-unique",
-    "768x1024 es landmark-unique"
-  ]
+  "layout": [],
+  "axe": []
 }

@@ -330,3 +330,24 @@ P2a adds the short mode and the safety net to the hand-written `App.css`, agains
 | A-21 CloudFront logs are personal data | D-2 revised to (c). |
 | A-22 review-only rules not labelled | "Unchecked" labels in section 6; H-11 scripted. |
 | A-23 `href` not validated | AD-02 link rules. |
+
+## 12. Implementation notes
+
+What the build changed against this plan, so the next audit compares the code with the decisions as built.
+
+**P1 (2026-10-12)**
+
+- E-08 and E-09 were fixed while extracting the kernel: the defaults are the bundled example, a face falls back in its own language, and the eyebrow comes from the content.
+- AD-11 (deploy) was done in P1 instead of the publish track: two lines, and its test (H-14) passes from the start.
+- The content loaders accept only JSON responses, so a missing private document is silent.
+
+**P2a (2026-10-12)**
+
+- `desktop-short` is `max-height: 900px`, not 820: measured, 1536×864 (a 1920×1080 screen at 125% scaling) overflowed at 864. 1536×864 joined the full matrix.
+- Compaction first, hiding last. Feature and flow descriptions stay; the only `secondary` lines are the research concept summaries, which their dialog repeats. Hiding all descriptions was measured and rejected: 1366×768 fitted without it.
+- The safety net grew two rules found with the stress content: the face strip never wraps on desktop (the owner's full name truncates instead), and the rail's call to action is `sticky`, so a rail that scrolls still shows it.
+- Budgets are publish rules, not render constraints: `PublishableSiteContentSchema` (admin) extends the tolerant `SiteContentSchema` (site), so content published under older rules keeps rendering instead of silently falling back to the example (finding of the admin audit, 2026-10-10). They count visible characters, not inline markup. With every field at its limit and Inter served, rails fit without scrolling from 768 px of height up; below it they scroll by up to 30 px at 1600×725 and 41 px at 1280×720 (a warning; the call to action stays visible). Cutting further would force copy shorter than the example's. The summary budget was cut to 112 visible characters to get there. The example content fits every size without scrolling.
+- Without WebGL, three.js fails inside React Three Fiber's asynchronous setup, which no error boundary sees; the shell checks `hasWebGL()` before mounting the canvas. React Three Fiber also reports caught errors through `window.reportError`, so the degradation check asserts the boundary caught the failure rather than the absence of page errors.
+- `src/lib/` was added for React utilities every layer may import (`ErrorBoundary`, `hasWebGL`): the scene needs a boundary and may not import `app/` or `ui/`.
+- The first-view budget rose by 47 KB for Inter, as AD-10 foresaw; the raise is recorded in `scripts/checks/budget.json`.
+- Not done in P2a: font metric overrides for the fallback (layout shift while Inter loads), and the CloudFront part of AD-09 (publish track).
