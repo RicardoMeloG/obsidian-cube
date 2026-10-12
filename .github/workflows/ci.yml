@@ -47,6 +47,13 @@ jobs:
         run: npm run check:layout -- ${{ github.event_name == 'schedule' && '--full' || '' }}
       - name: Layout check with every field at its budget
         run: npm run check:layout -- --content=stress ${{ github.event_name == 'schedule' && '--full' || '' }}
+      - name: Keep the layout evidence of a failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layout-report
+          path: layout-report/
+          if-no-files-found: ignore
 
   infra:
     name: CDK synth

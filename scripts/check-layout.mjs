@@ -22,7 +22,7 @@
 // result does not depend on the machine's GPU.
 
 import { spawn } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { buildStressContent } from './checks/stressContent.mjs'
@@ -155,11 +155,37 @@ function measureFace({ queries }) {
   return { mode, failures, warnings }
 }
 
+// On an unexpected error the page's own errors and a screenshot go to
+// layout-report/ (uploaded by CI), so a failure there can be read, not guessed.
+const REPORT_DIR = fileURLToPath(new URL('../layout-report/', import.meta.url))
+
 async function checkPage(browser, viewport, locale) {
   const [width, height] = viewport.split('x').map(Number)
   const context = await browser.newContext({ viewport: { width, height } })
   await serveContent(context)
   const page = await context.newPage()
+  const pageErrors = []
+  page.on('pageerror', (error) => pageErrors.push(`pageerror: ${error.message}`))
+  page.on('crash', () => pageErrors.push('crash: the page process crashed'))
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') pageErrors.push(`${message.type()}: ${message.text().slice(0, 300)}`)
+  })
+  try {
+    return await measurePage(page, viewport, locale)
+  } catch (error) {
+    mkdirSync(REPORT_DIR, { recursive: true })
+    const name = `${viewport}-${locale}`
+    await page.screenshot({ path: `${REPORT_DIR}${name}.png` }).catch(() => undefined)
+    writeFileSync(`${REPORT_DIR}${name}.log`, [String(error), '', ...pageErrors].join('\n'))
+    console.log(`  ${viewport} ${locale}: unexpected error, see layout-report/${name}.log`)
+    for (const line of pageErrors.slice(-8)) console.log(`    ${line}`)
+    throw error
+  } finally {
+    await context.close()
+  }
+}
+
+async function measurePage(page, viewport, locale) {
   const results = { layout: [], axe: [] }
   await page.goto(`${BASE}/?intro=0&lang=${locale}`)
   await page.waitForSelector('.side-panels.is-idle', { timeout: 60000 })
@@ -187,7 +213,6 @@ async function checkPage(browser, viewport, locale) {
     await page.evaluate(() => window.scrollTo(0, 0))
   }
 
-  await context.close()
   console.log(`  ${viewport} ${locale} (${mode}): ${results.layout.length} layout, ${results.axe.length} axe`)
   return results
 }
