@@ -24,7 +24,7 @@
       "eyebrow": "INGENIERÍA AGÉNTICA",
       "summary": "Diseño y construcción de <strong>sistemas autónomos</strong> que perciben, deciden y ejecutan acciones para generar <em>impacto real</em>.",
       "features": [
-        { "glyph": "eye", "label": "Visión Práctica", "description": "Agentes no para improvisar más, sino para convertir intención en resultados." },
+        { "glyph": "eye", "label": "Visión Práctica", "description": "Agentes que convierten la intención en resultados, no en improvisación." },
         { "glyph": "shield", "label": "Sistemas Verificables", "description": "Diseño con restricciones reales, observabilidad y decisiones auditables." },
         { "glyph": "rocket", "label": "Del Diseño a Producción", "description": "De prototipos rápidos a soluciones confiables y escalables." },
         { "glyph": "chart", "label": "Impacto Real", "description": "Soluciones que generan valor medible en el negocio y en las personas." }
