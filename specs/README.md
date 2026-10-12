@@ -10,6 +10,10 @@ Recommended next specs, in the order set by `docs/roadmap.md` (001–003 are tak
 4. `007-presentation-state` — thesis / opening state (see `docs/project-memory.md`, 2026-06-11).
 5. `008-admin-hardening` — login rate limit, secure cookies, persistent sessions, backend tests.
 
+Written outside that sequence:
+
+- `009-cube-intro/` — first-visit intro (the cube falls through the beam shedding sparks and lands) and the rotate invitation asked for by ADR 002, point 4.
+
 Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). The Spec Kit tooling tried in June 2026 now lives in its own repository, `OlemOdracir/spec-kit-study` (see `docs/roadmap.md`, Phase 2).
 
 ## Rescued drafts (June 2026, Spec Kit)

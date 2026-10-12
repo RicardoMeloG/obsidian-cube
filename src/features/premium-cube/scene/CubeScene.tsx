@@ -1,8 +1,8 @@
 import { PerspectiveCamera, Stars } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
-import type { Group } from 'three'
+import type { Group, MeshBasicMaterial } from 'three'
 import { AdditiveBlending, CanvasTexture, Color, Euler, LinearFilter, Quaternion, SRGBColorSpace, Vector3 } from 'three'
 import {
   playCubeDragTickSound,
@@ -17,9 +17,30 @@ import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { PremiumCube } from './PremiumCube'
 import { VectorWorldStage } from './vector-worlds/VectorWorldStage'
+import { IntroSparks } from './intro/IntroSparks'
+import { LandingRing } from './intro/LandingRing'
+import {
+  INTRO,
+  beamLevel,
+  fallOffset,
+  fallTurn,
+  introPhase,
+  platformGlowLevel,
+  turnAngle,
+} from './intro/introTimeline'
+import type { IntroPhase } from './intro/introTimeline'
 
 export type CubeSceneHandle = {
   enterSection: (sectionId: CubeSectionId) => void
+  skipIntro: () => void
+}
+
+// First-visit intro (specs/009-cube-intro). `play` runs the fall; `turns` are the
+// intro-time instants of the invitation turns (empty: none).
+export type CubeIntroConfig = {
+  play: boolean
+  turns: readonly number[]
+  freezeAt: number | null
 }
 
 type CubeSceneProps = {
@@ -29,6 +50,9 @@ type CubeSceneProps = {
   sections: ResolvedCubeSection[]
   activeSectionId: CubeSectionId
   handleRef?: RefObject<CubeSceneHandle | null>
+  intro: CubeIntroConfig
+  onIntroPhase?: (phase: IntroPhase) => void
+  onEngaged?: () => void
 }
 
 type PointerEventLike = {
@@ -69,6 +93,14 @@ const _dragAxis = new Vector3()
 const _dragDelta = new Quaternion()
 const _tiltEuler = new Euler()
 const _tiltQuat = new Quaternion()
+const _introEuler = new Euler()
+const _introQuat = new Quaternion()
+const _turnQuat = new Quaternion()
+const _yAxis = new Vector3(0, 1, 0)
+
+const PLATFORM_GLOW_OPACITY = 0.85
+const PLATFORM_CORE_OPACITY = 1
+const BEAM_OPACITY = 0.18
 
 function createGlowTexture(inner: string, outer: string) {
   const s = 512
@@ -152,7 +184,17 @@ function PlatformTicks({ radius, count, faint = false }: PlatformTicksProps) {
   )
 }
 
-export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSectionEnter, sections, handleRef }: CubeSceneProps) {
+export function CubeScene({
+  activeSectionId,
+  effects,
+  onCursorModeChange,
+  onSectionEnter,
+  sections,
+  handleRef,
+  intro,
+  onIntroPhase,
+  onEngaged,
+}: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
   const platformGlowTexture = useMemo(
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
@@ -176,6 +218,25 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
     spinAxis: new Vector3(0, 1, 0), // axis of the last drag step (for inertia)
   })
   const pointerSmoothRef = useRef({ x: 0, y: 0 })
+  // Intro clock: starts on the first rendered frame (the scene may arrive later
+  // than the DOM). `quiet` stops the invitation turns once the visitor acts.
+  const introRef = useRef({
+    start: -1,
+    time: 0,
+    skipped: false,
+    phase: (intro.play ? 'hold' : 'done') as IntroPhase,
+    quiet: false,
+    engaged: false,
+  })
+  const [sparksMounted, setSparksMounted] = useState(intro.play)
+  const platformGlowRef = useRef<MeshBasicMaterial>(null)
+  const platformCoreRef = useRef<MeshBasicMaterial>(null)
+  const beamRef = useRef<MeshBasicMaterial>(null)
+  const getIntroTime = useCallback(() => introRef.current.time, [])
+  const introTurns = useMemo(
+    () => (intro.play ? [INTRO.firstTurn, INTRO.secondTurn] : intro.turns),
+    [intro.play, intro.turns],
+  )
   const { camera, size, gl } = useThree()
   const aspectRatio = size.width / Math.max(size.height, 1)
   const isNarrow = size.width < 720
@@ -216,12 +277,32 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
     drag.freeRest = false
     drag.active = false
     drag.spinAngle = 0
+    introRef.current.quiet = true
     onCursorModeChange('default')
     void playCubeTransitionSound()
     onSectionEnter(sectionId)
   }, [onCursorModeChange, onSectionEnter])
 
-  useImperativeHandle(handleRef, () => ({ enterSection }), [enterSection])
+  const reportIntroPhase = useCallback(
+    (phase: IntroPhase) => {
+      const state = introRef.current
+      if (state.phase === phase) return
+      state.phase = phase
+      if (phase === 'done') setSparksMounted(false)
+      onIntroPhase?.(phase)
+    },
+    [onIntroPhase],
+  )
+
+  // Jump to the final state: cube at rest on its face, particles gone.
+  const skipIntro = useCallback(() => {
+    const state = introRef.current
+    if (!intro.play || state.skipped || state.phase === 'done') return
+    state.skipped = true
+    reportIntroPhase('done')
+  }, [intro.play, reportIntroPhase])
+
+  useImperativeHandle(handleRef, () => ({ enterSection, skipIntro }), [enterSection, skipIntro])
 
   useFrame(({ clock, pointer }) => {
     const rig = rigRef.current
@@ -231,11 +312,37 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
 
     const drag = dragRef.current
     const t = clock.getElapsedTime()
+    const introState = introRef.current
+    if (introState.start < 0) introState.start = t
+    const elapsed = t - introState.start
+    introState.time = intro.freezeAt ?? (introState.skipped ? Math.max(elapsed, INTRO.end) : elapsed)
+    const introTime = introState.time
 
     camera.position.set(cameraPosition[0], cameraPosition[1], cameraPosition[2])
     camera.lookAt(0, cameraTargetY, 0)
 
     rig.scale.setScalar(cubeScale)
+
+    if (intro.play) {
+      reportIntroPhase(introPhase(introTime))
+      const glow = platformGlowLevel(introTime)
+      if (platformGlowRef.current) platformGlowRef.current.opacity = Math.min(1, PLATFORM_GLOW_OPACITY * glow)
+      if (platformCoreRef.current) platformCoreRef.current.opacity = Math.min(1, PLATFORM_CORE_OPACITY * glow)
+      if (beamRef.current) beamRef.current.opacity = BEAM_OPACITY * beamLevel(introTime)
+
+      // Falling: height and turn come straight from the timeline (no smoothing),
+      // so the cube lands exactly at rest on the active face.
+      if (introTime < INTRO.land) {
+        const turn = fallTurn(introTime)
+        _introEuler.set(turn.pitch, turn.yaw, 0)
+        _introQuat.setFromEuler(_introEuler)
+        rig.position.y = cubeBaseY + fallOffset(introTime)
+        rig.quaternion.copy(_introQuat).multiply(FACE_QUATERNION[activeSectionId])
+        drag.target.copy(rig.quaternion)
+        return
+      }
+    }
+
     rig.position.y = cubeBaseY + (effects.idle ? Math.sin(t * 0.72) * 0.035 : 0)
 
     // Quaternion trackball. While dragging, drag.target follows the finger (set in
@@ -272,6 +379,12 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
       _tiltEuler.set(tiltPitch, tiltYaw, 0)
       _tiltQuat.setFromEuler(_tiltEuler)
       drag.target.copy(FACE_QUATERNION[activeSectionId]).premultiply(_tiltQuat)
+      // Invitation turn toward the next face and back, until the visitor acts.
+      const turn = introState.quiet ? 0 : turnAngle(introTime, introTurns)
+      if (turn !== 0) {
+        _turnQuat.setFromAxisAngle(_yAxis, turn)
+        drag.target.premultiply(_turnQuat)
+      }
       slerpFactor = 0.12
     }
 
@@ -349,6 +462,13 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
 
   function handlePointerDown(event: PointerEventLike) {
     event.stopPropagation?.()
+
+    const introState = introRef.current
+    introState.quiet = true
+    if (!introState.engaged) {
+      introState.engaged = true
+      onEngaged?.()
+    }
 
     const drag = dragRef.current
     drag.active = true
@@ -492,9 +612,10 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
         <mesh position={[0, -1.42, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[2.2, 2.2]} />
           <meshBasicMaterial
+            ref={platformGlowRef}
             map={platformGlowTexture}
             transparent
-            opacity={0.85}
+            opacity={PLATFORM_GLOW_OPACITY}
             depthWrite={false}
             blending={AdditiveBlending}
             toneMapped={false}
@@ -503,7 +624,7 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
 
         <mesh position={[0, -1.422, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.12, 64]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={1} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+          <meshBasicMaterial ref={platformCoreRef} color="#ffffff" transparent opacity={PLATFORM_CORE_OPACITY} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </mesh>
 
         <mesh position={[0, -1.412, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -533,16 +654,27 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
 
         <PlatformTicks radius={2.08} count={84} />
         <PlatformTicks radius={2.5} count={120} faint />
+        {intro.play && <LandingRing getTime={getIntroTime} />}
       </group>
+
+      {sparksMounted && (
+        <IntroSparks
+          cubeScale={cubeScale}
+          cubeBaseY={cubeBaseY}
+          faceQuaternion={FACE_QUATERNION[activeSectionId]}
+          getTime={getIntroTime}
+        />
+      )}
 
       <VectorWorldStage worldId={sections.find((section) => section.id === activeSectionId)?.worldId ?? null} />
 
       <mesh position={[0, 4.6, -0.4]}>
         <planeGeometry args={[0.9, 5]} />
         <meshBasicMaterial
+          ref={beamRef}
           map={beamTexture}
           transparent
-          opacity={0.18}
+          opacity={BEAM_OPACITY}
           depthWrite={false}
           blending={AdditiveBlending}
           toneMapped={false}

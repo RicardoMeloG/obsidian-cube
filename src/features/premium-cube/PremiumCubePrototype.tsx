@@ -10,10 +10,50 @@ import { resolveSections } from './content/visualContent'
 import { RichText } from './content/RichText'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
-import type { CubeSceneHandle } from './scene/CubeScene'
+import type { CubeIntroConfig, CubeSceneHandle } from './scene/CubeScene'
+import { CUBE_ENGAGED_KEY, INTRO_SEEN_KEY, RETURN_TURN, planIntro, readFreezeAt } from './scene/intro/introTimeline'
+import type { IntroPhase } from './scene/intro/introTimeline'
 import { SidePanels } from './SidePanels'
 
 type PanelTransitionState = 'idle' | 'exiting' | 'entering'
+
+// pending: interface hidden while the cube falls · reveal: staged fade-in after
+// the landing · done: no intro styling at all.
+type IntroStage = 'pending' | 'reveal' | 'done'
+
+// If the scene never renders (no WebGL, slow load) the interface still appears.
+const INTRO_SAFETY_MS = 4000
+// Long enough for the last staged element (the hint: 1100ms delay + 600ms fade).
+const REVEAL_MS = 2000
+
+function sessionStore(): Storage | null {
+  try {
+    return window.sessionStorage
+  } catch {
+    return null
+  }
+}
+
+function remember(key: string) {
+  try {
+    sessionStore()?.setItem(key, '1')
+  } catch {
+    // Storage blocked: the intro may replay, which is harmless.
+  }
+}
+
+function readIntroPlan() {
+  if (typeof window === 'undefined') {
+    return { play: false, reducedMotion: false, showHint: false }
+  }
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  return planIntro(window.location.search, sessionStore(), reducedMotion)
+}
+
+const HINT_COPY = {
+  en: { pointer: 'Drag to rotate', touch: 'Swipe to rotate' },
+  es: { pointer: 'Arrastra para girar', touch: 'Desliza para girar' },
+} as const
 
 function readInitialSectionId(): CubeSectionId {
   if (typeof window === 'undefined') {
@@ -41,6 +81,31 @@ export function PremiumCubePrototype() {
   const restoreFocusRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
+  const [introPlan] = useState(readIntroPlan)
+  const [introStage, setIntroStage] = useState<IntroStage>(introPlan.play ? 'pending' : 'done')
+  const [hintVisible, setHintVisible] = useState(introPlan.showHint)
+  const [isTouch] = useState(
+    () => typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches ?? false),
+  )
+  const introConfig = useMemo<CubeIntroConfig>(
+    () => ({
+      play: introPlan.play,
+      turns: !introPlan.play && introPlan.showHint && !introPlan.reducedMotion ? [RETURN_TURN] : [],
+      freezeAt: import.meta.env.DEV && typeof window !== 'undefined' ? readFreezeAt(window.location.search) : null,
+    }),
+    [introPlan],
+  )
+  // The landing starts the staged reveal; the reveal then runs on its own clock
+  // (see REVEAL_MS), so a slow device that jumps frames still gets the order.
+  const handleIntroPhase = useCallback((phase: IntroPhase) => {
+    if (phase === 'landed' || phase === 'done') {
+      setIntroStage((stage) => (stage === 'pending' ? 'reveal' : stage))
+    }
+  }, [])
+  const handleEngaged = useCallback(() => {
+    setHintVisible(false)
+    remember(CUBE_ENGAGED_KEY)
+  }, [])
   const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
   const syncSectionUrl = useCallback((id: CubeSectionId) => {
     if (typeof window === 'undefined') return
@@ -109,6 +174,43 @@ export function PremiumCubePrototype() {
   useEffect(() => {
     displayedSectionIdRef.current = displayedSectionId
   }, [displayedSectionId])
+
+  // Intro bookkeeping: mark it seen for this session and never leave the
+  // interface hidden if the scene does not report its landing.
+  useEffect(() => {
+    if (!introPlan.play) return
+    remember(INTRO_SEEN_KEY)
+    const safety = window.setTimeout(() => {
+      setIntroStage((stage) => (stage === 'pending' ? 'reveal' : stage))
+    }, INTRO_SAFETY_MS)
+    return () => window.clearTimeout(safety)
+  }, [introPlan.play])
+
+  useEffect(() => {
+    if (introStage !== 'reveal') return
+    const settle = window.setTimeout(() => setIntroStage('done'), REVEAL_MS)
+    return () => window.clearTimeout(settle)
+  }, [introStage])
+
+  // Any input while the intro runs skips it to the final state.
+  const introRunning = introStage !== 'done'
+  useEffect(() => {
+    if (!introRunning) return
+
+    function skip() {
+      cubeSceneRef.current?.skipIntro()
+      setIntroStage('done')
+    }
+
+    window.addEventListener('pointerdown', skip)
+    window.addEventListener('keydown', skip)
+    window.addEventListener('wheel', skip, { passive: true })
+    return () => {
+      window.removeEventListener('pointerdown', skip)
+      window.removeEventListener('keydown', skip)
+      window.removeEventListener('wheel', skip)
+    }
+  }, [introRunning])
 
   useEffect(() => {
     if (activeSectionId === displayedSectionIdRef.current) return
@@ -233,6 +335,7 @@ export function PremiumCubePrototype() {
     <main
       className={`prototype-shell is-${cursorMode}`}
       aria-label="Premium cube prototype"
+      data-intro={introRunning ? introStage : undefined}
       ref={shellRef}
       onDoubleClick={import.meta.env.DEV ? handleBackgroundDoubleClick : undefined}
       style={{ width: viewport.width || '100vw', height: isMobileViewport ? undefined : viewport.height || '100vh' }}
@@ -266,9 +369,21 @@ export function PremiumCubePrototype() {
               }}
               sections={resolvedSections}
               handleRef={cubeSceneRef}
+              intro={introConfig}
+              onIntroPhase={handleIntroPhase}
+              onEngaged={handleEngaged}
             />
           </Suspense>
         </Canvas>
+        {introPlan.showHint && (
+          <p className="cube-hint" data-visible={hintVisible}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4.5 13.5a8 4.5 0 0 0 15 0" />
+              <path d="M16.6 16.4l2.9-2.9 0.6 4" />
+            </svg>
+            <span>{HINT_COPY[locale][isTouch ? 'touch' : 'pointer']}</span>
+          </p>
+        )}
       </div>
 
       <div className="prototype-chrome">
