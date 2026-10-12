@@ -125,7 +125,14 @@ export function PremiumCubePrototype() {
     setFocusedDetail(null)
     setDetailOpen(false)
     syncSectionUrl(id)
-    cubeSceneRef.current?.enterSection(id)
+    // The scene turns the cube and reports the face once it lands. Without a
+    // scene (no WebGL, or it failed and the still image replaced it) the face
+    // changes at once, so navigation never depends on the 3D.
+    if (cubeSceneRef.current) {
+      cubeSceneRef.current.enterSection(id)
+    } else {
+      setActiveSectionId(id)
+    }
   }, [activeSectionId, syncSectionUrl])
   const [effects] = useState(() => readDiagnosticFx())
   const [viewport, setViewport] = useState(() => ({

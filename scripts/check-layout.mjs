@@ -18,8 +18,11 @@
 // --content the documents are served by the check itself, and every failure
 // fails: content that the admin accepts must always fit.
 //
-// Requires `npm run build` first. WebGL runs in software (SwiftShader) so the
-// result does not depend on the machine's GPU.
+// Requires `npm run build` first. The layout pages run without WebGL: the
+// geometry is DOM only and the still image takes the canvas's place, while a
+// software-rendered scene can starve the page's main thread on a small CI
+// runner. The scene itself is exercised by the degradation check, with WebGL
+// in software (SwiftShader) so the result does not depend on the GPU.
 
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -217,18 +220,19 @@ async function measurePage(page, viewport, locale) {
   return results
 }
 
+const launch = (args) => chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH || undefined, args })
+const NO_WEBGL = ['--disable-webgl', '--disable-webgl2']
+const SOFTWARE_WEBGL = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
+
 // Degradation (spec 010, AD-09 and H-18): no visitor gets a blank page.
-async function checkDegradation(browser) {
+async function checkDegradation(noWebglBrowser) {
   const failures = []
   const errors = []
 
   // Without WebGL: the still image replaces the scene, the DOM stays.
-  const noWebgl = await chromium.launch({
-    executablePath: process.env.PW_CHROMIUM_PATH || undefined,
-    args: ['--disable-webgl', '--disable-webgl2'],
-  })
+  const noWebglContext = await noWebglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
   try {
-    const page = await noWebgl.newPage({ viewport: { width: 1366, height: 768 } })
+    const page = await noWebglContext.newPage()
     page.on('pageerror', (error) => errors.push(`no-webgl: ${error.message}`))
     await page.goto(`${BASE}/?intro=1&lang=en`)
     await page.waitForSelector('.side-panels.is-idle', { timeout: 60000 })
@@ -249,12 +253,15 @@ async function checkDegradation(browser) {
     })
     for (const [check, ok] of Object.entries(state)) if (!ok) failures.push(`degradation no-webgl ${check}`)
   } finally {
-    await noWebgl.close()
+    await noWebglContext.close()
   }
 
-  // A world chunk that fails to load: that face loses its background, the
-  // cube and the page stay.
-  const context = await browser.newContext({ viewport: { width: 1366, height: 768 } })
+  // With the scene: it mounts, and a world chunk that fails to load leaves its
+  // face without background while the cube and the page stay. Software WebGL
+  // is slow on a CI runner, hence the generous timeouts.
+  const webglBrowser = await launch(SOFTWARE_WEBGL)
+  const context = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
+  context.setDefaultTimeout(120000)
   try {
     const page = await context.newPage()
     // React Three Fiber reports errors through window.reportError even when a
@@ -266,9 +273,9 @@ async function checkDegradation(browser) {
     })
     await page.route('**/assets/productsWorld-*.js', (route) => route.abort())
     await page.goto(`${BASE}/?intro=0&lang=en`)
-    await page.waitForSelector('.side-panels.is-idle', { timeout: 60000 })
+    await page.waitForSelector('.side-panels.is-idle')
     await page.click('.cube-section-nav a[data-section-id="products"]')
-    await page.waitForSelector('.side-panels.is-idle[data-section="products"]', { timeout: 15000 })
+    await page.waitForSelector('.side-panels.is-idle[data-section="products"]')
     await page.waitForTimeout(1500)
     const state = await page.evaluate(() => ({
       canvas: Boolean(document.querySelector('.cube-canvas canvas')),
@@ -279,7 +286,7 @@ async function checkDegradation(browser) {
       if (!ok) failures.push(`degradation world-fails ${check}`)
     }
   } finally {
-    await context.close()
+    await webglBrowser.close()
   }
 
   for (const error of errors) failures.push(`degradation page-error ${error.slice(0, 80)}`)
@@ -293,10 +300,7 @@ async function main() {
   let browser
   try {
     await waitForServer()
-    browser = await chromium.launch({
-      executablePath: process.env.PW_CHROMIUM_PATH || undefined,
-      args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
-    })
+    browser = await launch(NO_WEBGL)
     console.log(`Layout check on ${viewports.length} viewports × ${LOCALES.length} locales, content: ${contentMode}`)
     const found = { layout: [], axe: [] }
     for (const viewport of viewports) {
