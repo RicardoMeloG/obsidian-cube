@@ -30,7 +30,7 @@ The design should read as premium because it is precise, not because it is decor
 - The cube is not a one-shot portal. Selecting a face updates the surrounding side panels in place; the cube does not disappear, navigate, or fade out.
 - The cube rotates on drag and snaps to the selected face on click. Audio cues stay subtle and gesture-driven.
 - All six faces share the same frame: inset bevel, corner brackets, double-diamond, section label, "OBSIDIAN CUBE" subtitle, three accent dots. Inside the frame each face carries its own accent color and a quiet inner glyph in that accent (ADR 003). The frame, bevel, brackets and typography never change per face.
-- Per-face accents (from `visual.json`, defaults in `cubeSections.ts`): agentic violet `#b8aeff`, products copper `#c08b5a`, systems steel blue `#8bb4dd`, security mint `#89d6c7`, research lavender `#9fa9ef`, contact sand `#f0d2b4`. The same accent drives the second title line and the eyebrow in the side panels.
+- Per-face accents (from `visual.json`, defaults in `src/kernel/faces.ts`): agentic violet `#b8aeff`, products copper `#c08b5a`, systems steel blue `#8bb4dd`, security mint `#89d6c7`, research lavender `#9fa9ef`, contact sand `#f0d2b4`. The same accent drives the second title line and the eyebrow in the side panels.
 - Material direction: deep obsidian (`#010208`), high metalness (≈0.92), low-to-mid roughness (≈0.13), strong clearcoat. Edges should catch a clean top rim highlight; the underside should bathe in violet underglow.
 - Avoid postprocessing that creates instability.
 - `Bloom` is prohibited for production because it caused visible flicker.

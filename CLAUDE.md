@@ -14,6 +14,6 @@ All other docs are loaded on demand only:
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD
 - `specs/NNN-*/` — feature specs
 
-Layout: `src/` public site (React + Three.js), `server/` NestJS admin (`npm run server`, needs `.env`; Postgres via `docker compose up -d` is optional), `infra/` AWS CDK (own `package.json`).
+Layout: `src/` public site (React + Three.js; `src/kernel/` is the content contract shared with the admin), `server/` NestJS admin (`npm run server`, needs `.env`; Postgres via `docker compose up -d` is optional), `infra/` AWS CDK (own `package.json`).
 
-Before reporting completion, meet the definition of done in `AGENTS.md` (Engineering Contract): at least `npm run build`, `npm run lint` and `npm test`, plus the gates added by spec 010 as they land; verify visual changes with Playwright on desktop, a short desktop (1366×768) and a 390px phone.
+Before reporting completion, meet the definition of done in `AGENTS.md` (Engineering Contract): build, lint, server types, tests, and the `check:*` scripts (budget, privacy, docs, layout); verify visual changes with Playwright on desktop, a short desktop (1366×768) and a 390px phone.

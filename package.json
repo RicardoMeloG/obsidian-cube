@@ -9,6 +9,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "typecheck:server": "tsc --noEmit -p server/tsconfig.json",
+    "check:layout": "node scripts/check-layout.mjs",
+    "check:budget": "node scripts/check-budget.mjs",
+    "check:privacy": "node scripts/check-privacy.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
     "server": "ts-node --project server/tsconfig.json server/main.ts"
   },
   "dependencies": {
@@ -33,6 +38,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@types/express-session": "^1.19.0",
     "@types/node": "^24.12.3",

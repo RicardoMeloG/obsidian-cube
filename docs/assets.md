@@ -1,0 +1,9 @@
+# Public Assets
+
+Every file served from `public/` (except the content documents in `public/content/`) has a recorded source and licence, because the repository is public and the site redistributes them (spec 010, E-21). `scripts/checks/assets.test.ts` fails when a file is missing from this table, and keeps the list of pending licences from growing.
+
+| Path | Source | Licence |
+|---|---|---|
+| `environments/udec-frontis.jpg` | Photograph used as the cube's reflection environment; origin not recorded | pending |
+| `favicon.svg` | Vite's logo, left by the project template; to be replaced by the site's own icon | pending |
+| `og-image.jpg` | Rendered from this site (the cube on the AGENTIC face, interface hidden), 2026-10-12 | Same as the repository |

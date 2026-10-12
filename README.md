@@ -43,13 +43,21 @@ npm run server              # http://127.0.0.1:5182 — first login enrolls TOTP
 
 Without Postgres the admin still starts in file-only mode (publish works, drafts and versions are disabled).
 
-Checks before committing:
+Checks before committing (the same gates run in CI; see `docs/architecture.md`):
 
 ```bash
 npm run build
 npm run lint
+npm run typecheck:server
 npm test
+npm run check:budget     # first-view size, a ratchet
+npm run check:privacy    # no personal data in publishable files
+npm run check:docs       # no undated measurements in living docs
+npm run check:layout     # layout and accessibility on a viewport matrix (Playwright)
+git config core.hooksPath .githooks   # once per clone: privacy check before every push
 ```
+
+Private values for the privacy check go in `.privacy-denylist` (gitignored, one per line) and, in CI, in the `PRIVACY_DENYLIST` secret.
 
 AWS: see `docs/deploy-aws.md`. Nothing is provisioned by default; `cd infra && npm run synth` validates the stack offline.
 
@@ -66,7 +74,7 @@ Personal deploy content (gitignored):
 - `public/content/site.es.json`
 - `public/content/visual.json` (world and accent per face; example committed as `visual.example.json`)
 
-Loading order: try private → fall back to example → fall back to embedded defaults. The admin edits and publishes these same files.
+Loading order: the private file if present, otherwise the example, which is bundled as the defaults (`src/kernel/siteContent.ts`); a face that leaves a field empty takes it from the example in the same language. The admin edits and publishes these same files.
 
 Language behavior: `?lang=en` or `?lang=es` to force; otherwise inferred from `navigator.language`.
 

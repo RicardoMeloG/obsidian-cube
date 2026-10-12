@@ -4,10 +4,14 @@ on:
   push:
     branches: [main, "feature/**"]
   pull_request:
+  # Nightly: the layout check on the full viewport matrix.
+  schedule:
+    - cron: "0 6 * * *"
 
+# Gates of spec 010 (docs/architecture.md, "Rules and their gates").
 jobs:
   frontend:
-    name: Lint · Test · Build
+    name: Lint · Types · Test · Build · Budget · Privacy · Docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,8 +21,30 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm run typecheck:server
       - run: npm test
       - run: npm run build
+      - run: npm run check:budget
+      - run: npm run check:privacy
+        env:
+          # Owner's private values, one per line; never committed.
+          PRIVACY_DENYLIST: ${{ secrets.PRIVACY_DENYLIST }}
+      - run: npm run check:docs
+
+  layout:
+    name: Layout · Accessibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Layout check (PR matrix, full matrix at night)
+        run: npm run check:layout -- ${{ github.event_name == 'schedule' && '--full' || '' }}
 
   infra:
     name: CDK synth

@@ -125,10 +125,10 @@ Stack (do not change without a spec justifying it):
 
 Before reporting a change complete (definition of done; items marked with a phase start when that phase of `specs/010-architecture` lands):
 
-1. `npm run build`, `npm run lint` and `npm test` pass.
-2. The server type-checks and lints (P1).
-3. The layout and accessibility checks pass, with no new failure beyond the recorded known ones (P1).
-4. The privacy check passes (P1).
+1. `npm run build`, `npm run lint` (site and server), `npm run typecheck:server` and `npm test` pass.
+2. `npm run check:budget`, `npm run check:privacy` and `npm run check:docs` pass.
+3. `npm run check:layout` passes: no layout or accessibility failure beyond the known ones in `scripts/checks/layout-known.json`. A fix removes its entry; a new entry needs a reason in the commit.
+4. The pre-push hook is enabled (`git config core.hooksPath .githooks`).
 5. Visual changes are verified with Playwright: desktop at 1440px or wider, a short desktop (1366×768) and a 390px phone.
 6. `docs/architecture.md` is updated in the same change when a boundary, flow or rule status changes.
 7. Changes stay scoped to one product hito per commit.
@@ -138,14 +138,14 @@ Admin and backend rules:
 - The custom login (bcrypt + TOTP in `server/auth/`) never leaves `127.0.0.1`. Authentication in production is Cognito's; do not add homegrown auth to the cloud path (ADR 004).
 - The owner's personal data (email, admin user) is never written in code or committed; the Cognito user is created out of band.
 - "Publish" must reach the deploy target: validate, write to the site bucket under `content/`, invalidate `/content/*`. The local NestJS publish writes to disk only and is not production.
-- Code deploys must never delete or overwrite private content. **Not yet true:** `deploy.yml` syncs with `--delete` and no exclusion; fixed before the first publish (spec 010, AD-11), gated by a CI test.
+- Code deploys never delete or overwrite private content: `deploy.yml` excludes `content/*` from the deleting sync and uploads hashed `assets/` without deleting old ones (spec 010, AD-11; gated by `scripts/checks/deployWorkflow.test.ts`).
 - Admin backend logic lives in plain functions tested with Vitest against an S3 stub.
 
 ## Architecture Rules
 
 The overview, the module map and the status of every rule (in force, or the phase that brings it) are in `docs/architecture.md`; the reasoning is in ADR 005, ADR 006 and `specs/010-architecture/`. Read `docs/architecture.md` before changing code. In short:
 
-- **Content kernel** (`src/kernel/`, from P1): schemas, catalog, defaults, example content, SEO renderer, layout budgets. Pure TypeScript, no DOM, depends on `zod` only. The admin server imports the kernel and nothing else from `src/`.
+- **Content kernel** (`src/kernel/`): schemas, catalog, defaults, example content, SEO renderer, layout budgets. Pure TypeScript, no DOM, depends on `zod` only. The admin server imports the kernel and nothing else from `src/`.
 - **Scene and DOM are separate.** Scene code (R3F, three) and DOM features never import each other; they meet in the experience store (from P3).
 - **Styling.** Tailwind utilities and tokens; hand-written CSS only for what utilities express poorly, commented with why. `App.css` is legacy being migrated (P2b–P4): do not grow it except for the P2a short-screen fix.
 - **Layout modes** come from one source, `src/styles/layoutModes.ts` (from P2a). No numeric breakpoints in components.
@@ -220,10 +220,10 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet.
-- [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/seo/renderSeo.ts`. CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
+- [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`. CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [ ] README explains the agentic process and architecture — it covers the site, not the admin or the infra.
 - [ ] Real identity and at least one real artifact per face, live at a public URL.
-- [x] `npm run build`, `npm run lint` and `npm test` pass.
+- [x] The CI gates pass (build, lint, types, tests, budget, privacy, docs, layout).
 
 ## Other References (load on demand)
 
@@ -233,6 +233,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - `docs/architecture.md` — code architecture overview, module map, flows and the status of every rule
 - `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
+- `docs/assets.md` — source and licence of every public asset
 - `docs/visitor-profile.md` — who visits, with sources: recruiters, hiring managers, peers, AI crawlers, link previews, sourcing tools
 - `docs/research-philosophy.md` — content brief for the RESEARCH face (what of the private archive may be shown)
 - `specs/NNN-*/` — feature specs (lightweight markdown; Spec Kit drafts 002/003 kept as input)

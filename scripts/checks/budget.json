@@ -1,0 +1,7 @@
+{
+  "note": "First-view budget (spec 010, H-07). alwaysLoaded: public files the first view fetches on every visit. limitBytes: gzip ratchet, lowered with --update.",
+  "alwaysLoaded": [
+    "environments/udec-frontis.jpg"
+  ],
+  "limitBytes": 1217091
+}

@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-12):** P0 done. Next: P1 (gates and kernel). Phases are defined in `specs/010-architecture/spec.md`, section 7.
+**Migration status (2026-10-12):** P0 and P1 done. Next: P2a (short-screen fit and resilience), then the publish track. Phases are defined in `specs/010-architecture/spec.md`, section 7.
 
 ## System
 
@@ -27,14 +27,15 @@ Two layers: the repository holds code and example content; the owner's content i
 | Path | What | Notes |
 |---|---|---|
 | `src/` | Public site: React 19, TypeScript, Vite, React Three Fiber, Tailwind v4 | One package with the admin server |
-| `src/kernel/` | Content kernel: schemas, catalog, defaults, example, SEO renderer, budgets | **Target, P1** (ADR 005). Today: `src/features/premium-cube/content/` and `src/seo/` |
-| `server/` | Local NestJS admin, `127.0.0.1:5182` | Retired by ADR 004 slice 6; may import only `src/kernel` (from P1) |
+| `src/kernel/` | Content kernel: schemas, face and world catalogs, defaults (the bundled example), SEO renderer | ADR 005; layout budgets arrive in P2a |
+| `server/` | Local NestJS admin, `127.0.0.1:5182` | Retired by ADR 004 slice 6; imports only `src/kernel`; linted and type-checked |
 | `infra/` | AWS CDK | Own `package.json`, lockfile and TypeScript version |
+| `scripts/` | Gate scripts (`check-*.mjs`) and their data in `scripts/checks/` | Known layout failures, budget ratchet, deploy test |
 | `docs/`, `specs/` | Direction, ADRs, specs | `AGENTS.md` is the constitution |
 
 ## Site modules
 
-**Today:** everything under `src/features/premium-cube/` (one folder), plus `src/seo/`, `src/App.tsx`, `src/App.css`, `src/index.css`. `PremiumCubePrototype.tsx` owns most behaviour.
+**Today:** `src/kernel/` (content contract), `src/features/content/` (loaders, locale, sanitizer, `RichText`, content hooks), and everything else under `src/features/premium-cube/` (one folder), plus `src/App.tsx`, `src/App.css`, `src/index.css`. `PremiumCubePrototype.tsx` owns most behaviour.
 
 **Target** (ADR 006; folders appear in the phase noted):
 
@@ -46,39 +47,42 @@ src/
     scene/           R3F scene, intro, worlds, environment              P3 (moved as is)
     faces/           rails, evidence, flow, research map, dialog        P3
     navigation/      face strip, language switch, contact links         P3
-    content/         loaders, sanitizer, UI copy dictionary              P1 (loaders), P3
+    content/         loaders, sanitizer, UI copy dictionary              done (loaders), P3
     audio/  dev/     ambient sound; diagnostics and showcase (DEV only)  P3
   ui/                Tailwind primitives                                P2b
   styles/            tokens.css, scene.css, layoutModes.ts              P2a (layoutModes), P2b
-  kernel/            ADR 005                                            P1
+  kernel/            ADR 005                                            done
 ```
 
 Dependency rules (target, linted from P3): `kernel` imports only `zod`; `ui` imports no feature, three or R3F; `scene` and the DOM features (`faces`, `navigation`) never import each other and meet in `experience`; `experience` imports only `kernel`; `app` may import everything.
 
 ## Flows
 
-- **Build-time SEO.** `vite.config.ts` (`seoFromContent`) reads `public/content/site.en.json`, or the committed example if absent, and renders the head tags, JSON-LD and a plain-text body into `index.html` with `src/seo/renderSeo.ts`. CI has no private content, so a CI build carries the example identity.
-- **Content at runtime.** The site fetches `content/site.{locale}.json` and `content/visual.json`, validates them with the shared schemas, and falls back to the example content when absent or invalid.
+- **Build-time SEO.** `vite.config.ts` (`seoFromContent`) reads `public/content/site.en.json`, or the committed example if absent, and renders the head tags, JSON-LD and a plain-text body into `index.html` with `src/kernel/seo/renderSeo.ts`. CI has no private content, so a CI build carries the example identity.
+- **Content at runtime.** The site renders the bundled example first, fetches `content/site.{locale}.json` and `content/visual.json` (`src/features/content/loadContent.ts`), validates them with the kernel, and keeps the example when a document is absent, not JSON or invalid. Empty fields of a published face are filled from the example in the same language.
 - **Publish (today).** The local admin validates with the same schemas and writes `public/content/*.json` on disk. Not production.
 - **Publish (target, ADR 004).** Lambda validates with the kernel, writes to `content/` in the site bucket, renders SEO into `index.html`, invalidates.
-- **Deploy.** `deploy.yml` builds and syncs `dist/` to the site bucket. **Known gap:** the sync uses `--delete` without excluding `content/` (spec 010, E-13); fixed by AD-11 before the first publish.
+- **Deploy.** `deploy.yml` builds, uploads the hashed `assets/` without deleting old chunks, then syncs the rest with `--delete` excluding `content/*` and `assets/*` (AD-11). **Known gap:** CloudFront still rewrites 403/404 to `index.html` with status 200 (AD-09, P2a).
 
 ## Rules and their gates
 
 | Rule | Status | Gate |
 |---|---|---|
-| Personal data never in the repository | In force | `.gitignore`; privacy check from P1 (H-08a) |
+| Personal data never in the repository | In force | `.gitignore`; `npm run check:privacy` in CI and pre-push (H-08a); `--history` before publishing a repository |
 | Build, lint and unit tests pass | In force | CI |
 | CDK synthesises | In force | CI |
-| Server linted and type-checked | P1 | CI (H-05) |
-| Kernel pure, server imports only the kernel | P1 | `tsc` without DOM, lint (H-15, H-04b) |
-| Layout: no rail over the strip, CTAs in view, name first and not covered | P1 (known failures recorded), green from P2a | Layout check (H-06) |
-| Accessibility: no new axe violations | P1 | Layout job (H-13) |
-| First-view budget, ratchet | P1 | CI (H-07) |
-| Deploy never deletes content | P1 test, fixed before publishing | CI (H-14) |
+| Server linted and type-checked | In force | `npm run lint`, `npm run typecheck:server` (H-05) |
+| Kernel pure, server imports only the kernel | In force | `tsconfig.kernel.json` in `tsc -b`, lint rules in `eslint.config.js` (H-15, H-04b); the rules themselves are tested by `scripts/checks/boundaries.test.ts` |
+| Owner content wins; a missing field falls back to the example in the same language | In force | `src/kernel/siteContent.test.ts` |
+| Every public asset has a recorded source and licence | In force, two pending | `docs/assets.md`, `scripts/checks/assets.test.ts` |
+| Layout: no rail over the strip, CTAs in view, name first and not covered | In force with known failures (`scripts/checks/layout-known.json`); the list empties in P2a | `npm run check:layout` (H-06) |
+| Accessibility: no new axe violations | In force with known failures | `npm run check:layout` (H-13) |
+| First-view budget, ratchet | In force | `npm run check:budget`, limit in `scripts/checks/budget.json` (H-07) |
+| Deploy never deletes content | In force | `scripts/checks/deployWorkflow.test.ts` (H-14) |
 | One source for layout modes | P2a | Unit test (H-17) |
 | No blank page without WebGL | P2a | Playwright (H-18) |
 | No colour literals outside tokens | P2b | CI (H-08b) |
 | Module boundaries | P3 | Lint (H-04) |
 | DOM-layer files ≤ 250 lines | P3 | Script (H-16) |
+| Living docs carry no undated measurements | In force | `npm run check:docs` (H-11) |
 | Architecture doc updated with boundary changes | Unchecked | PR template |

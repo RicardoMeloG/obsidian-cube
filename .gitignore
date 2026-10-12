@@ -30,3 +30,6 @@ public/content/visual.json
 *.njsproj
 *.sln
 *.sw?
+
+# Private values the privacy check looks for (scripts/check-privacy.mjs)
+.privacy-denylist
