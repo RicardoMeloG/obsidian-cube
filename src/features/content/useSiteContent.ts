@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDefaultSiteContent, loadSiteContent, normalizeSections, resolveSiteLocale } from './siteContent'
-import type { SiteContent, SiteLocale } from './siteContent'
+import { getDefaultSiteContent, normalizeSections } from '../../kernel/siteContent'
+import type { SiteContent, SiteLocale } from '../../kernel/siteContent'
+import { loadSiteContent, resolveSiteLocale } from './loadContent'
 
 export function useSiteContent() {
   const [locale, setLocale] = useState<SiteLocale>(() => resolveSiteLocale())
   const [content, setContent] = useState<SiteContent>(() => getDefaultSiteContent(resolveSiteLocale()))
-  const sections = useMemo(() => normalizeSections(content.sections), [content.sections])
+  const sections = useMemo(() => normalizeSections(content.sections, content.locale), [content.sections, content.locale])
 
   useEffect(() => {
     let isCurrent = true

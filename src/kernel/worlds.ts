@@ -1,5 +1,5 @@
-// Pure world catalog metadata — NO React/Three imports. Both the frontend scene
-// AND the Node admin backend import world ids/labels from here, so the backend
+// World catalog of the content kernel — NO React/Three imports. Both the
+// frontend scene AND the Node admin backend import world ids/labels from here, so the backend
 // can validate visual.json against the same identifiers without dragging in the
 // 3D component modules (which would pull Three.js into Node).
 //

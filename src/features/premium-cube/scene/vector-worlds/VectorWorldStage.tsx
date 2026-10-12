@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { WORLD_REGISTRY } from './registry'
-import type { WorldId } from './catalog'
+import type { WorldId } from '../../../../kernel/worlds'
 
 type VectorWorldStageProps = {
   worldId: WorldId | null

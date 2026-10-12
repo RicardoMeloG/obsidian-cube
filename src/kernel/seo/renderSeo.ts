@@ -80,17 +80,16 @@ function publicLinks(content: SeoInput): { label: string; href: string }[] {
 
 // schema.org `sameAs` names the person's own profiles, not their projects:
 // a GitHub user page (one path segment) or a LinkedIn /in/ page.
+// Parsed by hand rather than with `URL`, which is not part of the ES library
+// the kernel compiles against (ADR 005).
 export function isProfileUrl(href: string): boolean {
-  try {
-    const url = new URL(href)
-    const host = url.hostname.replace(/^www\./, '')
-    const segments = url.pathname.split('/').filter(Boolean)
-    if (host === 'github.com') return segments.length === 1
-    if (host === 'linkedin.com') return segments[0] === 'in' && segments.length === 2
-    return false
-  } catch {
-    return false
-  }
+  const match = /^https?:\/\/(?:www\.)?([^/?#:]+)([^?#]*)/i.exec(href)
+  if (!match) return false
+  const host = match[1].toLowerCase()
+  const segments = match[2].split('/').filter(Boolean)
+  if (host === 'github.com') return segments.length === 1
+  if (host === 'linkedin.com') return segments[0] === 'in' && segments.length === 2
+  return false
 }
 
 function keywordList(keywords?: string): string[] {

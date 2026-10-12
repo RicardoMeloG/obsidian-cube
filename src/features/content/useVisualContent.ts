@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getDefaultVisualContent, loadVisualContent } from './visualContent'
-import type { VisualContent } from './visualContent'
+import { getDefaultVisualContent } from '../../kernel/visualContent'
+import type { VisualContent } from '../../kernel/visualContent'
+import { loadVisualContent } from './loadContent'
 
 // Loads the language-independent visual config once. Starts from embedded
 // defaults (identical to the previous hardcoded look) so there is no flash

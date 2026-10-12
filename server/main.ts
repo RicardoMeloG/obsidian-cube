@@ -39,7 +39,6 @@ async function bootstrap() {
   )
 
   await app.listen(PORT, HOST)
-  // eslint-disable-next-line no-console
   console.log(`Obsidian Cube admin → http://${HOST}:${PORT}`)
 }
 

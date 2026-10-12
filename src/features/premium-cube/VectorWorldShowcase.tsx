@@ -1,11 +1,11 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { MathUtils, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
-import { useSiteContent } from './content/useSiteContent'
+import { useSiteContent } from '../content/useSiteContent'
 import { VECTOR_WORLD_THEME } from './scene/vector-worlds/base/theme'
 import { isWorldId, WORLD_REGISTRY } from './scene/vector-worlds/registry'
-import { WORLD_IDS } from './scene/vector-worlds/catalog'
-import type { WorldId } from './scene/vector-worlds/catalog'
+import { WORLD_IDS } from '../../kernel/worlds'
+import type { WorldId } from '../../kernel/worlds'
 import type { WorldComposition } from './scene/vector-worlds/types'
 
 type ProductTuneState = {

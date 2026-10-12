@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import exampleEn from '../../public/content/site.example.en.json'
+import exampleEn from '../../../public/content/site.example.en.json'
 import { buildPersonJsonLd, escapeHtml, isProfileUrl, renderHeadTags, renderStaticBody, toPlainText } from './renderSeo'
 import type { SeoInput } from './renderSeo'
 

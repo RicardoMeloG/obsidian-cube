@@ -11,8 +11,8 @@ import {
   stopCubeDragSound,
   updateCubeDragSound,
 } from '../audio/cubeAudio'
-import type { CubeSectionId } from '../cubeSections'
-import type { ResolvedCubeSection } from '../content/visualContent'
+import type { CubeSectionId } from '../../../kernel/faces'
+import type { ResolvedCubeSection } from '../../../kernel/visualContent'
 import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { PremiumCube } from './PremiumCube'

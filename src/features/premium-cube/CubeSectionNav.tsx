@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import type { CubeSection, CubeSectionId } from './cubeSections'
-import type { SiteLocale } from './content/siteContent'
+import type { CubeSection, CubeSectionId } from '../../kernel/faces'
+import type { SiteLocale } from '../../kernel/siteContent'
 
 type CubeSectionNavProps = {
   activeSectionId: CubeSectionId

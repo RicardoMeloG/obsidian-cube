@@ -3,10 +3,10 @@ import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { renderHeadTags, renderStaticBody } from './src/seo/renderSeo.ts'
-import type { SeoInput } from './src/seo/renderSeo.ts'
+import { renderHeadTags, renderStaticBody } from './src/kernel/seo/renderSeo.ts'
+import type { SeoInput } from './src/kernel/seo/renderSeo.ts'
 
-// Static SEO (src/seo/renderSeo.ts): the published English content when it
+// Static SEO (src/kernel/seo/renderSeo.ts): the published English content when it
 // exists locally (gitignored, written by the admin), otherwise the committed
 // example. CI has no private content, so a deploy from CI ships the example
 // until the admin publish step renders the page (ADR 004).

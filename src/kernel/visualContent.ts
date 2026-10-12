@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { CUBE_FACE_ORDER, SECTION_ACCENTS } from '../cubeSections'
-import type { CubeSection, CubeSectionId } from '../cubeSections'
-import { WORLD_IDS, WORLD_LABELS } from '../scene/vector-worlds/catalog'
-import type { WorldId } from '../scene/vector-worlds/catalog'
+import { CUBE_FACE_ORDER, SECTION_ACCENTS } from './faces'
+import type { CubeSection, CubeSectionId } from './faces'
+import { WORLD_IDS, WORLD_LABELS } from './worlds'
+import type { WorldId } from './worlds'
 
 // Presentation layer, isolated from the per-locale text content. This config is
 // language-independent (a background/accent is the same in EN and ES), so it
@@ -61,7 +61,7 @@ export function getDefaultVisualContent(): VisualContent {
   }
 }
 
-function normalizeVisual(parsed: z.infer<typeof VisualContentSchema>): VisualContent {
+export function normalizeVisual(parsed: z.infer<typeof VisualContentSchema>): VisualContent {
   const defaults = getDefaultVisualContent()
   const faces = {} as Record<CubeSectionId, FaceVisual>
   for (const id of CUBE_FACE_ORDER) {
@@ -90,24 +90,4 @@ export function resolveSections(sections: CubeSection[], visual: VisualContent):
     accent: visual.faces[section.id]?.accent ?? SECTION_ACCENTS[section.id],
     worldId: resolveWorldId(visual, section.id),
   }))
-}
-
-export async function loadVisualContent(): Promise<VisualContent> {
-  const contentPaths = ['/content/visual.json', '/content/visual.example.json']
-
-  for (const contentPath of contentPaths) {
-    try {
-      const response = await fetch(contentPath, { cache: 'no-store' })
-
-      if (!response.ok) {
-        continue
-      }
-
-      return normalizeVisual(VisualContentSchema.parse(await response.json()))
-    } catch (error) {
-      console.warn(`Could not load visual content from ${contentPath}`, error)
-    }
-  }
-
-  return getDefaultVisualContent()
 }

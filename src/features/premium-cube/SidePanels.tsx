@@ -1,13 +1,11 @@
 import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
-import type { CubeSection, CubeSectionDetail, CubeSectionId, CubeSectionResearchConcept, FeatureGlyphId } from './cubeSections'
-import type { ResolvedCubeSection } from './content/visualContent'
-import type { SiteLocale } from './content/siteContent'
-import { RichText } from './content/RichText'
+import type { CubeSection, CubeSectionDetail, CubeSectionResearchConcept, FeatureGlyphId } from '../../kernel/faces'
+import type { ResolvedCubeSection } from '../../kernel/visualContent'
+import { RichText } from '../content/RichText'
 
 type SidePanelsProps = {
   activeSection: ResolvedCubeSection
-  locale: SiteLocale
   // `trigger` is the control that opened the detail; the dialog returns focus to it on close.
   onOpenDetail: (detail?: CubeSectionDetail, trigger?: HTMLElement) => void
   transitionState?: 'idle' | 'exiting' | 'entering'
@@ -101,11 +99,9 @@ function createResearchConceptDetail(concept: CubeSectionResearchConcept): CubeS
 
 export function SidePanels({
   activeSection,
-  locale,
   onOpenDetail,
   transitionState = 'idle',
 }: SidePanelsProps) {
-  const eyebrowLabel = getEyebrowLabel(activeSection, locale)
   const titleLines = useMemo(() => splitTitleIntoTwoLines(activeSection.title), [activeSection.title])
   // Per-face accent: exposed as a CSS variable so the title picks up the section
   // hue. Resolved from visual.json (falls back to SECTION_ACCENTS defaults).
@@ -144,7 +140,7 @@ export function SidePanels({
       <aside className="side-panels__rail side-panels__rail--left" key={`L-${activeSection.id}`}>
         <p className="side-panels__eyebrow">
           <span aria-hidden />
-          {eyebrowLabel}
+          {activeSection.eyebrow}
         </p>
         <h2 className="side-panels__title">
           {titleLines[1] ? (
@@ -218,23 +214,6 @@ export function SidePanels({
       </aside>
     </div>
   )
-}
-
-function getEyebrowLabel(section: CubeSection, locale: SiteLocale) {
-  if (locale !== 'es') {
-    return section.eyebrow
-  }
-
-  const labels: Record<CubeSectionId, string> = {
-    agentic: 'INGENIERÍA AGÉNTICA',
-    products: 'PRODUCTO ABIERTO',
-    systems: 'ARQUITECTURA',
-    security: 'CONTROL DE RIESGO',
-    research: 'INVESTIGACIÓN',
-    contact: 'CONTACTO',
-  }
-
-  return labels[section.id]
 }
 
 function splitTitleIntoTwoLines(title: string): [string, string?] {

@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import type { WorldEntry } from './types'
-import { WORLD_LABELS } from './catalog'
-import type { WorldId } from './catalog'
+import { WORLD_LABELS } from '../../../../kernel/worlds'
+import type { WorldId } from '../../../../kernel/worlds'
 
 // World identifiers and labels are the pure catalog (./catalog). Adding a new
 // world = (1) create file in worlds/, (2) register its Component here, (3) add

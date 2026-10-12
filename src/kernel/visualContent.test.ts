@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { getDefaultVisualContent, resolveSections, resolveWorldId } from './visualContent'
 import type { VisualContent } from './visualContent'
-import { CUBE_SECTIONS } from '../cubeSections'
+import { getDefaultSiteContent, normalizeSections } from './siteContent'
 
 describe('visualContent defaults', () => {
   it('exposes all six worlds enabled and a 1:1 face->world mapping', () => {
@@ -47,7 +47,7 @@ describe('resolveWorldId', () => {
 
 describe('resolveSections', () => {
   it('attaches accent and worldId onto each section', () => {
-    const resolved = resolveSections(CUBE_SECTIONS, getDefaultVisualContent())
+    const resolved = resolveSections(normalizeSections(getDefaultSiteContent('en').sections, 'en'), getDefaultVisualContent())
     const agentic = resolved.find((s) => s.id === 'agentic')!
     expect(agentic.accent).toBe('#b8aeff')
     expect(agentic.worldId).toBe('agentic')

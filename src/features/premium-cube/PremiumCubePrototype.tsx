@@ -1,13 +1,13 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { CUBE_FACE_ORDER } from './cubeSections'
-import type { CubeSectionDetail, CubeSectionId } from './cubeSections'
+import { CUBE_FACE_ORDER } from '../../kernel/faces'
+import type { CubeSectionDetail, CubeSectionId } from '../../kernel/faces'
 import { CubeSectionNav } from './CubeSectionNav'
-import { useSiteContent } from './content/useSiteContent'
-import { useVisualContent } from './content/useVisualContent'
-import { resolveSections } from './content/visualContent'
-import { RichText } from './content/RichText'
+import { useSiteContent } from '../content/useSiteContent'
+import { useVisualContent } from '../content/useVisualContent'
+import { resolveSections } from '../../kernel/visualContent'
+import { RichText } from '../content/RichText'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
 import type { CubeIntroConfig, CubeSceneHandle } from './scene/CubeScene'
@@ -418,7 +418,6 @@ export function PremiumCubePrototype() {
       {displayedSection && (
         <SidePanels
           activeSection={displayedSection}
-          locale={locale}
           onOpenDetail={(detail, trigger) => {
             restoreFocusRef.current =
               trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)

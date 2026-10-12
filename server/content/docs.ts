@@ -1,6 +1,6 @@
 import type { ZodType } from 'zod'
-import { SiteContentSchema } from '../../src/features/premium-cube/content/siteContent'
-import { VisualContentSchema } from '../../src/features/premium-cube/content/visualContent'
+import { SiteContentSchema } from '../../src/kernel/siteContent'
+import { VisualContentSchema } from '../../src/kernel/visualContent'
 
 // The three editable documents. Each maps to the SAME Zod schema the frontend
 // validates against, plus its published file and a committed example used as the
