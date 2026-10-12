@@ -186,6 +186,11 @@ Privacy:
 - Commit only coherent milestones.
 - Commit messages describe the product hito, not the file diff.
 - Do not mix unrelated refactors with feature changes.
+- Messages follow Conventional Commits: `type(scope): summary`, lowercase after the colon except proper names (AWS, Cognito), no trailing period.
+- Language: the summary and body are written in Spanish; types, scopes and footers (`BREAKING CHANGE:`, `Co-Authored-By:`) stay in English because tooling reads them. Example: `feat(cube): intro de primera visita e invitación a girar`.
+  - Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`.
+  - Scopes are optional; reuse the existing ones: `cube`, `admin`, `content`, `infra`, `a11y`, `mobile`.
+  - A breaking change to the content schema or a public contract adds `!` after the type and a `BREAKING CHANGE:` footer.
 
 ## MVP Definition
 
