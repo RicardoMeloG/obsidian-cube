@@ -171,7 +171,7 @@ Working palette:
 
 ## Tailwind Implementation
 
-Tailwind is the implementation layer for static pages and future admin UI. It must follow the Obsidian Interface System above.
+Tailwind is the implementation layer for the whole interface: the home rails and chrome, static pages and the admin UI (ADR 006, which supersedes the earlier "static pages and future admin UI" scope; the home migrates by phases, see `docs/architecture.md`). It must follow the Obsidian Interface System above.
 
 Setup:
 
@@ -186,7 +186,7 @@ Token rules:
 
 Usage rules:
 
-- Use Tailwind for static page layouts, typography, spacing, and future admin UI.
+- Use Tailwind for layout, typography, spacing and states across the interface; hand-written CSS only where utilities are poor (canvas, scrims, keyframes), commented with why.
 - Prefer reusable React components for repeated page patterns (planned components tracked in `docs/roadmap.md`).
 - Do not introduce generic SaaS/landing-page visual patterns.
 - Keep pages semantic and readable for recruiters and AI parsers.

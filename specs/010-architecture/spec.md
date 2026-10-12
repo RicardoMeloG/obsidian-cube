@@ -1,6 +1,6 @@
 # 010: Architecture and Harness — Proposal
 
-**Status:** revision 2 (2026-10-12), after the first independent audit (`audit-1.md`, verdict "approve with changes"). Nothing here is built yet. Section 11 maps every audit finding to the change it produced.
+**Status:** revision 2 (2026-10-12), after the first independent audit (`audit-1.md`, verdict "approve with changes"). Accepted as ADR 005 and ADR 006; P0 done (2026-10-12), progress tracked in `docs/architecture.md`. Section 11 maps every audit finding to the change it produced.
 **Owner decisions:** D-1 and D-3 decided; D-2, D-4, D-5 open (section 9), each with a recommendation.
 **Outputs once accepted:** `docs/architecture.md` (living overview), ADR 005 (content kernel inside the site; workspaces deferred), ADR 006 (frontend architecture), harness changes in `AGENTS.md`, `CLAUDE.md` and CI.
 

@@ -117,27 +117,41 @@ Stack (do not change without a spec justifying it):
 
 - React + TypeScript + Vite (public site, `src/`)
 - Three.js / @react-three/fiber for 3D
-- Tailwind v4 with project tokens (see `docs/visual-direction.md`)
+- Tailwind v4 with project tokens (see `docs/visual-direction.md`; styling rules in ADR 006)
 - Zod for content schema validation — the same schemas are shared by the site and the admin
 - Admin in production (ADR 004, in progress): static page under `/admin/`, Amazon Cognito User Pool (TOTP MFA, managed login, code + PKCE), API Gateway HTTP API with a Cognito JWT authorizer, one Lambda, S3 for published content, drafts and versions. No database in the cloud.
 - Admin locally until ADR 004 is complete: NestJS API plus a vanilla admin page (`server/`), Postgres via `docker-compose.yml`; `npm run server` on `127.0.0.1:5182`. Retired once the Lambda path covers every operation.
 - AWS CDK (`infra/`): private S3 + CloudFront with OAC, deployed by GitHub Actions over OIDC (`docs/deploy-aws.md`)
 
-Before reporting a change complete:
+Before reporting a change complete (definition of done; items marked with a phase start when that phase of `specs/010-architecture` lands):
 
-1. Run `npm run build` (passes).
-2. Run `npm run lint` (passes).
-3. Run `npm test` (passes).
-4. Verify visually with Playwright when the change is visual: desktop at 1440px or wider and a 390px phone.
-5. Keep changes scoped to one product hito per commit.
+1. `npm run build`, `npm run lint` and `npm test` pass.
+2. The server type-checks and lints (P1).
+3. The layout and accessibility checks pass, with no new failure beyond the recorded known ones (P1).
+4. The privacy check passes (P1).
+5. Visual changes are verified with Playwright: desktop at 1440px or wider, a short desktop (1366×768) and a 390px phone.
+6. `docs/architecture.md` is updated in the same change when a boundary, flow or rule status changes.
+7. Changes stay scoped to one product hito per commit.
 
 Admin and backend rules:
 
 - The custom login (bcrypt + TOTP in `server/auth/`) never leaves `127.0.0.1`. Authentication in production is Cognito's; do not add homegrown auth to the cloud path (ADR 004).
 - The owner's personal data (email, admin user) is never written in code or committed; the Cognito user is created out of band.
 - "Publish" must reach the deploy target: validate, write to the site bucket under `content/`, invalidate `/content/*`. The local NestJS publish writes to disk only and is not production.
-- Code deploys never delete or overwrite private content: `deploy.yml` excludes the private content keys from `s3 sync --delete`.
+- Code deploys must never delete or overwrite private content. **Not yet true:** `deploy.yml` syncs with `--delete` and no exclusion; fixed before the first publish (spec 010, AD-11), gated by a CI test.
 - Admin backend logic lives in plain functions tested with Vitest against an S3 stub.
+
+## Architecture Rules
+
+The overview, the module map and the status of every rule (in force, or the phase that brings it) are in `docs/architecture.md`; the reasoning is in ADR 005, ADR 006 and `specs/010-architecture/`. Read `docs/architecture.md` before changing code. In short:
+
+- **Content kernel** (`src/kernel/`, from P1): schemas, catalog, defaults, example content, SEO renderer, layout budgets. Pure TypeScript, no DOM, depends on `zod` only. The admin server imports the kernel and nothing else from `src/`.
+- **Scene and DOM are separate.** Scene code (R3F, three) and DOM features never import each other; they meet in the experience store (from P3).
+- **Styling.** Tailwind utilities and tokens; hand-written CSS only for what utilities express poorly, commented with why. `App.css` is legacy being migrated (P2b–P4): do not grow it except for the P2a short-screen fix.
+- **Layout modes** come from one source, `src/styles/layoutModes.ts` (from P2a). No numeric breakpoints in components.
+- **Content budgets** (lengths, counts, link rules) are schema constraints, so content that would not fit is rejected at publish.
+- **No blank page.** Error boundaries keep the name, rails and strip visible when WebGL or a scene chunk fails (from P2a).
+- **Unchecked rules** (review only) say so where they are written.
 
 ## Content Strategy
 
@@ -181,6 +195,10 @@ Privacy:
 - README must explain setup, content strategy, and project intent.
 - Use specs (see `specs/`) for large changes.
 
+## Working Method
+
+Large changes follow: spec (`specs/NNN-*/`) → independent audit by an agent without prior context, recorded next to the spec → revision → build → gates → visual verification → Conventional Commit. The method is part of what the site presents as its own case study; `specs/010-architecture/audit-1.md` is the first record. Unchecked: enforced by review.
+
 ## Commits
 
 - Commit only coherent milestones.
@@ -212,7 +230,8 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - `docs/visual-direction.md` — design system (materials, color, motion, layout, tokens)
 - `docs/project-memory.md` — owner direction that must survive across sessions (future-state positioning, presentation layer, market reframing)
 - `docs/roadmap.md` — phase status, known gaps, priority order
-- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS)
+- `docs/architecture.md` — code architecture overview, module map, flows and the status of every rule
+- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
 - `docs/visitor-profile.md` — who visits, with sources: recruiters, hiring managers, peers, AI crawlers, link previews, sourcing tools
 - `docs/research-philosophy.md` — content brief for the RESEARCH face (what of the private archive may be shown)
