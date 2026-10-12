@@ -14,6 +14,8 @@ A review on 2026-10-09 found the engineering well ahead of the product: the site
 - **Name and thesis at the top of the hierarchy.** The owner's name and role must be the most prominent text on screen, above the cube's own label.
 - **Backgrounds must be perceivable.** A world that cannot be seen in a static frame behind the cube is not doing its retention job.
 
+**Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository and reaches the site only through the admin. The admin is therefore on the critical path to publishing, and moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`).
+
 Priority order: (1) real content and publish, (2) one artifact per face, (3) methodology page and static SEO, (4) thesis/presentation state, (5) admin hardening and admin-to-deploy-target publishing, (6) cleanup. `docs/roadmap.md` carries the detail.
 
 ## Identity
@@ -25,6 +27,8 @@ Priority order: (1) real content and publish, (2) one artifact per face, (3) met
 - Secondary positioning: Senior Software Engineer, AI-assisted product builder, open-source tool builder
 
 ## Audience
+
+Evidence and segments behind this list: `docs/visitor-profile.md` (2026-10-10). Machines that read raw HTML are the largest audience; most AI crawlers do not execute JavaScript.
 
 1. **Recruiters / hiring managers**: must understand in under 30 seconds what Ricardo is becoming professionally, why his senior systems background matters, what he can build with agentic workflows, and how to contact him.
 2. **AI / recruiter systems**: indexable, semantic HTML with clear keywords (Agentic Product Engineer, AI-assisted development, React, TypeScript, Python, PostgreSQL, AWS, Security, Legacy modernization, Open source, Production systems).
@@ -115,7 +119,8 @@ Stack (do not change without a spec justifying it):
 - Three.js / @react-three/fiber for 3D
 - Tailwind v4 with project tokens (see `docs/visual-direction.md`)
 - Zod for content schema validation — the same schemas are shared by the site and the admin
-- NestJS admin API plus a vanilla admin page (`server/`), Postgres via `docker-compose.yml` for drafts, versions and admin users; `npm run server` on `127.0.0.1:5182`
+- Admin in production (ADR 004, in progress): static page under `/admin/`, Amazon Cognito User Pool (TOTP MFA, managed login, code + PKCE), API Gateway HTTP API with a Cognito JWT authorizer, one Lambda, S3 for published content, drafts and versions. No database in the cloud.
+- Admin locally until ADR 004 is complete: NestJS API plus a vanilla admin page (`server/`), Postgres via `docker-compose.yml`; `npm run server` on `127.0.0.1:5182`. Retired once the Lambda path covers every operation.
 - AWS CDK (`infra/`): private S3 + CloudFront with OAC, deployed by GitHub Actions over OIDC (`docs/deploy-aws.md`)
 
 Before reporting a change complete:
@@ -128,9 +133,11 @@ Before reporting a change complete:
 
 Admin and backend rules:
 
-- The admin binds to `127.0.0.1` and stays there until it has login rate limiting, `secure` cookies behind HTTPS and a persistent session store. Password + TOTP MFA are already required.
-- "Publish" must reach the deploy target. Today it writes `public/content/*.json` on the server's disk, which only the local dev site reads. Before the admin is called production, publish must also upload to the static bucket and invalidate the CDN.
-- Backend changes ship with tests against `pg-mem` (installed, unused as of 2026-10-09).
+- The custom login (bcrypt + TOTP in `server/auth/`) never leaves `127.0.0.1`. Authentication in production is Cognito's; do not add homegrown auth to the cloud path (ADR 004).
+- The owner's personal data (email, admin user) is never written in code or committed; the Cognito user is created out of band.
+- "Publish" must reach the deploy target: validate, write to the site bucket under `content/`, invalidate `/content/*`. The local NestJS publish writes to disk only and is not production.
+- Code deploys never delete or overwrite private content: `deploy.yml` excludes the private content keys from `s3 sync --delete`.
+- Admin backend logic lives in plain functions tested with Vitest against an S3 stub.
 
 ## Content Strategy
 
@@ -200,7 +207,8 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - `docs/visual-direction.md` — design system (materials, color, motion, layout, tokens)
 - `docs/project-memory.md` — owner direction that must survive across sessions (future-state positioning, presentation layer, market reframing)
 - `docs/roadmap.md` — phase status, known gaps, priority order
-- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph)
+- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
+- `docs/visitor-profile.md` — who visits, with sources: recruiters, hiring managers, peers, AI crawlers, link previews, sourcing tools
 - `docs/research-philosophy.md` — content brief for the RESEARCH face (what of the private archive may be shown)
 - `specs/NNN-*/` — feature specs (lightweight markdown; Spec Kit drafts 002/003 kept as input)

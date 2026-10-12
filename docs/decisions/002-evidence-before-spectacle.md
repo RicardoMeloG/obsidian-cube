@@ -1,6 +1,6 @@
 # 002: Evidence Before Spectacle
 
-**Status:** accepted
+**Status:** accepted (Cognito deferral and admin ordering amended by 004)
 **Date:** 2026-10-09
 
 ## Context

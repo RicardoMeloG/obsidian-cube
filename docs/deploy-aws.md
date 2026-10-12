@@ -57,4 +57,5 @@ npm run synth   # generates CloudFormation into cdk.out/ — fully offline
 
 - RDS/Aurora Postgres + admin backend deploy (Fargate/Lambda).
 - Custom domain + ACM certificate (CloudFront currently serves its default domain).
-- Cognito / WAF.
+- Cognito-authenticated admin (HTTP API + Lambda + S3) — decided in ADR 004, being built.
+- WAF.
