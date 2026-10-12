@@ -11,7 +11,7 @@ A review on 2026-10-09 found the engineering well ahead of the product: the site
 - **Evidence before spectacle.** The cube is the invitation, not the proof. What makes the owner stand out is inspectable work: every face must link to at least one concrete artifact (repo, demo, write-up) with one line of result.
 - **Publish before building more.** No further infrastructure, admin features or 3D worlds until the site is live with real identity and real links.
 - **The site is its own case study.** The methodology deep-dive explains how this site was built with agents: decisions, gates, what went wrong. It is the one page that aligns the cube with the positioning.
-- **Name and thesis at the top of the hierarchy.** The owner's name and role must be the most prominent text on screen, above the cube's own label.
+- **Name first, message largest.** The owner's name and role are the first text a visitor reads: top-left, the page's `h1`, never covered, AA contrast. The face title stays the largest text, because two headlines of equal weight compete; the name wins by position and contrast, not size.
 - **Backgrounds must be perceivable.** A world that cannot be seen in a static frame behind the cube is not doing its retention job.
 
 **Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository and reaches the site only through the admin. The admin is therefore on the critical path to publishing, and moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`).
@@ -22,7 +22,7 @@ Priority order: (1) real content and publish, (2) one artifact per face, (3) met
 
 - Public display name: Ricardo Melo
 - SEO/legal full name: Ricardo Hernan Melo Gallardo
-- Technical handle: OlemOdracir
+- Technical handle: RicardoMeloG
 - Primary positioning: Agentic Product Engineer
 - Secondary positioning: Senior Software Engineer, AI-assisted product builder, open-source tool builder
 
@@ -103,7 +103,7 @@ Design:
 - The cube is the persistent focal element; selecting a face updates side panels in place — the cube does not disappear.
 - Each face's primary content must fit a single viewport on desktop without scroll, and collapse responsively on narrow viewports.
 - All six cube faces share the same frame; accent color and inner glyph vary per face, nothing else.
-- The owner's name and role are the top of the visual hierarchy on every face and must meet AA contrast.
+- The owner's name and role are the first text read on every face (top-left, `h1`, not covered by any layer) and must meet AA contrast; the face title may be larger.
 - Fixed chrome (face strip, identity block, language toggle) never overlaps scrolling content on narrow viewports.
 - Do **not** use `Bloom` in production — it caused visible flicker.
 - Do **not** add auto-playing audio. Audio is gesture-driven and subtle.
