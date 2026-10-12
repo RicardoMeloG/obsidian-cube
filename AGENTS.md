@@ -202,7 +202,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet.
-- [ ] Static SEO in `index.html` (`<title>`, description, JSON-LD) — the title is still the scaffold placeholder, fixed at runtime only.
+- [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/seo/renderSeo.ts`. CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [ ] README explains the agentic process and architecture — it covers the site, not the admin or the infra.
 - [ ] Real identity and at least one real artifact per face, live at a public URL.
 - [x] `npm run build`, `npm run lint` and `npm test` pass.

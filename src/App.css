@@ -88,7 +88,9 @@
 .prototype-chrome {
   position: absolute;
   inset: 0;
-  z-index: 4;
+  /* Above the side panels (z 5): their left scrim used to dim the name. The
+     chrome takes no pointer events, so the panels stay clickable. */
+  z-index: 6;
   display: grid;
   grid-template-rows: auto 1fr auto;
   pointer-events: none;
@@ -234,17 +236,34 @@
   padding-left: clamp(1.2rem, 3vw, 2.6rem);
 }
 
-.prototype-kicker span {
-  color: rgba(247, 250, 253, 0.88);
-  font-size: 0.78rem;
+/* Name first: the first thing read in the top-left corner (ADR 002 first
+   glance). Readable at a glance without competing with the cube or the
+   section title. */
+.prototype-kicker__name {
+  margin: 0;
+  color: rgba(248, 250, 253, 0.97);
+  font-size: clamp(0.98rem, 1.15vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.24em;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.7);
 }
 
-.prototype-kicker small {
-  color: rgba(154, 203, 242, 0.54);
-  font-size: 0.58rem;
+.prototype-kicker__role {
+  margin: 0;
+  color: rgba(196, 188, 255, 0.9);
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.22em;
-  text-transform: uppercase;
+}
+
+.prototype-kicker__keywords {
+  margin: 0;
+  color: rgba(206, 216, 228, 0.7);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: none;
 }
 
 .prototype-mark {
@@ -288,6 +307,20 @@
   .prototype-mark {
     font-size: 0.52rem;
     letter-spacing: 0.24em;
+  }
+
+  .prototype-kicker__name {
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+  }
+
+  .prototype-kicker__role {
+    font-size: 0.56rem;
+  }
+
+  .prototype-kicker__keywords {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
   }
 
   .prototype-status {

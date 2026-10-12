@@ -4,11 +4,13 @@
     "displayName": "Portfolio Owner",
     "fullName": "Portfolio Owner",
     "handle": "your-handle",
-    "role": "Agentic Product Engineer"
+    "role": "Agentic Product Engineer",
+    "keywords": "AI Engineer · LLM agents · Python · AWS"
   },
   "seo": {
     "title": "Agentic Portfolio | Agentic Product Engineer",
-    "description": "Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research."
+    "description": "Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research.",
+    "image": "/og-image.jpg"
   },
   "hero": {
     "headline": "Agentic Product Engineer building AI-assisted products from real-world systems experience.",

@@ -76,10 +76,16 @@ export const SiteContentSchema = z.object({
     fullName: z.string().min(1),
     handle: z.string().min(1),
     role: z.string().min(1),
+    // One line under the role, e.g. "AI Engineer · LLM agents · Python · AWS".
+    keywords: z.string().min(1).optional(),
   }),
   seo: z.object({
     title: z.string().min(1),
     description: z.string().min(1),
+    // Public origin of the deployed site (canonical and og:url), no trailing slash.
+    siteUrl: z.string().url().optional(),
+    // Share preview image: a path under public/ or an absolute URL.
+    image: z.string().min(1).optional(),
   }),
   hero: z.object({
     headline: z.string().min(1),
@@ -99,6 +105,7 @@ const DEFAULT_CONTENT: Record<SiteLocale, SiteContent> = {
       fullName: 'Portfolio Owner',
       handle: 'your-handle',
       role: 'Agentic Product Engineer',
+      keywords: 'AI Engineer · LLM agents · Python · AWS',
     },
     seo: {
       title: 'Agentic Portfolio | Agentic Product Engineer',
@@ -119,6 +126,7 @@ const DEFAULT_CONTENT: Record<SiteLocale, SiteContent> = {
       fullName: 'Portfolio Owner',
       handle: 'your-handle',
       role: 'Ingeniero de Productos Agénticos',
+      keywords: 'AI Engineer · LLM agents · Python · AWS',
     },
     seo: {
       title: 'Portfolio Agéntico | Ingeniero de Productos Agénticos',

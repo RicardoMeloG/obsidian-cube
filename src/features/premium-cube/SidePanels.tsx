@@ -146,7 +146,7 @@ export function SidePanels({
           <span aria-hidden />
           {eyebrowLabel}
         </p>
-        <h1 className="side-panels__title">
+        <h2 className="side-panels__title">
           {titleLines[1] ? (
             <>
               <span className="side-panels__title-line">{titleLines[0]}</span>
@@ -155,7 +155,7 @@ export function SidePanels({
           ) : (
             <span className="side-panels__title-line side-panels__title-line--accent">{titleLines[0]}</span>
           )}
-        </h1>
+        </h2>
         <RichText as="p" className="side-panels__summary" html={activeSection.summary} />
 
         {activeSection.features && activeSection.features.length > 0 && (

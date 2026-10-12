@@ -4,11 +4,13 @@
     "displayName": "Portfolio Owner",
     "fullName": "Portfolio Owner",
     "handle": "your-handle",
-    "role": "Ingeniero de Productos Agénticos"
+    "role": "Ingeniero de Productos Agénticos",
+    "keywords": "AI Engineer · LLM agents · Python · AWS"
   },
   "seo": {
     "title": "Portfolio Agéntico | Ingeniero de Productos Agénticos",
-    "description": "Prototipo open source de portfolio agéntico para desarrollo asistido por IA, sistemas productivos, seguridad e investigación."
+    "description": "Prototipo open source de portfolio agéntico para desarrollo asistido por IA, sistemas productivos, seguridad e investigación.",
+    "image": "/og-image.jpg"
   },
   "hero": {
     "headline": "Ingeniero de productos agénticos construyendo software asistido por IA desde experiencia real en sistemas productivos.",

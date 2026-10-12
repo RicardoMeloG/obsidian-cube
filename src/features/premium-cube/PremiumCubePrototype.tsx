@@ -387,10 +387,11 @@ export function PremiumCubePrototype() {
       </div>
 
       <div className="prototype-chrome">
-        <div className="prototype-kicker">
-          <span>{content.identity.displayName}</span>
-          <small>{content.identity.role}</small>
-        </div>
+        <header className="prototype-kicker">
+          <h1 className="prototype-kicker__name">{content.identity.displayName}</h1>
+          <p className="prototype-kicker__role">{content.identity.role}</p>
+          {content.identity.keywords && <p className="prototype-kicker__keywords">{content.identity.keywords}</p>}
+        </header>
         <div className="prototype-mark">{content.identity.handle}</div>
         <div className="prototype-status">{content.identity.fullName}</div>
       </div>

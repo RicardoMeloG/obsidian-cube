@@ -4,10 +4,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- seo:head — title, description, share preview and JSON-LD, rendered at build time from the site content (src/seo/renderSeo.ts) -->
     <title>Obsidian Cube</title>
+    <!-- /seo:head -->
+    <script>document.documentElement.classList.add('js')</script>
+    <style>
+      html.js .seo-fallback { display: none; }
+      .seo-fallback { max-width: 42rem; margin: 0 auto; padding: 2rem 1rem; color: #e8eef5; background: #08050d; font-family: system-ui, sans-serif; line-height: 1.5; }
+      .seo-fallback a { color: #b8aeff; }
+      .seo-fallback h1 { margin: 0; font-size: 1.6rem; }
+      .seo-fallback h2 { margin: 1.4rem 0 0.2rem; font-size: 1rem; }
+      .seo-fallback p, .seo-fallback ul { margin: 0 0 0.5rem; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!-- seo:body --></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
