@@ -22,6 +22,7 @@ import { IntroSparks } from './intro/IntroSparks'
 import { LandingRing } from './intro/LandingRing'
 import {
   INTRO,
+  RETURN_TURN,
   beamLevel,
   fallOffset,
   fallTurn,
@@ -36,11 +37,13 @@ export type CubeSceneHandle = {
   skipIntro: () => void
 }
 
-// First-visit intro (specs/009-cube-intro). `play` runs the fall; `turns` are the
-// intro-time instants of the invitation turns (empty: none).
+// First-visit intro (specs/009-cube-intro). `play` runs the fall and its two
+// invitation turns; without it, `returnTurn` gives a visitor who has not dragged
+// the cube yet one invitation turn shortly after load. `freezeAt` (development)
+// stops the intro clock at that second.
 export type CubeIntroConfig = {
   play: boolean
-  turns: readonly number[]
+  returnTurn: boolean
   freezeAt: number | null
 }
 
@@ -235,8 +238,8 @@ export function CubeScene({
   const beamRef = useRef<MeshBasicMaterial>(null)
   const getIntroTime = useCallback(() => introRef.current.time, [])
   const introTurns = useMemo(
-    () => (intro.play ? [INTRO.firstTurn, INTRO.secondTurn] : intro.turns),
-    [intro.play, intro.turns],
+    () => (intro.play ? [INTRO.firstTurn, INTRO.secondTurn] : intro.returnTurn ? [RETURN_TURN] : []),
+    [intro.play, intro.returnTurn],
   )
   const { camera, gl } = useThree()
   const { narrow: isNarrow, stacked: isStackedFrame } = useLayoutMode()

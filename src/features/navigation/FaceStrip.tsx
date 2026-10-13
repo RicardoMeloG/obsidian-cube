@@ -2,21 +2,24 @@ import { useEffect, useRef } from 'react'
 import type { CubeSection, CubeSectionId } from '@/kernel/faces'
 import type { SiteLocale } from '@/kernel/siteContent'
 
-type CubeSectionNavProps = {
+type FaceStripProps = {
   activeSectionId: CubeSectionId
   fullName: string
+  label: string
   locale: SiteLocale
   onSelectSection: (id: CubeSectionId) => void
   sections: CubeSection[]
 }
 
-export function CubeSectionNav({
+// The strip of face names at the bottom; selecting one asks for that face.
+export function FaceStrip({
   activeSectionId,
   fullName,
+  label,
   locale,
   onSelectSection,
   sections,
-}: CubeSectionNavProps) {
+}: FaceStripProps) {
   const navRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export function CubeSectionNav({
   }, [onSelectSection])
 
   return (
-    <nav className="cube-section-nav" aria-label="Cube sections" ref={navRef}>
+    <nav className="cube-section-nav" aria-label={label} ref={navRef}>
       <ul>
         {sections.map((section) => (
           <li key={section.id}>

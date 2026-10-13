@@ -1,0 +1,13 @@
+import type { MouseEvent } from 'react'
+import type { CubeSectionId } from '@/kernel/faces'
+
+// Development only: a double-click on the background (not on the interface)
+// opens the standalone showcase of the face's world (?bg=<world>). The
+// visitor-facing fullscreen art mode of ADR 001 is still pending.
+export function openWorldShowcase(event: MouseEvent<HTMLElement>, face: CubeSectionId) {
+  const target = event.target as HTMLElement
+  if (target.closest('.side-panels__rail, .cube-section-nav, .language-toggle, .prototype-chrome, .detail-modal, button, a')) return
+  const params = new URLSearchParams(window.location.search)
+  params.set('bg', face)
+  window.location.search = `?${params.toString()}`
+}

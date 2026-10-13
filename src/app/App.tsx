@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { PremiumCubePrototype } from './Experience'
+import { Experience } from './Experience'
 import { isWorldId } from '@/features/scene/vector-worlds/registry'
 import '@/App.css'
 
@@ -24,7 +24,7 @@ function App() {
       </Suspense>
     )
   }
-  return <PremiumCubePrototype />
+  return <Experience />
 }
 
 export default App

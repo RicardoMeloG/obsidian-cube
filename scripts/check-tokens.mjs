@@ -18,7 +18,7 @@ const COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\([^)]*\)/g
 // Where a literal is the right tool, and why.
 const EXEMPT = [
   ['src/styles/tokens.css', 'the tokens themselves'],
-  ['src/features/premium-cube/scene/', 'scene code: three.js materials and shaders take colour values'],
+  ['src/features/scene/', 'scene code: three.js materials and shaders take colour values'],
   ['src/kernel/faces.ts', 'default per-face accents, overridden at runtime by visual.json (ADR 003)'],
   ['src/kernel/seo/renderSeo.ts', 'the theme-color meta tag of the static HTML'],
 ]
