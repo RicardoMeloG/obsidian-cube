@@ -9,14 +9,14 @@ The project is an open-source, public, agentic portfolio prototype for Ricardo M
 A review on 2026-10-09 found the engineering well ahead of the product: the site was not yet published and no face linked to a real artifact, so the priority moved from the container to the content. Full reasoning in `docs/decisions/002-evidence-before-spectacle.md`.
 
 - **Evidence before spectacle.** The cube is the invitation, not the proof. What makes the owner stand out is inspectable work: every face must link to at least one concrete artifact (repo, demo, write-up) with one line of result.
-- **Publish before building more.** No further infrastructure, admin features or 3D worlds until the site is live with real identity and real links.
+- **Stages, in order; build nothing more until the release.** The path to the first public release is normalization, then content, then release; a stage starts only when the previous one met its exit criteria, and its decisions are taken at its entry (`docs/decisions/007-staged-path-to-publishing.md`). Normalizing the existing code to the declared architecture is not building more: the public repository is evidence too. New features, infrastructure, admin functions or 3D worlds wait until the site is live.
 - **The site is its own case study.** The methodology deep-dive explains how this site was built with agents: decisions, gates, what went wrong. It is the one page that aligns the cube with the positioning.
 - **Name first, message largest.** The owner's name and role are the first text a visitor reads: top-left, the page's `h1`, never covered, AA contrast. The face title stays the largest text, because two headlines of equal weight compete; the name wins by position and contrast, not size.
 - **Backgrounds must be perceivable.** A world that cannot be seen in a static frame behind the cube is not doing its retention job.
 
-**Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository and reaches the site only through the admin. The admin is therefore on the critical path to publishing, and moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`).
+**Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository. In production it reaches the site through the admin, which moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`); how it reaches production for the first release is decision D-6, taken at the entry of the release stage.
 
-Priority order: (1) real content and publish, (2) one artifact per face, (3) methodology page and static SEO, (4) thesis/presentation state, (5) admin hardening and admin-to-deploy-target publishing, (6) cleanup. `docs/roadmap.md` carries the detail.
+Stages (ADR 007): (1) normalization, spec 010 P2b–P4 and the developer-facing docs; (2) content, the face set, one artifact per face and the real copy; (3) release. After the release: methodology page (unless D-8 brings it into the release), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility and composition variety. `docs/roadmap.md` carries the detail.
 
 ## Identity
 
@@ -32,7 +32,7 @@ Evidence and segments behind this list: `docs/visitor-profile.md` (2026-10-10). 
 
 1. **Recruiters / hiring managers**: must understand in under 30 seconds what Ricardo is becoming professionally, why his senior systems background matters, what he can build with agentic workflows, and how to contact him.
 2. **AI / recruiter systems**: indexable, semantic HTML with clear keywords (Agentic Product Engineer, AI-assisted development, React, TypeScript, Python, PostgreSQL, AWS, Security, Legacy modernization, Open source, Production systems).
-3. **Developers** (secondary): inspect the repo and find clear architecture, reproducible setup, design rules, and a professional commit/spec history.
+3. **Developers and technical hiring managers**: inspect the repo and find clear architecture, reproducible setup, design rules, and a professional commit/spec history. The repository is evidence, not an appendix (ADR 007).
 
 ## Narrative
 
@@ -169,7 +169,7 @@ Content files (paths):
 - Private deploy (gitignored): `public/content/site.en.json`, `public/content/site.es.json`
 - Visual layer, world and accent per face: `public/content/visual.example.json` (committed) / `public/content/visual.json` (gitignored)
 
-Loading order: try private → fall back to example → fall back to embedded defaults. Validate shape (Zod) before rendering. Prose fields accept inline HTML only, sanitized at render time by `sanitizeRichText` (no block tags, no Markdown).
+Loading order: the private document if present and valid, otherwise the example, which is bundled as the defaults; a field a published face leaves empty comes from the example in the same language. Validate shape (Zod) before rendering. Prose fields accept inline HTML only, sanitized at render time by `sanitizeRichText` (no block tags, no Markdown).
 
 Face content shape (primary scene, must stay minimal):
 
@@ -178,7 +178,7 @@ Face content shape (primary scene, must stay minimal):
 - `flowTitle` + `flow`: 4 short procedural steps for the right rail
 - `ctaPrimary` + `ctaSecondary` — at least one of them, or one `detail.links` entry, must carry a real `href` to an artifact
 - `label` (the face name on the cube and the bottom strip): 13 characters at most — "INVESTIGACIÓN" is the ceiling that fits the 320px strip without clipping
-- `researchConcepts` (RESEARCH face only): the side panel shows the first 4; extra entries are silently ignored
+- `researchConcepts` (RESEARCH face only): 4 at most, the number the side panel shows (a publish rule)
 - Copy must name concrete things (a tool, a system, a result). Generic consultancy phrasing ("real impact", "practical vision") is a defect, not content.
 
 Extended content (`detail.title`, `detail.summary`, `detail.points`, `detail.links`) is for the modal — not the rails. Full essays and project archives belong on future deep-dive routes.
@@ -219,7 +219,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, stacked rails, fixed face strip at the viewport bottom with the content padded above it.
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
-- [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet.
+- [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
 - [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`. CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [ ] README explains the agentic process and architecture — it covers the site, not the admin or the infra.
 - [ ] Real identity and at least one real artifact per face, live at a public URL.
@@ -231,7 +231,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - `docs/project-memory.md` — owner direction that must survive across sessions (future-state positioning, presentation layer, market reframing)
 - `docs/roadmap.md` — phase status, known gaps, priority order
 - `docs/architecture.md` — code architecture overview, module map, flows and the status of every rule
-- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture)
+- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture, 007 normalize before publishing)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
 - `docs/assets.md` — source and licence of every public asset
 - `docs/visitor-profile.md` — who visits, with sources: recruiters, hiring managers, peers, AI crawlers, link previews, sourcing tools

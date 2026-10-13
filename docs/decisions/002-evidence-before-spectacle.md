@@ -1,6 +1,6 @@
 # 002: Evidence Before Spectacle
 
-**Status:** accepted (Cognito deferral and admin ordering amended by 004)
+**Status:** accepted (Cognito deferral and admin ordering amended by 004; point 1 and the priority order amended by 007, staged path to publishing; the hierarchy of point 4 read as "first read", not "largest", by spec 010 D-3)
 **Date:** 2026-10-09
 
 ## Context

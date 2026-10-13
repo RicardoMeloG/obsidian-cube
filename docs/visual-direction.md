@@ -139,7 +139,7 @@ Working palette:
 
 ## Responsive Density
 
-- Treat `1600px-2200px` CSS width as the primary desktop review range.
+- Review desktops from 1280×720 to 2048×1152, with 1366×768, 1600×725 and 1920×1080 as the reference sizes (the layout check's matrix, `scripts/check-layout.mjs`).
 - Use wide page containers, not giant centered blocks.
 - Keep first-screen content high enough that the structure is visible without excessive scrolling.
 - Avoid using `vw` alone for major typography; always cap with conservative `clamp()` limits.

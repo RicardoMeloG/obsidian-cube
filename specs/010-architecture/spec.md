@@ -1,7 +1,7 @@
 # 010: Architecture and Harness — Proposal
 
 **Status:** revision 2 (2026-10-12), after the first independent audit (`audit-1.md`, verdict "approve with changes"). Accepted as ADR 005 and ADR 006; P0 done (2026-10-12), progress tracked in `docs/architecture.md`. Section 11 maps every audit finding to the change it produced.
-**Owner decisions:** D-1 and D-3 decided; D-2, D-4, D-5 open (section 9), each with a recommendation.
+**Owner decisions:** D-1, D-3 and D-4 decided; D-2, D-5, D-6, D-7, D-8, D-9 and D-10 open (section 9), each taken at the entry of the stage that needs it (ADR 007).
 **Outputs once accepted:** `docs/architecture.md` (living overview), ADR 005 (content kernel inside the site; workspaces deferred), ADR 006 (frontend architecture), harness changes in `AGENTS.md`, `CLAUDE.md` and CI.
 
 ## How to audit this document
@@ -45,7 +45,7 @@ The most urgent consequence is visible: on short desktop screens the side rails 
 ## 3. Drivers (ranked)
 
 1. **Privacy by construction.** Public code, private content (ADR 004). Personal data must be hard to commit, and deploys must not destroy content.
-2. **Publish soon.** The site goes live with real identity and links before more architecture or features (ADR 002). The plan is ordered by this driver.
+2. **Publish soon.** The site goes live with real identity and links before more features (ADR 002). Since ADR 007 it ranks below the legibility of the public repository for the order of phases: the normalization precedes the release.
 3. **First impression.** The cube and the name in the first seconds, on every viewport visitors use, including short laptop screens.
 4. **Resilience.** No visitor ever sees a blank page: without WebGL, after a deploy, or when a scene chunk fails.
 5. **Legibility of the public repo.** A developer finds the structure in minutes; agents find the rules without reading everything.
@@ -254,7 +254,7 @@ The harness is what keeps agents and the owner inside the architecture: the docu
 
 ## 7. Migration plan
 
-Ordered by driver 2. Every phase ends with every gate green and the site working; visual changes only where the phase says so.
+Every phase ends with every gate green and the site working; visual changes only where the phase says so. Since ADR 007 the phases P2b–P4 form the normalization stage, which precedes the content and release stages; the "publish track" row below is the release stage.
 
 | Phase | Content | Exit criteria |
 |---|---|---|
@@ -290,8 +290,13 @@ P2a adds the short mode and the safety net to the hand-written `App.css`, agains
 | D-1 | Where does the shared kernel live? | (a) npm workspaces now; (b) `src/kernel/` now, workspaces with the Lambda | **Decided (b)** on 2026-10-12, revised after the audit (A-09): two real consumers today, one of them retiring. |
 | D-2 | Measure visits? | (a) CloudFront standard logs; (b) a privacy-friendly analytics script; (c) CloudFront's built-in reports only, no logs; (d) none | **(c)**, revised after the audit (A-21): standard logs hold IP addresses, which are personal data needing retention rules; the console reports (top referrers, popular objects) may be enough to see whether recruiters arrive. Confirm against current AWS documentation before relying on it. |
 | D-3 | The "name is the most prominent text" rule | (a) keep; (b) amend: first read, not largest | **Decided (b)** on 2026-10-12; `AGENTS.md` amended. |
-| D-4 | Order against publishing | (a) P0, P1, P2a, publish track, then P2b–P4; (b) all phases before publishing | **(a)**: only what fixes the visible overflow and the blank-page cases precedes publishing. |
-| D-5 | History of the public repository | (a) a fresh repository with one initial commit authored with the GitHub `noreply` address; (b) publish the current history rewritten | **(a)**: the current history carries the personal email (E-20), and the current repository holds a pull-request reference with private data that cannot be deleted; a clean start is simpler and verifiable by H-08a. |
+| D-4 | Order against publishing | (a) P0, P1, P2a, publish track, then P2b–P4; (b) all phases before publishing | **Decided (b)** on 2026-10-12 by the owner, against the recommendation (a): the repository is public evidence, so it is published normalized; normalization, content and release are sequential stages (ADR 007). |
+| D-5 | History of the public repository (release stage) | (a) a fresh repository with one initial commit authored with the GitHub `noreply` address; (b) a fresh repository with the current history rewritten: author e-mails mapped to `noreply`, private text replaced in every past version of the files, verified by a full-content history scan | **Open; recommendation revised to (b)** on 2026-10-12. Audience 3 inspects "a professional commit/spec history", and the history (Conventional Commits, specs, audits) is part of the evidence ADR 007 publishes; (a) throws it away. The review of 2026-10-12 found that private text is not only in the old repository's pull-request reference: a client name sits in two past versions of `vite.config.ts` on `main` (E-22), so (b) must rewrite file contents, not only authors, and the privacy check must scan history contents (H-08a extension). A fresh repository is needed in both options, because the old one's pull-request references cannot be removed. |
+| D-6 | How the owner's content reaches production for the first release (release stage) | (a) wait for the Cognito admin (ADR 004 slices 2–5); (b) build with the private content on the owner's machine and deploy from there, with the CI deploy disabled until slice 5 (a CI build would put the example identity back into `index.html`) | **Open; recommendation (b)**: the content never enters the repository either way, and the release does not wait for new infrastructure (ADR 007, building more waits). The exception is recorded in ADR 004 when taken. |
+| D-7 | Domain (release stage) | (a) the CloudFront default host; (b) a custom domain | **Open; recommendation (b)**: the link a recruiter sees is part of the first impression (driver 3); a `*.cloudfront.net` host undermines it. Was deferred by 002 as infrastructure; it belongs to the release itself. |
+| D-8 | Methodology page in the first release (release stage) | (a) yes: the router (AD-08) and the page before release; (b) no: AGENTIC links the public repository and its docs as the case study, the page follows | **Open; recommendation (b)**: the repository with its specs and audits is already the inspectable case study; the page is new product. The MVP checklist item is amended accordingly if (b). |
+| D-9 | World visibility and composition variety (002, point 5) | (a) before the release; (b) after it, as recorded in the roadmap | **Open; recommendation (b)**: spectacle ranks below evidence (002); the worlds were composed around the centred cube on purpose (2026-10-12). Point 5 says such a world "is not finished", so (b) is recorded as a known limit, not silence. |
+| D-10 | CONTACT: a face or persistent chrome (content stage) | (a) keep the face; (b) contact links in the chrome and the face freed for a market-facing capability (`docs/project-memory.md`, 2026-06-11) | **Open**: it changes which six faces the content stage writes, so it is taken at that stage's entry. |
 
 ## 10. Questions for the next audit
 
@@ -352,3 +357,28 @@ What the build changed against this plan, so the next audit compares the code wi
 - The first-view budget rose by 47 KB for Inter, as AD-10 foresaw; the raise is recorded in `scripts/checks/budget.json`.
 - H-06 measures the geometry without WebGL. On the 2-CPU CI runner the software-rendered scene starved the page's main thread and Playwright could not query it (the page itself rendered correctly). The geometry is DOM and the still image takes the canvas's place, so nothing is lost; the scene is exercised by the degradation check with software WebGL. Walking the faces without WebGL exposed a real defect, fixed: without a scene the face strip could not change faces.
 - Not done in P2a: font metric overrides for the fallback (layout shift while Inter loads), and the CloudFront part of AD-09 (publish track).
+
+**D-4 (2026-10-12)**
+
+- The owner decided (b): P2b, P3 and P4 precede the publish track (ADR 007). The table in section 7 keeps its phases; only their place against publishing changes. Normalization stays bounded: no feature is added, each phase keeps the site visually unchanged except where it says so, and the real content is prepared in parallel.
+
+**Review of the decisions against the goal (2026-10-12)**
+
+Every decision was checked against the project's goal (ADR 007, Context). Contradictions found and how each was resolved:
+
+| Contradiction | Resolution |
+|---|---|
+| ADR 007 first draft and `AGENTS.md` ran content in parallel with normalization; the owner set them as sequential stages | ADR 007 rewritten as the staged path; `AGENTS.md`, roadmap and architecture follow it |
+| `AGENTS.md` priority (5) "admin hardening" and the roadmap kept hardening the local NestJS admin, which ADR 004 never exposes | Replaced by the Cognito admin after the release |
+| "The admin is on the critical path to publishing" (004) against "build nothing more before the release" (002, 007) | Made explicit as D-6 |
+| MVP checklist requires the methodology page; the priority order put it after publishing | Made explicit as D-8 |
+| 002 point 5 calls worlds that cannot be seen "not finished", yet nothing scheduled them | Made explicit as D-9; listed after the release in the roadmap |
+| 002 point 4 "the label must not outrank the name" against D-3 "the name wins by position, not size" | 002's status records D-3's reading |
+| D-5 (a) discards the commit and spec history that Audience 3 is told to inspect | D-5 recommendation revised; E-22 |
+| The client name is in two past versions of `vite.config.ts`, not only in the old pull-request reference | E-22; H-08a must scan history contents |
+| `visual-direction.md` reviewed desktops at 1600–2200 px; `AGENTS.md` at 1440–1920; the layout check at 1280–2048 | `visual-direction.md` follows the layout check's matrix |
+| The domain was deferred as infrastructure; the first impression depends on it | D-7 |
+| `AGENTS.md` loading order and research concepts described the behaviour before P1 and P2a | Updated |
+| Audience 3 called developers "secondary" while ADR 007 makes the repository evidence | Audience 3 names technical hiring managers and the repository's role |
+
+E-22 (2026-10-12): a client name appears in the contents of two commits on `main` (`476849f`, added to `vite.config.ts`; `75e18b6`, removed). Reproduce with `git log --all -S"<value>" -i` using the local denylist; the value is not written here.
