@@ -1,6 +1,6 @@
 # 010: Architecture and Harness — Proposal
 
-**Status:** revision 2 (2026-10-12), after the first independent audit (`audit-1.md`, verdict "approve with changes"). Accepted as ADR 005 and ADR 006; P0 done (2026-10-12), progress tracked in `docs/architecture.md`. Section 11 maps every audit finding to the change it produced.
+**Status:** built and closed (2026-10-13). Revision 2 (2026-10-12) followed the first independent audit (`audit-1.md`, "approve with changes"); accepted as ADR 005 and ADR 006; P0–P4 built (section 12); the second independent audit (`audit-2.md`, "close with minor changes") audited the result. Sections 11 and 13 map every finding of each audit to the change it produced. This closes the normalization stage of ADR 007.
 **Owner decisions:** D-1, D-3 and D-4 decided; D-2, D-5, D-6, D-7, D-8, D-9 and D-10 open (section 9), each taken at the entry of the stage that needs it (ADR 007).
 **Outputs once accepted:** `docs/architecture.md` (living overview), ADR 005 (content kernel inside the site; workspaces deferred), ADR 006 (frontend architecture), harness changes in `AGENTS.md`, `CLAUDE.md` and CI.
 
@@ -8,7 +8,7 @@
 
 Every claim about the current state carries an evidence id (`E-nn`) with the command or file that reproduces it. Every decision (`AD-nn`) lists the alternatives considered, the consequences and how compliance is verified. Every harness change (`H-nn`) names the gate that enforces it, or says **unchecked** when only review enforces it. A claim without evidence, a decision without a verification, or a rule presented as enforced without a gate is a finding.
 
-**Baseline.** Evidence was measured on commit `7ac3a0c` plus the uncommitted first-glance and SEO work. Once that work is committed, the baseline is pinned to that commit and re-measured.
+**Baseline.** Evidence was measured on commit `7ac3a0c` plus the uncommitted first-glance and SEO work, committed as `e2d7af8`: that commit is the baseline. The `E-nn` figures were not re-measured on it, because the stage replaced the code they describe; the state after the stage is what the gates measure on every commit (`docs/architecture.md`, "Rules and their gates").
 
 ## 1. Problem
 
@@ -415,3 +415,35 @@ E-22 (2026-10-12): a client name appears in the contents of two commits on `main
 - Security headers (5.13): no inline script or style is left in `index.html` (the JavaScript flag and the fallback style became files), so the policy carries no hashes and a rebuild cannot invalidate it. `infra/security-headers.json` is the one source: CloudFront serves it (CSP report-only, HSTS, nosniff, frame-ancestors and X-Frame-Options, referrer policy) and `vite preview` enforces it, so every layout-check page runs under the policy and any violation fails. The layout check's own probe used an inline style; the policy caught it and the probe moved to the CSSOM. The admin's separate policy waits for the admin (ADR 004).
 - The environment photo is a reflection map only: resized from 2592 to 1536 px wide, it reflects the same (compared side by side). The first view fell from 1,231 KB to 535 KB gzip; the budget ratchet locked the gain.
 - Not done: font metric overrides for the fallback font (layout shift while Inter loads); the CloudFront part of AD-09 (release stage).
+
+## 13. Audit resolution (`audit-2.md`)
+
+The second audit read the built code with no context from the work. Verdict: close with minor changes. Every finding, with what it produced (2026-10-13):
+
+| Finding | Resolution | Evidence |
+|---|---|---|
+| B-01 publish rules checked the raw document, not the one filled from the example | Fixed: the rules check what a visitor sees | `419f7c9`; test in `stressContent.test.ts` |
+| B-02 no contrast measurement over the image | Fixed: name and role measured at AA over the real background | `6919b26`; fails at 1.68:1 with the name dimmed |
+| B-03 static HTML read the old `cta`, not `ctaPrimary` | Fixed | `419f7c9`; test in `renderSeo.test.ts` |
+| B-04 `check:tokens` missed named colours, `oklch` and public CSS; the default palette existed | Fixed: palette removed, scan widened | `59ec901`; probes |
+| B-05 a breakpoint could bypass the modes | Fixed: default breakpoints removed; loose width variants and numeric comparisons fail | `59ec901`; `layoutModes.test.ts` |
+| B-06 lint gaps in the kernel and lazy loading | Fixed | `59ec901`; `boundaries.test.ts` |
+| B-07 `--history` did not read past contents | Fixed | `59ec901` |
+| B-08 deploy did not depend on CI; its test ignored `rm`, `cp` | Fixed: deploy only after a green CI, on the tested commit | `59ec901`; `deployWorkflow.test.ts` |
+| B-09 README | Fixed: status, architecture, method, reading order | `README.md` |
+| B-10 nine queries against "three modes" | Documented: three modes and six width refinements, why they stay | `docs/architecture.md`, `AGENTS.md` |
+| B-11 legacy fields and hand-written types | Links of `cta` and `links` validated; types inferred from the schema. The fields stay: private content may use them | `a91e59d` |
+| B-12 visual defaults not from the example | Fixed; a test keeps the world catalog and the example equal | `a91e59d` |
+| B-13 arbitrary type values, dead tokens | Base type only from roles, refinements per mode; dead tokens removed; both enforced | `8810738` |
+| B-14 stale documents | Fixed: roadmap, `specs/README.md`, `deploy-aws.md`; dated note on ADR 003 | this commit |
+| B-15 comments contradicting the code | Fixed | `a91e59d`, `6aa6cc4` |
+| B-16 legacy hook names | Renamed to the face vocabulary; the intro check now proves its hooks | `6aa6cc4` |
+| B-17 font not preloaded | Fixed, enforced by `check:budget`. Not done: metric overrides for the fallback font (the preload shortens the swap); the seven Inter subsets stay bundled, the browser fetches only the ones it uses | `411a03c` |
+| B-18 ratchet could rise | Fixed | `59ec901` |
+| B-19 `check:docs` escape | Narrowed to explicit limit words | `59ec901` |
+| B-20 small duplications | Fixed: research cap from the budgets, one face id schema, accents from the example | `a91e59d` |
+| B-21 tests not type-checked | Fixed: `tsconfig.test.json` in `tsc -b` | `59ec901` |
+| B-22 SEO plugin did not validate | Fixed: the build parses with the kernel schema | `a91e59d` |
+| B-23 fallback partial, baseline unpinned | Fixed: fixed chrome measured in every mode; baseline pinned (header) | `6aa6cc4` |
+
+Known and accepted: the Vite build warns that the kernel's extensionless imports will not suit its future native config loader. Adding extensions would break the CommonJS admin, so it waits for that loader to become the default.
