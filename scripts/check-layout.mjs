@@ -33,6 +33,7 @@ import { buildStressContent } from './checks/stressContent.mjs'
 const require = createRequire(import.meta.url)
 const { chromium } = require('playwright')
 const { AxeBuilder } = require('@axe-core/playwright')
+const { PNG } = require('pngjs')
 
 const KNOWN_PATH = fileURLToPath(new URL('./checks/layout-known.json', import.meta.url))
 const PORT = 4179
@@ -98,6 +99,73 @@ async function waitForServer(timeoutMs = 30000) {
     await new Promise((resolve) => setTimeout(resolve, 300))
   }
   throw new Error(`vite preview did not answer on ${BASE}`)
+}
+
+// Contrast of the identity (AGENTS.md, Hard Rules: the name and role meet
+// AA). axe cannot judge text over the cube's image and gradients, so the
+// check hides the text, photographs exactly what lies behind it, takes the
+// lightest background pixel (the worst case) and computes the WCAG ratio
+// against the text colour composited over it.
+const AA = 4.5
+
+function channel(value) {
+  const c = value / 255
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+}
+function luminance([r, g, b]) {
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+}
+function contrast(a, b) {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  return (light + 0.05) / (dark + 0.05)
+}
+
+async function identityContrast(page) {
+  const failures = []
+  for (const [part, selector] of [['name', 'h1'], ['role', 'h1 + p']]) {
+    const sample = await page.evaluate((selector) => {
+      const element = document.querySelector(selector)
+      if (!element) return null
+      const box = element.getBoundingClientRect()
+      // The computed colour may be oklab() or color-mix(): a 1x1 canvas turns
+      // any CSS colour into RGBA.
+      const canvas = document.createElement('canvas')
+      canvas.width = 1
+      canvas.height = 1
+      const context = canvas.getContext('2d')
+      context.fillStyle = getComputedStyle(element).color
+      context.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data
+      return { box: { x: box.x, y: box.y, width: box.width, height: box.height }, color: [r, g, b, a / 255] }
+    }, selector)
+    if (!sample) {
+      failures.push(`contrast-${part}-missing`)
+      continue
+    }
+    // Hide the text and its shadow, photograph the background, restore.
+    await page.evaluate((selector) => {
+      const element = document.querySelector(selector)
+      element.style.setProperty('color', 'transparent', 'important')
+      element.style.setProperty('text-shadow', 'none', 'important')
+    }, selector)
+    const png = PNG.sync.read(await page.screenshot({ clip: sample.box }))
+    await page.evaluate((selector) => {
+      const element = document.querySelector(selector)
+      element.style.removeProperty('color')
+      element.style.removeProperty('text-shadow')
+    }, selector)
+
+    let lightest = [0, 0, 0]
+    for (let i = 0; i < png.data.length; i += 4) {
+      const pixel = [png.data[i], png.data[i + 1], png.data[i + 2]]
+      if (luminance(pixel) > luminance(lightest)) lightest = pixel
+    }
+    const [r, g, b, alpha] = sample.color
+    const text = [r, g, b].map((value, index) => value * alpha + lightest[index] * (1 - alpha))
+    const ratio = contrast(text, lightest)
+    if (ratio < AA) failures.push(`contrast-${part} ${ratio.toFixed(2)}`)
+  }
+  return failures
 }
 
 // Runs in the page: every geometric assertion for the face on screen.
@@ -213,6 +281,8 @@ async function measurePage(page, viewport, locale) {
   if (!(await page.evaluate(() => document.fonts.check('16px "Inter Variable"')))) {
     results.layout.push(`${viewport} ${locale} font-not-loaded`)
   }
+
+  for (const failure of await identityContrast(page)) results.layout.push(`${viewport} ${locale} ${failure}`)
 
   // Accessibility of the landing face (the dialog and other faces share markup).
   const axe = await new AxeBuilder({ page }).analyze()
