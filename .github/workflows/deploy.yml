@@ -1,10 +1,13 @@
 name: Deploy static site
 
-# Publishes the built frontend to S3 + CloudFront. Runs only on demand or on
-# main, and only does anything once the AWS OIDC role + target vars are set.
+# Publishes the built frontend to S3 + CloudFront: on demand, or after the CI
+# workflow passed on main (never on a red build). Does anything only once the
+# AWS OIDC role and target variables are set.
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 
 permissions:
@@ -14,10 +17,14 @@ permissions:
 jobs:
   deploy:
     name: Build & deploy
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The commit the CI run tested, not whatever main points at now.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24

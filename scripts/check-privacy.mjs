@@ -7,9 +7,10 @@
 // PRIVACY_DENYLIST environment variable (a CI secret, one value per line).
 //
 //   node scripts/check-privacy.mjs            scan the files
-//   node scripts/check-privacy.mjs --history  also scan commit authors and
-//                                              messages of every branch (run
-//                                              before publishing a repository)
+//   node scripts/check-privacy.mjs --history  also scan every branch's
+//                                              authors, messages and the content
+//                                              of every past version (run before
+//                                              publishing a repository)
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
@@ -53,11 +54,21 @@ for (const file of files) {
 }
 
 if (process.argv.includes('--history')) {
+  // Authors, committers and messages.
   const log = git('log', '--all', '--format=%H%x00%an <%ae>%x00%cn <%ce>%x00%B%x01')
   for (const record of log.split('\x01')) {
     const [hash, ...fields] = record.trim().split('\x00')
     if (!hash) continue
     for (const finding of new Set(findings(fields.join('\n'), values))) problems.push(`commit ${hash.slice(0, 7)}: ${finding}`)
+  }
+  // The content of every past version: each line a commit added or removed
+  // (audit-2 B-07). Binary files show no lines.
+  const patches = git('log', '--all', '-p', '--no-color', '--format=%x01%H')
+  for (const patch of patches.split('\x01')) {
+    const [hash, ...lines] = patch.split('\n')
+    if (!hash) continue
+    const changed = lines.filter((line) => /^[+-](?![+-]{2} )/.test(line)).join('\n')
+    for (const finding of new Set(findings(changed, values))) problems.push(`commit ${hash.slice(0, 7)} content: ${finding}`)
   }
 }
 

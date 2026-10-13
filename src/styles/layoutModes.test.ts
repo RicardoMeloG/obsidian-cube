@@ -40,9 +40,19 @@ describe('layout modes', () => {
   })
 
   it('leave no numeric breakpoint in the components', () => {
+    // A width or height compared with a pixel-sized number, or the 4/3 aspect.
+    const numeric = /\b\w*(?:[Ww]idth|[Hh]eight)\s*[<>]=?\s*\d{3,}|<=?\s*4\s*\/\s*3/
     const offenders = sourceFiles('src')
       .filter((file) => !file.replace(/\\/g, '/').endsWith('src/styles/layoutModes.ts'))
-      .filter((file) => /\b(innerWidth|innerHeight|size\.width|size\.height|viewport\.width)\s*[<>]=?\s*\d|<=?\s*4\s*\/\s*3/.test(readFileSync(file, 'utf8')))
+      .filter((file) => numeric.test(readFileSync(file, 'utf8')))
+    expect(offenders).toEqual([])
+  })
+
+  it('leave no width variant outside the layout modes', () => {
+    // Tailwind's own breakpoints are removed in tokens.css; arbitrary ones
+    // (max-[900px]:, min-[...]:) would bypass the modes.
+    const variant = /(?<![\w-])(?:sm|md|lg|xl|2xl|(?:max|min)-\[[^\]]+\]):/
+    const offenders = sourceFiles('src').filter((file) => variant.test(readFileSync(file, 'utf8')))
     expect(offenders).toEqual([])
   })
 })

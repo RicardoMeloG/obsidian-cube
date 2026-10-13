@@ -76,17 +76,24 @@ export default defineConfig([
   boundary(['src/features/dev/**/*.{ts,tsx}'], ['^@/app/'], 'dev/ tools are reached from the app, never the reverse.'),
 
   {
-    files: ['src/{ui,lib,styles}/**/*.{ts,tsx}', 'src/features/{experience,faces,navigation,audio}/**/*.{ts,tsx}'],
+    files: ['src/{ui,lib,styles}/**/*.{ts,tsx}', 'src/features/{experience,faces,navigation,audio,dev}/**/*.{ts,tsx}'],
     ignores: ['**/*.test.ts'],
     rules: { 'no-restricted-syntax': ['error', LOCALE_LITERAL, DYNAMIC_IMPORT] },
   },
   {
-    files: ['src/app/**/*.{ts,tsx}', 'src/features/scene/**/*.{ts,tsx}', 'src/features/dev/**/*.{ts,tsx}'],
+    // content/ resolves the locale, so it may compare it; it loads nothing lazily.
+    files: ['src/features/content/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.ts'],
+    rules: { 'no-restricted-syntax': ['error', DYNAMIC_IMPORT] },
+  },
+  {
+    files: ['src/app/**/*.{ts,tsx}', 'src/features/scene/**/*.{ts,tsx}'],
     ignores: ['**/*.test.ts'],
     rules: { 'no-restricted-syntax': ['error', LOCALE_LITERAL] },
   },
 
-  // The content kernel is pure (ADR 005): zod and its own files only.
+  // The content kernel is pure (ADR 005): zod and its own files only, plus the
+  // committed example content it bundles as defaults.
   {
     files: ['src/kernel/**/*.ts'],
     ignores: ['src/kernel/**/*.test.ts'],
@@ -100,12 +107,17 @@ export default defineConfig([
               message: 'The content kernel depends on zod only (ADR 005).',
             },
             {
-              regex: '^(\\.\\./)+(features|app|ui|styles)(/|$)',
-              message: 'The content kernel must not import the site (ADR 005).',
+              regex: '^(\\.\\./)+(features|app|ui|styles|lib|scripts|server|infra)(/|$)',
+              message: 'The content kernel must not import the site or the tooling (ADR 005).',
+            },
+            {
+              regex: '^(\\.\\./){2,}(?!public/content/)',
+              message: 'The content kernel reaches outside itself only for the example content (ADR 005).',
             },
           ],
         },
       ],
+      'no-restricted-syntax': ['error', DYNAMIC_IMPORT],
     },
   },
   // The local NestJS admin (CommonJS, Node) reaches the site only through the

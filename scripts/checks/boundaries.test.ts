@@ -27,6 +27,13 @@ describe('content kernel boundary', () => {
     expect(await restrictedImports('src/kernel/probe.ts', code)).toHaveLength(1)
   })
 
+  it('rejects relative paths to lib, the tooling and lazy imports (audit-2 B-06)', async () => {
+    expect(await restrictedImports('src/kernel/probe.ts', "import { hasWebGL } from '../lib/hasWebGL'\nexport { hasWebGL }\n")).not.toEqual([])
+    expect(await restrictedImports('src/kernel/probe.ts', "import budget from '../../scripts/checks/budget.json'\nexport { budget }\n")).not.toEqual([])
+    const [result] = await eslint.lintText("export const load = () => import('three')\n", { filePath: 'src/kernel/probe.ts' })
+    expect(result.messages.some((message) => message.ruleId === 'no-restricted-syntax')).toBe(true)
+  })
+
   it('allows zod, its own files and the example content', async () => {
     const code =
       "import { z } from 'zod'\nimport { CUBE_FACE_ORDER } from './faces'\nimport example from '../../public/content/site.example.en.json'\nexport { z, CUBE_FACE_ORDER, example }\n"

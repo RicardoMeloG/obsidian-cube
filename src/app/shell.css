@@ -34,7 +34,7 @@
       linear-gradient(color-mix(in srgb, var(--color-white) 2.1%, transparent) 1px, transparent 1px),
       linear-gradient(90deg, color-mix(in srgb, var(--color-white) 1.8%, transparent) 1px, transparent 1px);
     background-size: 72px 72px;
-    mask-image: radial-gradient(circle at 50% 48%, black 0 38%, transparent 72%);
+    mask-image: radial-gradient(circle at 50% 48%, var(--color-black) 0 38%, transparent 72%);
     opacity: 0.82;
   }
 

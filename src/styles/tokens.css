@@ -4,6 +4,14 @@
    accent that visual.json sets at runtime (ADR 003). */
 
 @theme {
+  /* Only the project's tokens exist: Tailwind's default palette and its
+     sm/md/lg breakpoints are removed, so a colour or a breakpoint can come
+     only from this file (check:tokens, layoutModes.test.ts). */
+  --color-*: initial;
+  --breakpoint-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
   /* The page: its background and default text colour. */
   --color-page: #03050b;
   --color-page-ink: #eef3f8;

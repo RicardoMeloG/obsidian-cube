@@ -46,7 +46,8 @@ if (process.argv.includes('--update')) {
     console.log('Not raising the limit: a larger first view needs a spec that says why.')
     process.exitCode = 1
   } else {
-    const limitBytes = Math.ceil(total * 1.01)
+    // Never above the current limit: the 1% headroom must not let the ratchet climb.
+    const limitBytes = Math.min(budget.limitBytes, Math.ceil(total * 1.01))
     writeFileSync(BUDGET_PATH, `${JSON.stringify({ ...budget, limitBytes }, null, 2)}\n`)
     console.log(`Limit set to ${kb(limitBytes)}.`)
   }
