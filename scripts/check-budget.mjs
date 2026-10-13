@@ -24,7 +24,7 @@ const budget = JSON.parse(readFileSync(BUDGET_PATH, 'utf8'))
 const html = readFileSync(join(DIST, 'index.html'), 'utf8')
 
 const referenced = [
-  ...html.matchAll(/<script[^>]+type="module"[^>]+src="\/([^"]+)"/g),
+  ...html.matchAll(/<script[^>]+src="\/([^"]+)"/g),
   ...html.matchAll(/<link[^>]+rel="(?:modulepreload|stylesheet|preload)"[^>]+href="\/([^"]+)"/g),
 ].map((match) => match[1])
 

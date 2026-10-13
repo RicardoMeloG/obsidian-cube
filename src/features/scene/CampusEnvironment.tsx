@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import { EquirectangularReflectionMapping, SRGBColorSpace, TextureLoader } from 'three'
 
 // Equirectangular photo used only as the cube's reflection map (it is never
-// visible directly). It is the heaviest asset in the repo (~1 MB); replacing it
-// with a small synthetic environment is a pending optimization.
+// visible directly), so it is stored small: 1536 px wide, which reflects the
+// same as the 2592 px original (compared on 2026-10-12).
 const ENVIRONMENT_URL = '/environments/udec-frontis.jpg'
 
 export function CampusEnvironment() {

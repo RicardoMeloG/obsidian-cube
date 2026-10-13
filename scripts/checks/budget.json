@@ -4,7 +4,7 @@
     "environments/udec-frontis.jpg",
     "assets/inter-latin-wght-normal-*.woff2"
   ],
-  "limitBytes": 1267255,
+  "limitBytes": 552946,
   "raises": [
     "2026-10-12: +47 KB for the self-hosted Inter font (spec 010, AD-10)."
   ]
