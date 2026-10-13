@@ -50,6 +50,17 @@ describe('publish rules', () => {
     expect(messages).toContain('Enlaza al menos un artefacto (https: o mailto:) desde esta cara.')
   })
 
+  it('check what a visitor sees: an empty field filled from the example cannot carry a placeholder (audit-2 B-01)', () => {
+    const owned = JSON.parse(
+      JSON.stringify(exampleEn).replaceAll('your-handle', 'ada').replaceAll('your-project', 'tool').replaceAll('Portfolio Owner', 'Ada Example'),
+    )
+    const products = owned.sections.find((section: { id: string }) => section.id === 'products')
+    delete products.detail
+    const result = PublishableSiteContentSchema.safeParse(owned)
+    expect(result.success).toBe(false)
+    expect(result.error?.issues.map((issue) => issue.message)).toContain('Reemplaza el texto de ejemplo "your-project".')
+  })
+
   it('count only the text a visitor reads, not inline markup', () => {
     expect(visibleLength('Build <strong>autonomous</strong> systems &amp; tools')).toBe('Build autonomous systems _ tools'.length)
   })

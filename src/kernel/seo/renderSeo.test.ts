@@ -18,7 +18,7 @@ const base: SeoInput = {
       label: 'PRODUCTS',
       title: 'Public Products',
       summary: 'Tools &amp; experiments.',
-      cta: { label: 'Repository', href: 'https://github.com/ada/tool' },
+      ctaPrimary: { label: 'Repository', href: 'https://github.com/ada/tool' },
       detail: {
         links: [
           { label: 'GitHub', href: 'https://github.com/ada' },
@@ -108,6 +108,11 @@ describe('renderStaticBody', () => {
     expect(body).toContain('<p>Tools &amp; experiments.</p>')
     expect(body.match(/href="https:\/\/github.com\/ada"/g)).toHaveLength(1)
     expect(body).not.toContain('#products')
+  })
+
+  it('lists the primary call to action, the one every face shows (audit-2 B-03)', () => {
+    const body = renderStaticBody(base)
+    expect(body).toContain('href="https://github.com/ada/tool"')
   })
 
   it('renders the committed example content', () => {

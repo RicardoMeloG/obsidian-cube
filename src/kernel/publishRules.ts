@@ -3,7 +3,7 @@
 // loads with the tolerant render contract, so content published under older
 // rules keeps rendering instead of silently falling back to the example. The
 // admin validates with PublishableSiteContentSchema and refuses to publish.
-import { SiteContentSchema } from './siteContent'
+import { normalizeSections, SiteContentSchema } from './siteContent'
 import type { SiteContent } from './siteContent'
 import budgets from './layoutBudgets.json'
 
@@ -95,6 +95,24 @@ export function publishIssues(content: SiteContent): Issue[] {
   return issues
 }
 
+// What a visitor will see: a field a published face leaves empty is filled
+// from the example in the same language (normalizeSections), so the rules
+// check the filled content, or an example placeholder could slip through an
+// empty field (audit-2 B-01).
+export function visibleContent(content: SiteContent): SiteContent {
+  return { ...content, sections: normalizeSections(content.sections, content.locale) as unknown as SiteContent['sections'] }
+}
+
 export const PublishableSiteContentSchema = SiteContentSchema.superRefine((content, context) => {
-  for (const issue of publishIssues(content)) context.addIssue({ code: 'custom', path: issue.path, message: issue.message })
+  const visible = visibleContent(content)
+  for (const issue of publishIssues(visible)) {
+    // Point at the face in the document as written, not its place in the face order.
+    const path = [...issue.path]
+    if (path[0] === 'sections' && typeof path[1] === 'number') {
+      const id = visible.sections[path[1]]?.id
+      const index = content.sections.findIndex((section) => section.id === id)
+      path[1] = index === -1 ? id ?? path[1] : index
+    }
+    context.addIssue({ code: 'custom', path, message: issue.message })
+  }
 })
