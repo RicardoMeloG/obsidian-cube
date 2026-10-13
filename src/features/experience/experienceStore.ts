@@ -1,5 +1,6 @@
 import { createContext, useContext, useSyncExternalStore } from 'react'
-import type { CubeSectionDetail, CubeSectionId } from '@/kernel/faces'
+import type { FaceId } from '@/kernel/faces'
+import type { FaceDetail } from '@/kernel/siteContent'
 
 // State of the experience and the events that change it (ADR 006, spec 010
 // AD-04). The scene and the DOM never talk to each other: both read this state
@@ -15,36 +16,36 @@ export type CursorMode = 'default' | 'grab' | 'grabbing'
 export type ExperienceState = {
   // The face the cube shows; `displayedFace` is the one the rails show, which
   // follows it after the exit half of the transition.
-  activeFace: CubeSectionId
-  displayedFace: CubeSectionId
+  activeFace: FaceId
+  displayedFace: FaceId
   transition: PanelTransition
   // A face asked for (strip, link) that the scene is turning towards.
-  requestedFace: CubeSectionId | null
+  requestedFace: FaceId | null
   // Whether a scene is mounted to turn the cube; without one, faces change at once.
   sceneReady: boolean
   intro: IntroStage
   introSkipped: boolean
   hintVisible: boolean
-  detail: { open: boolean; focused: CubeSectionDetail | null }
+  detail: { open: boolean; focused: FaceDetail | null }
   cursor: CursorMode
 }
 
 export type ExperienceEvent =
   | { type: 'sceneMounted' }
   | { type: 'sceneFailed' }
-  | { type: 'faceRequested'; face: CubeSectionId }
-  | { type: 'faceEntered'; face: CubeSectionId }
+  | { type: 'faceRequested'; face: FaceId }
+  | { type: 'faceEntered'; face: FaceId }
   | { type: 'panelsSwapped' }
   | { type: 'transitionFinished' }
   | { type: 'introLanded' }
   | { type: 'introSettled' }
   | { type: 'introSkipped' }
   | { type: 'visitorEngaged' }
-  | { type: 'detailOpened'; detail: CubeSectionDetail | null }
+  | { type: 'detailOpened'; detail: FaceDetail | null }
   | { type: 'detailClosed' }
   | { type: 'cursorChanged'; cursor: CursorMode }
 
-export function initialExperience(options: { face: CubeSectionId; introPlays: boolean; hintVisible: boolean }): ExperienceState {
+export function initialExperience(options: { face: FaceId; introPlays: boolean; hintVisible: boolean }): ExperienceState {
   return {
     activeFace: options.face,
     displayedFace: options.face,
@@ -61,7 +62,7 @@ export function initialExperience(options: { face: CubeSectionId; introPlays: bo
 
 const CLOSED_DETAIL: ExperienceState['detail'] = { open: false, focused: null }
 
-function enterFace(state: ExperienceState, face: CubeSectionId): ExperienceState {
+function enterFace(state: ExperienceState, face: FaceId): ExperienceState {
   // Back on the face the rails already show (a quick change and return):
   // cancel the transition instead of leaving the rails faded out.
   const transition = face === state.displayedFace ? 'idle' : 'exiting'

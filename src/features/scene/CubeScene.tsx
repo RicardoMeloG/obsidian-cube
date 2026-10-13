@@ -11,9 +11,9 @@ import {
   stopCubeDragSound,
   updateCubeDragSound,
 } from '@/features/audio/cubeAudio'
-import type { CubeSectionId } from '@/kernel/faces'
+import type { FaceId } from '@/kernel/faces'
 import { useLayoutMode } from '@/styles/layoutModes'
-import type { ResolvedCubeSection } from '@/kernel/visualContent'
+import type { ResolvedFace } from '@/kernel/visualContent'
 import type { DiagnosticFx } from './diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { PremiumCube } from './PremiumCube'
@@ -33,7 +33,7 @@ import {
 import type { IntroPhase } from './intro/introTimeline'
 
 export type CubeSceneHandle = {
-  enterSection: (sectionId: CubeSectionId) => void
+  enterSection: (sectionId: FaceId) => void
   skipIntro: () => void
 }
 
@@ -50,9 +50,9 @@ export type CubeIntroConfig = {
 type CubeSceneProps = {
   effects: DiagnosticFx
   onCursorModeChange: (mode: 'default' | 'grab' | 'grabbing') => void
-  onSectionEnter: (sectionId: CubeSectionId) => void
-  sections: ResolvedCubeSection[]
-  activeSectionId: CubeSectionId
+  onSectionEnter: (sectionId: FaceId) => void
+  sections: ResolvedFace[]
+  activeSectionId: FaceId
   handleRef?: RefObject<CubeSceneHandle | null>
   intro: CubeIntroConfig
   onIntroPhase?: (phase: IntroPhase) => void
@@ -75,7 +75,7 @@ type PointerEventLike = {
 // ~175px swipe rotates a full 90°.
 const DRAG_SENSITIVITY = 0.009
 
-const FACE_TARGET_ROTATION: Record<CubeSectionId, [number, number, number]> = {
+const FACE_TARGET_ROTATION: Record<FaceId, [number, number, number]> = {
   agentic: [0, 0, 0],
   products: [0, -Math.PI / 2, 0],
   systems: [Math.PI / 2, 0, 0],
@@ -87,10 +87,10 @@ const FACE_TARGET_ROTATION: Record<CubeSectionId, [number, number, number]> = {
 // Canonical orientation quaternion for each face (the cube's resting pose with
 // that face front and upright). Built once from the Euler targets above.
 const FACE_QUATERNION = Object.fromEntries(
-  (Object.entries(FACE_TARGET_ROTATION) as [CubeSectionId, [number, number, number]][]).map(
+  (Object.entries(FACE_TARGET_ROTATION) as [FaceId, [number, number, number]][]).map(
     ([id, [x, y, z]]) => [id, new Quaternion().setFromEuler(new Euler(x, y, z))],
   ),
-) as Record<CubeSectionId, Quaternion>
+) as Record<FaceId, Quaternion>
 
 // Scratch objects reused per frame to avoid allocations (single CubeScene).
 const _dragAxis = new Vector3()
@@ -217,7 +217,7 @@ export function CubeScene({
     totalDistance: 0,
     soundDistance: 0,
     lastResonanceAt: 0,
-    clickSectionId: 'agentic' as CubeSectionId,
+    clickSectionId: 'agentic' as FaceId,
     target: new Quaternion(), // desired orientation (free-mode)
     spinAxis: new Vector3(0, 1, 0), // axis of the last drag step (for inertia)
   })
@@ -271,7 +271,7 @@ export function CubeScene({
     return localPoint.z > 0 ? 'agentic' : 'security'
   }, [])
 
-  const enterSection = useCallback((sectionId: CubeSectionId) => {
+  const enterSection = useCallback((sectionId: FaceId) => {
     // Leave free-mode and hand control back to the resting pose, which slerps the
     // cube toward FACE_QUATERNION[activeSectionId] once the section updates.
     const drag = dragRef.current

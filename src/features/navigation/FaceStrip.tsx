@@ -1,16 +1,16 @@
 import { useEffect, useRef } from 'react'
-import type { CubeSection, CubeSectionId } from '@/kernel/faces'
-import type { SiteLocale } from '@/kernel/siteContent'
+import type { FaceId } from '@/kernel/faces'
+import type { FaceContent, SiteLocale } from '@/kernel/siteContent'
 import { cx } from '@/ui/cx'
 import './FaceStrip.css'
 
 type FaceStripProps = {
-  activeSectionId: CubeSectionId
+  activeSectionId: FaceId
   fullName: string
   label: string
   locale: SiteLocale
-  onSelectSection: (id: CubeSectionId) => void
-  sections: CubeSection[]
+  onSelectSection: (id: FaceId) => void
+  sections: FaceContent[]
 }
 
 // The strip of face names at the bottom; selecting one asks for that face.
@@ -32,7 +32,7 @@ export function FaceStrip({
       const target = event.target instanceof Element ? event.target : null
       const link = target?.closest<HTMLAnchorElement>('.cube-section-nav a[data-section-id]')
       if (!link || !nav?.contains(link)) return null
-      return link.dataset.sectionId as CubeSectionId | undefined
+      return link.dataset.sectionId as FaceId | undefined
     }
 
     function handlePointerDown(event: PointerEvent) {
@@ -139,6 +139,6 @@ const DOT = 'size-[0.32rem] flex-[0_0_0.32rem] rounded-full transition-[backgrou
 const DOT_IDLE = 'bg-violet-500/42'
 const DOT_ACTIVE = 'bg-violet-300/96 shadow-[0_0_10px_color-mix(in_srgb,var(--color-violet-300)_70%,transparent)]'
 
-function buildSectionHref(sectionId: CubeSectionId, locale: SiteLocale) {
+function buildSectionHref(sectionId: FaceId, locale: SiteLocale) {
   return `/?section=${encodeURIComponent(sectionId)}&lang=${encodeURIComponent(locale)}`
 }

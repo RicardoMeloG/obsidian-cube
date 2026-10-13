@@ -3,8 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
-import type { CubeSectionId } from '@/kernel/faces'
-import type { ResolvedCubeSection } from '@/kernel/visualContent'
+import type { FaceId } from '@/kernel/faces'
+import type { ResolvedFace } from '@/kernel/visualContent'
 
 const FACE_ACCENT_SOFT = 'rgba(170, 160, 255, 0.6)'
 
@@ -16,7 +16,7 @@ const FACE_ACCENT_SOFT = 'rgba(170, 160, 255, 0.6)'
 // them onto the requested size.
 function drawFaceGlyph(
   ctx: CanvasRenderingContext2D,
-  sectionId: CubeSectionId,
+  sectionId: FaceId,
   accent: string,
   x: number,
   y: number,
@@ -140,7 +140,7 @@ function getFaceLabelTypography(label: string) {
   return { fontSize: 116, letterSpacing: 28 }
 }
 
-function createFaceTexture(section: ResolvedCubeSection) {
+function createFaceTexture(section: ResolvedFace) {
   const size = 1536
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -367,7 +367,7 @@ function ShineGlints({ animate }: ShineGlintsProps) {
 
 type PremiumCubeProps = {
   animateGlints: boolean
-  sections: ResolvedCubeSection[]
+  sections: ResolvedFace[]
   shadows: boolean
 }
 

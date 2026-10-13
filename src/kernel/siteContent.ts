@@ -4,12 +4,12 @@
 import { z } from 'zod'
 import exampleEn from '../../public/content/site.example.en.json'
 import exampleEs from '../../public/content/site.example.es.json'
-import { CUBE_FACE_ORDER, FEATURE_GLYPHS } from './faces'
-import type { CubeSection, CubeSectionId, FeatureGlyphId } from './faces'
+import { FACE_ORDER, FEATURE_GLYPHS } from './faces'
+import type { FaceId, FeatureGlyphId } from './faces'
 
 export type SiteLocale = 'en' | 'es'
 
-const SectionIdSchema = z.enum(CUBE_FACE_ORDER as [CubeSectionId, ...CubeSectionId[]])
+export const FaceIdSchema = z.enum(FACE_ORDER as [FaceId, ...FaceId[]])
 const FeatureGlyphSchema = z.enum(FEATURE_GLYPHS as unknown as [FeatureGlyphId, ...FeatureGlyphId[]])
 
 // Rich prose fields are rendered through `sanitizeRichText` (inline HTML
@@ -48,7 +48,7 @@ const ResearchConceptSchema = z.object({
 })
 
 const SiteSectionSchema = z.object({
-  id: SectionIdSchema,
+  id: FaceIdSchema,
   label: z.string().min(1),
   title: z.string().min(1),
   eyebrow: z.string().min(1).optional(),
@@ -96,11 +96,18 @@ export const SiteContentSchema = z.object({
     headline: z.string().min(1),
     summary: RichTextSchema,
   }),
-  sections: z.array(SiteSectionSchema).length(CUBE_FACE_ORDER.length),
+  sections: z.array(SiteSectionSchema).length(FACE_ORDER.length),
 })
 
 export type SiteContent = z.infer<typeof SiteContentSchema>
 export type SiteSection = SiteContent['sections'][number]
+
+// A face as the interface renders it: every field the document left empty is
+// already filled from the example (normalizeSections).
+export type FaceContent = Omit<SiteSection, 'eyebrow'> & { eyebrow: string }
+export type FaceDetail = NonNullable<SiteSection['detail']>
+export type FaceResearchConcept = NonNullable<SiteSection['researchConcepts']>[number]
+export type FaceCta = NonNullable<SiteSection['ctaPrimary']>
 
 // The committed example is the one set of defaults: it renders before the
 // published content arrives, replaces it when it is missing or invalid, and
@@ -114,10 +121,10 @@ export function getDefaultSiteContent(locale: SiteLocale): SiteContent {
   return DEFAULT_CONTENT[locale]
 }
 
-export function normalizeSections(sections: SiteSection[], locale: SiteLocale): CubeSection[] {
+export function normalizeSections(sections: SiteSection[], locale: SiteLocale): FaceContent[] {
   const defaults = DEFAULT_CONTENT[locale].sections
 
-  return CUBE_FACE_ORDER.map((id) => {
+  return FACE_ORDER.map((id) => {
     const section = sections.find((candidate) => candidate.id === id)
     const fallback = defaults.find((candidate) => candidate.id === id)!
 

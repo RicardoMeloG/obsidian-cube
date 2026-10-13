@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import type { MouseEvent, RefObject } from 'react'
-import type { CubeSectionDetail } from '@/kernel/faces'
+import type { FaceDetail } from '@/kernel/siteContent'
 import { RichText } from '@/features/content/RichText'
 import { cx } from '@/ui/cx'
 import './DetailDialog.css'
 
 type DetailDialogProps = {
-  detail: CubeSectionDetail
+  detail: FaceDetail
   faceLabel: string
   closeLabel: string
   onClose: () => void

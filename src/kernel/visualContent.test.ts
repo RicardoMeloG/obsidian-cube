@@ -2,8 +2,19 @@ import { describe, it, expect } from 'vitest'
 import { getDefaultVisualContent, resolveSections, resolveWorldId } from './visualContent'
 import type { VisualContent } from './visualContent'
 import { getDefaultSiteContent, normalizeSections } from './siteContent'
+import { WORLD_IDS, WORLD_LABELS } from './worlds'
+import visualExample from '../../public/content/visual.example.json'
 
 describe('visualContent defaults', () => {
+  it('are the committed example, not a second copy in code (audit-2 B-12)', () => {
+    expect(getDefaultVisualContent()).toEqual(visualExample)
+  })
+
+  it('name every world as the kernel catalog does', () => {
+    expect(visualExample.worlds.map((world) => world.id)).toEqual(WORLD_IDS)
+    for (const world of visualExample.worlds) expect(world.label).toBe(WORLD_LABELS[world.id as keyof typeof WORLD_LABELS])
+  })
+
   it('exposes all six worlds enabled and a 1:1 face->world mapping', () => {
     const visual = getDefaultVisualContent()
     expect(visual.worlds).toHaveLength(6)

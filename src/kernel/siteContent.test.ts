@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CUBE_FACE_ORDER } from './faces'
+import { FACE_ORDER } from './faces'
 import { getDefaultSiteContent, normalizeSections } from './siteContent'
 import type { SiteSection } from './siteContent'
 
@@ -8,7 +8,7 @@ describe('default content', () => {
     for (const locale of ['en', 'es'] as const) {
       const content = getDefaultSiteContent(locale)
       expect(content.locale).toBe(locale)
-      expect(content.sections.map((section) => section.id)).toEqual(CUBE_FACE_ORDER)
+      expect(content.sections.map((section) => section.id)).toEqual(FACE_ORDER)
       expect(content.sections.every((section) => section.eyebrow)).toBe(true)
     }
   })
@@ -36,6 +36,6 @@ describe('normalizeSections', () => {
   })
 
   it('returns the six faces in catalog order even when the document omits some', () => {
-    expect(normalizeSections([], 'en').map((section) => section.id)).toEqual(CUBE_FACE_ORDER)
+    expect(normalizeSections([], 'en').map((section) => section.id)).toEqual(FACE_ORDER)
   })
 })

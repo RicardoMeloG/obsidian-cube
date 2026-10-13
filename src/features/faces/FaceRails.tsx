@@ -1,7 +1,8 @@
 import { useId, useMemo } from 'react'
 import type { CSSProperties } from 'react'
-import type { CubeSection, CubeSectionDetail, CubeSectionResearchConcept } from '@/kernel/faces'
-import type { ResolvedCubeSection } from '@/kernel/visualContent'
+import budgets from '@/kernel/layoutBudgets.json'
+import type { FaceContent, FaceDetail, FaceResearchConcept } from '@/kernel/siteContent'
+import type { ResolvedFace } from '@/kernel/visualContent'
 import { RichText } from '@/features/content/RichText'
 import { cx } from '@/ui/cx'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -12,15 +13,15 @@ import { FeatureGlyph } from './FeatureGlyph'
 import './FaceRails.css'
 
 type FaceRailsProps = {
-  activeSection: ResolvedCubeSection
+  activeSection: ResolvedFace
   // Interface strings (src/features/content/copy.ts).
   copy: { researchConceptsLabel: string; conceptSource: string }
   // `trigger` is the control that opened the detail; the dialog returns focus to it on close.
-  onOpenDetail: (detail?: CubeSectionDetail, trigger?: HTMLElement) => void
+  onOpenDetail: (detail?: FaceDetail, trigger?: HTMLElement) => void
   transitionState?: 'idle' | 'exiting' | 'entering'
 }
 
-function createResearchConceptDetail(concept: CubeSectionResearchConcept, source: string): CubeSectionDetail {
+function createResearchConceptDetail(concept: FaceResearchConcept, source: string): FaceDetail {
   return {
     title: concept.label,
     summary: concept.summary,
@@ -76,7 +77,7 @@ export function FaceRails({ activeSection, copy, onOpenDetail, transitionState =
   // Per-face accent from visual.json (ADR 003); accent-scope derives its tones.
   const accentStyle = { '--section-accent': activeSection.accent } as CSSProperties
 
-  const renderCta = (cta: CubeSection['ctaPrimary'], className: string) => {
+  const renderCta = (cta: FaceContent['ctaPrimary'], className: string) => {
     if (!cta) return null
     if (cta.href) {
       return (
@@ -119,14 +120,13 @@ export function FaceRails({ activeSection, copy, onOpenDetail, transitionState =
           {...rise(105)}
         />
 
-        {activeSection.features && activeSection.features.length > 0 && (
-          activeSection.id === 'research' && activeSection.researchConcepts?.length ? (
+        {activeSection.id === 'research' && activeSection.researchConcepts?.length ? (
             <div
               className="research-map relative grid max-w-[29rem] gap-[0.55rem] py-[0.12rem] pr-0 pl-4 stacked-wide:max-w-[min(46rem,100%)] stacked-wide:grid-cols-2 stacked-wide:pl-0 narrow:max-w-full narrow:grid-cols-2 narrow:gap-[0.45rem] narrow:p-0 phone-small:grid-cols-1 phone-small:gap-[0.4rem]"
               aria-label={copy.researchConceptsLabel}
               {...rise(145)}
             >
-              {activeSection.researchConcepts.slice(0, 4).map((concept) => (
+              {activeSection.researchConcepts.slice(0, budgets.counts.researchConcepts.max).map((concept) => (
                 <button
                   className="research-node focus-ring relative m-0 grid min-h-[4.25rem] w-full cursor-pointer gap-[0.2rem] rounded-[7px] border border-violet-500/28 px-[0.82rem] py-[0.72rem] text-left font-[inherit] text-ink-100/90 transition-[border-color,background,transform] duration-180 hover:translate-x-[0.18rem] hover:border-violet-300/62 desktop-short:min-h-0 desktop-short:px-3 desktop-short:py-2 narrow:min-h-[3.2rem] narrow:px-[0.62rem] narrow:py-[0.55rem] phone-small:min-h-12 phone-small:px-[0.7rem] phone-small:py-2"
                   key={concept.key}
@@ -141,7 +141,7 @@ export function FaceRails({ activeSection, copy, onOpenDetail, transitionState =
                 </button>
               ))}
             </div>
-          ) : (
+          ) : activeSection.features && activeSection.features.length > 0 ? (
             <ul
               className="m-0 grid list-none gap-[clamp(0.6rem,1vw,0.9rem)] p-0 desktop-short:gap-[clamp(0.45rem,1.1vh,0.75rem)] stacked-wide:grid-cols-2 stacked-wide:gap-x-[1.2rem] stacked-wide:gap-y-[0.78rem]"
               {...rise(145)}
@@ -161,8 +161,7 @@ export function FaceRails({ activeSection, copy, onOpenDetail, transitionState =
                 </li>
               ))}
             </ul>
-          )
-        )}
+          ) : null}
 
         {renderCta(activeSection.ctaPrimary, 'justify-self-start')}
       </aside>

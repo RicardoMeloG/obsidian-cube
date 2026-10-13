@@ -3,11 +3,12 @@ import type { WorldEntry } from './types'
 import { WORLD_LABELS } from '@/kernel/worlds'
 import type { WorldId } from '@/kernel/worlds'
 
-// World identifiers and labels are the pure catalog (./catalog). Adding a new
-// world = (1) create file in worlds/, (2) register its Component here, (3) add
-// its id/label to ./catalog. This registry maps a WorldId to its 3D Component +
-// showcase config; the catalog stays free of React/Three so the backend can
-// share it. Showcase config is used by the ?bg=<id> standalone preview.
+// World ids and names are the kernel catalog (src/kernel/worlds.ts). Adding a
+// world: (1) create its file in worlds/, (2) add its id and name to the
+// catalog and to visual.example.json, (3) register its component here. This
+// registry maps a WorldId to its 3D component and its showcase settings (the
+// ?bg=<id> preview); the catalog stays free of React and three so the admin
+// can share it.
 //
 // Components are lazy: each world is its own chunk and only the active face's
 // world is downloaded. VectorWorldStage / the showcase wrap them in Suspense.

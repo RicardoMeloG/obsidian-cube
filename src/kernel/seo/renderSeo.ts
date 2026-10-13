@@ -4,27 +4,12 @@
 // docs/visitor-profile.md) only ever see this HTML, so it carries the identity,
 // the share preview and a plain-text version of every face.
 //
-// Pure and DOM-free on purpose: it runs inside the Vite config (Node) and in
-// Vitest. The input is a structural subset of SiteContent, so it does not
-// import the content module (which touches `window`).
+// Pure and DOM-free, like the rest of the kernel: it runs inside the Vite
+// config (Node) and in Vitest. The input is the content document the schema
+// validated (vite.config.ts parses it first).
+import type { SiteContent } from '../siteContent'
 
-export type SeoInput = {
-  locale: 'en' | 'es'
-  identity: { displayName: string; fullName: string; role: string; keywords?: string }
-  seo: { title: string; description: string; siteUrl?: string; image?: string }
-  hero: { headline: string; summary: string }
-  sections: {
-    label: string
-    title: string
-    summary: string
-    ctaPrimary?: { label: string; href?: string }
-    ctaSecondary?: { label: string; href?: string }
-    detail?: { links?: { label: string; href?: string }[] }
-    // Older fields still accepted by the schema; their links count too.
-    cta?: { label: string; href?: string }
-    links?: { label: string; href?: string }[]
-  }[]
-}
+export type SeoInput = SiteContent
 
 export const DEFAULT_SHARE_IMAGE = '/og-image.jpg'
 export const SHARE_IMAGE_SIZE = { width: 1200, height: 630 } as const

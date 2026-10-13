@@ -36,7 +36,7 @@ describe('content kernel boundary', () => {
 
   it('allows zod, its own files and the example content', async () => {
     const code =
-      "import { z } from 'zod'\nimport { CUBE_FACE_ORDER } from './faces'\nimport example from '../../public/content/site.example.en.json'\nexport { z, CUBE_FACE_ORDER, example }\n"
+      "import { z } from 'zod'\nimport { FACE_ORDER } from './faces'\nimport example from '../../public/content/site.example.en.json'\nexport { z, FACE_ORDER, example }\n"
     expect(await restrictedImports('src/kernel/probe.ts', code)).toEqual([])
   })
 })

@@ -2,24 +2,36 @@ import { describe, expect, it } from 'vitest'
 import exampleEn from '../../../public/content/site.example.en.json'
 import { buildPersonJsonLd, escapeHtml, isProfileUrl, renderHeadTags, renderStaticBody, toPlainText } from './renderSeo'
 import type { SeoInput } from './renderSeo'
+import { SiteContentSchema } from '../siteContent'
+
+// The example document, validated, with the fields under test replaced.
+const example = SiteContentSchema.parse(exampleEn)
+const products = example.sections.find((section) => section.id === 'products')!
 
 const base: SeoInput = {
-  locale: 'en',
+  ...example,
   identity: {
+    ...example.identity,
     displayName: 'Ada Example',
     fullName: 'Ada Example',
     role: 'Agentic Product Engineer',
     keywords: 'AI Engineer · LLM agents · Python · AWS',
   },
   seo: { title: 'Ada Example — Agentic Product Engineer', description: 'Builds products with agents.' },
-  hero: { headline: 'Headline', summary: 'Summary with <strong>emphasis</strong>.' },
+  hero: { ...example.hero, headline: 'Headline', summary: 'Summary with <strong>emphasis</strong>.' },
   sections: [
     {
+      ...products,
       label: 'PRODUCTS',
       title: 'Public Products',
       summary: 'Tools &amp; experiments.',
       ctaPrimary: { label: 'Repository', href: 'https://github.com/ada/tool' },
+      ctaSecondary: undefined,
+      cta: undefined,
+      links: undefined,
       detail: {
+        title: 'Products',
+        summary: 'Detail',
         links: [
           { label: 'GitHub', href: 'https://github.com/ada' },
           { label: 'LinkedIn', href: 'https://www.linkedin.com/in/ada-example/' },

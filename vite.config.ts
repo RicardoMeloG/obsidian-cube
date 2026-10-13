@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { renderHeadTags, renderStaticBody } from './src/kernel/seo/renderSeo.ts'
 import type { SeoInput } from './src/kernel/seo/renderSeo.ts'
+import { SiteContentSchema } from './src/kernel/siteContent.ts'
 
 // Static SEO (src/kernel/seo/renderSeo.ts): the published English content when it
 // exists locally (gitignored, written by the admin), otherwise the committed
@@ -34,11 +35,14 @@ function readSeoContent(): { file: string; content: SeoInput } {
   for (const file of SEO_SOURCES) {
     const url = new URL(file, CONTENT_DIR)
     if (!existsSync(url)) continue
-    const content = JSON.parse(readFileSync(url, 'utf8')) as SeoInput
-    if (!content?.identity?.fullName || !content?.seo?.title || !Array.isArray(content.sections)) {
-      throw new Error(`[seo] ${file} is missing identity, seo or sections`)
+    // The same schema the page applies: a document the page would reject (and
+    // replace with the example) must not reach the static HTML either.
+    const parsed = SiteContentSchema.safeParse(JSON.parse(readFileSync(url, 'utf8')))
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ')
+      throw new Error(`[seo] ${file} does not match the content schema: ${issues}`)
     }
-    return { file, content }
+    return { file, content: parsed.data }
   }
   throw new Error('[seo] no site content found in public/content/')
 }
@@ -67,11 +71,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), seoFromContent()],
   // `@/` is src/: imports across top-level modules use it (ADR 006).
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  // Puerto propio para no chocar con otros proyectos que usan el 5173 por defecto.
-  // strictPort evita que Vite salte a otro puerto en silencio si el 5180 está ocupado.
+  // A port of its own, so it does not clash with other projects on 5173;
+  // strictPort fails instead of moving silently to another port.
   server: {
-    // host: true → escucha en 0.0.0.0 (toda la red local), no solo en localhost,
-    // para poder abrir el sitio desde otros dispositivos (móvil) y desde la IP.
+    // Listens on the local network too, to open the site from a phone.
     host: true,
     port: 5180,
     strictPort: true,

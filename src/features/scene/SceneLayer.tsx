@@ -1,6 +1,6 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import type { ResolvedCubeSection } from '@/kernel/visualContent'
+import type { ResolvedFace } from '@/kernel/visualContent'
 import { useExperience, useExperienceStore } from '@/features/experience/experienceStore'
 import { CUBE_ENGAGED_KEY, readFreezeAt, rememberInSession } from '@/features/experience/introPlan'
 import type { IntroPlan } from '@/features/experience/introPlan'
@@ -11,7 +11,7 @@ import { readDiagnosticFx } from './diagnosticFx'
 import type { IntroPhase } from './intro/introTimeline'
 
 type SceneLayerProps = {
-  sections: ResolvedCubeSection[]
+  sections: ResolvedFace[]
   plan: IntroPlan
   webglAvailable: boolean
 }

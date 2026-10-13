@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import type { CubeSectionDetail, CubeSectionId } from '@/kernel/faces'
+import type { FaceId } from '@/kernel/faces'
+import type { FaceDetail } from '@/kernel/siteContent'
 import { resolveSections } from '@/kernel/visualContent'
 import { interfaceCopy } from '@/features/content/copy'
 import { useSiteContent } from '@/features/content/useSiteContent'
@@ -80,7 +81,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
 
   // The dialog shows what opened it (a research concept), otherwise the face's
   // `detail`, otherwise its long-form fields.
-  const dialogDetail = useMemo<CubeSectionDetail | null>(() => {
+  const dialogDetail = useMemo<FaceDetail | null>(() => {
     if (detail.focused) return detail.focused
     if (!activeSection) return null
     if (activeSection.detail) return activeSection.detail
@@ -93,14 +94,14 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   }, [activeSection, detail.focused])
 
   const openDetail = useCallback(
-    (focused?: CubeSectionDetail, trigger?: HTMLElement) => {
+    (focused?: FaceDetail, trigger?: HTMLElement) => {
       restoreFocusRef.current = trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
       store.dispatch({ type: 'detailOpened', detail: focused ?? null })
     },
     [store],
   )
   const closeDetail = useCallback(() => store.dispatch({ type: 'detailClosed' }), [store])
-  const requestFace = useCallback((face: CubeSectionId) => store.dispatch({ type: 'faceRequested', face }), [store])
+  const requestFace = useCallback((face: FaceId) => store.dispatch({ type: 'faceRequested', face }), [store])
 
   // In the stacked layout the page scrolls and the cube hero takes its height
   // from CSS, so the shell and canvas stop being pinned to the viewport height.

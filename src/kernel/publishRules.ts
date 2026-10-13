@@ -79,6 +79,9 @@ export function publishIssues(content: SiteContent): Issue[] {
       { path: at('ctaPrimary', 'href'), href: section.ctaPrimary?.href },
       { path: at('ctaSecondary', 'href'), href: section.ctaSecondary?.href },
       ...(section.detail?.links ?? []).map((link, item) => ({ path: at('detail', 'links', item, 'href'), href: link.href })),
+      // Older fields, still shown when a face has no detail (audit-2 B-11).
+      { path: at('cta', 'href'), href: section.cta?.href },
+      ...(section.links ?? []).map((link, item) => ({ path: at('links', item, 'href'), href: link.href })),
     ].filter((link): link is { path: Issue['path']; href: string } => Boolean(link.href))
     for (const link of links) {
       if (!isAllowedHref(link.href)) issues.push({ path: link.path, message: 'Usa un enlace https: o mailto:, o una ruta de este sitio.' })
