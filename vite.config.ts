@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -48,6 +49,8 @@ function seoFromContent(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), seoFromContent()],
+  // `@/` is src/: imports across top-level modules use it (ADR 006).
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // Puerto propio para no chocar con otros proyectos que usan el 5173 por defecto.
   // strictPort evita que Vite salte a otro puerto en silencio si el 5180 está ocupado.
   server: {

@@ -10,11 +10,11 @@ import {
   startCubeDragSound,
   stopCubeDragSound,
   updateCubeDragSound,
-} from '../audio/cubeAudio'
-import type { CubeSectionId } from '../../../kernel/faces'
-import { useLayoutMode } from '../../../styles/layoutModes'
-import type { ResolvedCubeSection } from '../../../kernel/visualContent'
-import type { DiagnosticFx } from '../diagnosticFx'
+} from '@/features/audio/cubeAudio'
+import type { CubeSectionId } from '@/kernel/faces'
+import { useLayoutMode } from '@/styles/layoutModes'
+import type { ResolvedCubeSection } from '@/kernel/visualContent'
+import type { DiagnosticFx } from './diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { PremiumCube } from './PremiumCube'
 import { VectorWorldStage } from './vector-worlds/VectorWorldStage'

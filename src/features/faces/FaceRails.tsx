@@ -1,14 +1,14 @@
 import { useId, useMemo } from 'react'
 import type { CSSProperties } from 'react'
-import type { CubeSection, CubeSectionDetail, CubeSectionResearchConcept, FeatureGlyphId } from '../../kernel/faces'
-import type { ResolvedCubeSection } from '../../kernel/visualContent'
-import { RichText } from '../content/RichText'
-import { cx } from '../../ui/cx'
-import { Eyebrow } from '../../ui/Eyebrow'
-import { GlyphTile } from '../../ui/GlyphTile'
-import { NumberBadge } from '../../ui/NumberBadge'
-import { PillButton } from '../../ui/PillButton'
-import './SidePanels.css'
+import type { CubeSection, CubeSectionDetail, CubeSectionResearchConcept, FeatureGlyphId } from '@/kernel/faces'
+import type { ResolvedCubeSection } from '@/kernel/visualContent'
+import { RichText } from '@/features/content/RichText'
+import { cx } from '@/ui/cx'
+import { Eyebrow } from '@/ui/Eyebrow'
+import { GlyphTile } from '@/ui/GlyphTile'
+import { NumberBadge } from '@/ui/NumberBadge'
+import { PillButton } from '@/ui/PillButton'
+import './FaceRails.css'
 
 type SidePanelsProps = {
   activeSection: ResolvedCubeSection

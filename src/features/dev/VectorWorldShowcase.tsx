@@ -1,12 +1,12 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { MathUtils, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
-import { useSiteContent } from '../content/useSiteContent'
-import { VECTOR_WORLD_THEME } from './scene/vector-worlds/base/theme'
-import { isWorldId, WORLD_REGISTRY } from './scene/vector-worlds/registry'
-import { WORLD_IDS } from '../../kernel/worlds'
-import type { WorldId } from '../../kernel/worlds'
-import type { WorldComposition } from './scene/vector-worlds/types'
+import { useSiteContent } from '@/features/content/useSiteContent'
+import { VECTOR_WORLD_THEME } from '@/features/scene/vector-worlds/base/theme'
+import { isWorldId, WORLD_REGISTRY } from '@/features/scene/vector-worlds/registry'
+import { WORLD_IDS } from '@/kernel/worlds'
+import type { WorldId } from '@/kernel/worlds'
+import type { WorldComposition } from '@/features/scene/vector-worlds/types'
 
 type ProductTuneState = {
   yaw: number

@@ -1,7 +1,7 @@
-import { getDefaultSiteContent, SiteContentSchema } from '../../kernel/siteContent'
-import type { SiteContent, SiteLocale } from '../../kernel/siteContent'
-import { getDefaultVisualContent, normalizeVisual, VisualContentSchema } from '../../kernel/visualContent'
-import type { VisualContent } from '../../kernel/visualContent'
+import { getDefaultSiteContent, SiteContentSchema } from '@/kernel/siteContent'
+import type { SiteContent, SiteLocale } from '@/kernel/siteContent'
+import { getDefaultVisualContent, normalizeVisual, VisualContentSchema } from '@/kernel/visualContent'
+import type { VisualContent } from '@/kernel/visualContent'
 
 // Browser side of the content kernel: locale detection and fetching the
 // published documents. Validation and defaults stay in src/kernel.

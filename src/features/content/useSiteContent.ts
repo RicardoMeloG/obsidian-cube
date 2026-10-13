@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDefaultSiteContent, normalizeSections } from '../../kernel/siteContent'
-import type { SiteContent, SiteLocale } from '../../kernel/siteContent'
+import { getDefaultSiteContent, normalizeSections } from '@/kernel/siteContent'
+import type { SiteContent, SiteLocale } from '@/kernel/siteContent'
 import { loadSiteContent, resolveSiteLocale } from './loadContent'
 
 export function useSiteContent() {

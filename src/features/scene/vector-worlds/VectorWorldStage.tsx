@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
-import { ErrorBoundary } from '../../../../lib/ErrorBoundary'
+import { ErrorBoundary } from '@/lib/ErrorBoundary'
 import { WORLD_REGISTRY } from './registry'
-import type { WorldId } from '../../../../kernel/worlds'
+import type { WorldId } from '@/kernel/worlds'
 
 type VectorWorldStageProps = {
   worldId: WorldId | null

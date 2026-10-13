@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getDefaultVisualContent } from '../../kernel/visualContent'
-import type { VisualContent } from '../../kernel/visualContent'
+import { getDefaultVisualContent } from '@/kernel/visualContent'
+import type { VisualContent } from '@/kernel/visualContent'
 import { loadVisualContent } from './loadContent'
 
 // Loads the language-independent visual config once. Starts from embedded

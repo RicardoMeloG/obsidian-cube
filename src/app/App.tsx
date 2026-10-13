@@ -1,12 +1,12 @@
 import { lazy, Suspense } from 'react'
-import { PremiumCubePrototype } from './features/premium-cube/PremiumCubePrototype'
-import { isWorldId } from './features/premium-cube/scene/vector-worlds/registry'
-import './App.css'
+import { PremiumCubePrototype } from './Experience'
+import { isWorldId } from '@/features/scene/vector-worlds/registry'
+import '@/App.css'
 
 // Dev-only world showcase (?bg=<world>, ?bg=only, ?tune=1). Loaded lazily and
 // only in development so the tuning tooling never ships to visitors.
 const VectorWorldShowcase = lazy(() =>
-  import('./features/premium-cube/VectorWorldShowcase').then((module) => ({ default: module.VectorWorldShowcase })),
+  import('@/features/dev/VectorWorldShowcase').then((module) => ({ default: module.VectorWorldShowcase })),
 )
 
 function readBgShowcaseFlag() {

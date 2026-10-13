@@ -3,8 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
-import type { CubeSectionId } from '../../../kernel/faces'
-import type { ResolvedCubeSection } from '../../../kernel/visualContent'
+import type { CubeSectionId } from '@/kernel/faces'
+import type { ResolvedCubeSection } from '@/kernel/visualContent'
 
 const FACE_ACCENT_SOFT = 'rgba(170, 160, 255, 0.6)'
 
