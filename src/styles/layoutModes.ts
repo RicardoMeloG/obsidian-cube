@@ -7,10 +7,19 @@ import { useSyncExternalStore } from 'react'
 //   stacked        cube on top, rails below, the page scrolls
 //   narrow         phone-sized stacked layout
 //   desktop        cube in the centre, rails left and right, strip at the bottom
-//   desktop-short  desktop on a short screen: the rails compact (App.css)
+//   desktop-short  desktop on a short screen: the rails compact
+//   stacked-wide   stacked on a wide but squarish screen (tablet landscape)
+//   tight          any layout up to 1100px wide: narrower rail columns
+//   phone          phones up to 680px: the face strip takes two rows
+//   phone-small    phones up to 389px: research concepts in one column
+// tokens.css turns each into a Tailwind variant of the same name.
 export const LAYOUT_QUERIES = {
   stacked: '(max-width: 900px), (max-aspect-ratio: 4 / 3)',
+  stackedWide: '(min-width: 901px) and (max-aspect-ratio: 4 / 3)',
   narrow: '(max-width: 720px)',
+  tight: '(max-width: 1100px)',
+  phone: '(max-width: 680px)',
+  phoneSmall: '(max-width: 389px)',
   desktop: '(not ((max-width: 900px) or (max-aspect-ratio: 4 / 3)))',
   desktopShort: '(not ((max-width: 900px) or (max-aspect-ratio: 4 / 3))) and (max-height: 900px)',
 } as const

@@ -5,17 +5,13 @@ import { describe, expect, it } from 'vitest'
 import { LAYOUT_QUERIES } from './layoutModes'
 
 // One source for the layout modes (ADR 006, spec 010 AD-06 and H-17).
-const css = readFileSync('src/App.css', 'utf8')
+const css = ['src/App.css', 'src/styles/tokens.css'].map((file) => readFileSync(file, 'utf8')).join('\n')
 const mediaQueries = [...css.matchAll(/@media ([^{]+)\{/g)].map((match) => match[1].trim())
 
 // Legacy component breakpoints from before the layout modes. They are migrated
 // with the components in P2b and P4; the list only shrinks.
 const LEGACY_QUERIES = [
   '(prefers-reduced-motion: reduce)',
-  '(max-width: 1100px)',
-  '(min-width: 901px) and (max-aspect-ratio: 4 / 3)',
-  '(max-width: 680px)',
-  '(max-width: 389px)',
   '(max-width: 340px)',
 ]
 
@@ -34,7 +30,7 @@ describe('layout modes', () => {
   })
 
   it('are all used by the CSS, so a renamed query cannot silently stop applying', () => {
-    for (const query of [LAYOUT_QUERIES.stacked, LAYOUT_QUERIES.narrow, LAYOUT_QUERIES.desktop, LAYOUT_QUERIES.desktopShort]) {
+    for (const query of Object.values(LAYOUT_QUERIES)) {
       expect(mediaQueries).toContain(query)
     }
   })

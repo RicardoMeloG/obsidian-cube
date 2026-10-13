@@ -191,7 +191,7 @@ async function checkPage(browser, viewport, locale) {
 async function measurePage(page, viewport, locale) {
   const results = { layout: [], axe: [] }
   await page.goto(`${BASE}/?intro=0&lang=${locale}`)
-  await page.waitForSelector('.side-panels.is-idle', { timeout: 60000 })
+  await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
   await page.evaluate(() => document.fonts.ready)
   // The layout is measured with the served font (ADR 006, AD-10).
   if (!(await page.evaluate(() => document.fonts.check('16px "Inter Variable"')))) {
@@ -207,7 +207,7 @@ async function measurePage(page, viewport, locale) {
     const current = await page.getAttribute('.side-panels', 'data-section')
     if (current !== face) {
       await page.click(`.cube-section-nav a[data-section-id="${face}"]`)
-      await page.waitForSelector(`.side-panels.is-idle[data-section="${face}"]`, { timeout: 15000 })
+      await page.waitForSelector(`.side-panels[data-transition="idle"][data-section="${face}"]`, { timeout: 15000 })
     }
     const measured = await page.evaluate(measureFace, { queries: MODE_QUERIES })
     mode = measured.mode
@@ -235,7 +235,7 @@ async function checkDegradation(noWebglBrowser) {
     const page = await noWebglContext.newPage()
     page.on('pageerror', (error) => errors.push(`no-webgl: ${error.message}`))
     await page.goto(`${BASE}/?intro=1&lang=en`)
-    await page.waitForSelector('.side-panels.is-idle', { timeout: 60000 })
+    await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
     const state = await page.evaluate(() => {
       const poster = document.querySelector('.cube-canvas__poster')
       const visible = (selector) => {
@@ -273,9 +273,9 @@ async function checkDegradation(noWebglBrowser) {
     })
     await page.route('**/assets/productsWorld-*.js', (route) => route.abort())
     await page.goto(`${BASE}/?intro=0&lang=en`)
-    await page.waitForSelector('.side-panels.is-idle')
+    await page.waitForSelector('.side-panels[data-transition="idle"]')
     await page.click('.cube-section-nav a[data-section-id="products"]')
-    await page.waitForSelector('.side-panels.is-idle[data-section="products"]')
+    await page.waitForSelector('.side-panels[data-transition="idle"][data-section="products"]')
     await page.waitForTimeout(1500)
     const state = await page.evaluate(() => ({
       canvas: Boolean(document.querySelector('.cube-canvas canvas')),

@@ -1,0 +1,226 @@
+/* Design tokens: the one place where colours, the font, motion and the layout
+   modes are defined (ADR 006). Components use these through Tailwind
+   utilities; no colour literal outside this file, scene code and the per-face
+   accent that visual.json sets at runtime (ADR 003). */
+
+@theme {
+  /* The page: its background and default text colour. */
+  --color-page: #03050b;
+  --color-page-ink: #eef3f8;
+
+  /* Obsidian surfaces, darkest first. */
+  --color-obsidian-950: #020307;
+  --color-obsidian-900: #05070d;
+  --color-obsidian-800: #090d14;
+  --color-night-950: rgb(3 4 11);
+  --color-night-900: rgb(7 9 20);
+  --color-night-800: rgb(12 14 30);
+  --color-night-700: rgb(18 20 38);
+
+  /* Cool white text, strongest first. */
+  --color-ink-50: rgb(246 248 255);
+  --color-ink-100: rgb(232 232 252);
+  --color-ink-200: rgb(218 220 246);
+  --color-ink-300: rgb(204 215 227);
+
+  /* The violet signature and its light tint. */
+  --color-violet-200: rgb(196 188 255);
+  --color-violet-300: #b8aeff;
+  --color-violet-500: #7a6dff;
+
+  /* Steel: the quiet signature line under the cube on phones. */
+  --color-steel-300: rgb(170 195 220);
+  --color-steel-400: rgb(140 180 220);
+
+  --color-ice-300: #9acbf2;
+  --color-ice-100: #eef7ff;
+  --color-mineral-500: #8a97a6;
+  --color-copper-400: #c08b5a;
+
+  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Spacing: the page edge inset, shared by the header, the rails and the strip. */
+  --spacing-edge: clamp(1.2rem, 3vw, 2.6rem);
+  --spacing-edge-top: clamp(1.25rem, 3vw, 2rem);
+  --spacing-corner: clamp(1rem, 2vw, 1.6rem);
+
+  /* Type roles. Labels are uppercase and tracked; reading text is not. */
+  --text-name: clamp(0.98rem, 1.15vw, 1.2rem);
+  --text-name--line-height: 1.2;
+  --text-name--letter-spacing: 0.24em;
+  --text-name--font-weight: 600;
+  --text-name-narrow: 0.9rem;
+  --text-name-narrow--letter-spacing: 0.2em;
+  --text-role: 0.66rem;
+  --text-role--letter-spacing: 0.22em;
+  --text-role--font-weight: 700;
+  --text-role-narrow: 0.56rem;
+  --text-keywords: 0.7rem;
+  --text-keywords--letter-spacing: 0.06em;
+  --text-keywords--font-weight: 500;
+  --text-keywords-narrow: 0.62rem;
+  --text-keywords-narrow--letter-spacing: 0.04em;
+  --text-signature: 0.64rem;
+  --text-signature--letter-spacing: 0.32em;
+  --text-signature--font-weight: 500;
+  --text-signature-narrow: 0.52rem;
+  --text-signature-narrow--letter-spacing: 0.24em;
+  --text-eyebrow: 0.62rem;
+  --text-eyebrow--letter-spacing: 0.34em;
+  --text-eyebrow--font-weight: 700;
+  --text-face-title: clamp(2.4rem, 4.2vw, 4.6rem);
+  --text-face-title--line-height: 0.96;
+  --text-face-title--letter-spacing: -0.01em;
+  --text-face-title--font-weight: 700;
+  --text-summary: clamp(0.86rem, 0.95vw, 0.98rem);
+  --text-summary--line-height: 1.55;
+  --text-body-sm: 0.82rem;
+  --text-body-sm--line-height: 1.45;
+  --text-label: 0.74rem;
+  --text-label--letter-spacing: 0.22em;
+  --text-label--font-weight: 700;
+  --text-step: 0.78rem;
+  --text-step--letter-spacing: 0.18em;
+  --text-step--font-weight: 700;
+  --text-rail-title: 0.7rem;
+  --text-rail-title--letter-spacing: 0.34em;
+  --text-rail-title--font-weight: 700;
+  --text-counter: clamp(1.6rem, 2.3vw, 2.2rem);
+  --text-counter--letter-spacing: 0.04em;
+  --text-counter--font-weight: 300;
+  --text-badge: 0.72rem;
+  --text-badge--letter-spacing: 0.06em;
+  --text-badge--font-weight: 700;
+  --text-cta: 0.7rem;
+  --text-cta--letter-spacing: 0.22em;
+  --text-cta--font-weight: 700;
+  --text-concept-axis: 0.56rem;
+  --text-concept-axis--letter-spacing: 0.24em;
+  --text-concept-axis--font-weight: 800;
+  --text-concept: 0.82rem;
+  --text-concept--letter-spacing: 0.12em;
+  --text-concept--font-weight: 800;
+  --text-concept-summary: 0.76rem;
+  --text-concept-summary--line-height: 1.34;
+  --text-control: 0.68rem;
+  --text-control--letter-spacing: 0.08em;
+  --text-control--font-weight: 700;
+
+  /* Text shadows: the name lifted off the field, the face title given depth. */
+  --text-shadow-name: 0 1px 18px rgb(0 0 0 / 0.7);
+  --text-shadow-title: 0 1px 0 rgb(255 255 255 / 0.12), 0 18px 64px rgb(0 0 0 / 0.6);
+
+  --ease-obsidian: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Face change: the rails blur out, then their parts rise in order. */
+  --animate-rail-in: rail-in 280ms var(--ease-obsidian) 80ms forwards;
+  --animate-rail-out: rail-out 150ms ease forwards;
+  --animate-rail-enter: rail-enter 300ms var(--ease-obsidian) forwards;
+  --animate-rail-item: rail-item 360ms var(--ease-obsidian) forwards;
+
+  @keyframes rail-in {
+    from { opacity: 0; transform: translate3d(0, 0.6rem, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+
+  @keyframes rail-out {
+    from { opacity: 1; filter: blur(0); transform: translate3d(0, 0, 0); }
+    to { opacity: 0; filter: blur(5px); transform: translate3d(0, 0.5rem, 0); }
+  }
+
+  @keyframes rail-enter {
+    from { opacity: 0; filter: blur(5px); transform: translate3d(0, 0.7rem, 0); }
+    to { opacity: 1; filter: blur(0); transform: translate3d(0, 0, 0); }
+  }
+
+  @keyframes rail-item {
+    from { opacity: 0; transform: translate3d(0, 0.35rem, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+}
+
+/* Layout modes. The queries are copied from src/styles/layoutModes.ts, their
+   single source; layoutModes.test.ts fails if they drift. Block form, because
+   the short form breaks on queries joined by a comma. The order is the cascade
+   order: a later mode wins where two apply (tight < desktop-short, stacked <
+   stacked-wide < narrow < phone < phone-small). */
+@custom-variant tight {
+  @media (max-width: 1100px) {
+    @slot;
+  }
+}
+
+@custom-variant desktop {
+  @media (not ((max-width: 900px) or (max-aspect-ratio: 4 / 3))) {
+    @slot;
+  }
+}
+
+@custom-variant desktop-short {
+  @media (not ((max-width: 900px) or (max-aspect-ratio: 4 / 3))) and (max-height: 900px) {
+    @slot;
+  }
+}
+
+@custom-variant stacked {
+  @media (max-width: 900px), (max-aspect-ratio: 4 / 3) {
+    @slot;
+  }
+}
+
+@custom-variant stacked-wide {
+  @media (min-width: 901px) and (max-aspect-ratio: 4 / 3) {
+    @slot;
+  }
+}
+
+@custom-variant narrow {
+  @media (max-width: 720px) {
+    @slot;
+  }
+}
+
+@custom-variant phone {
+  @media (max-width: 680px) {
+    @slot;
+  }
+}
+
+@custom-variant phone-small {
+  @media (max-width: 389px) {
+    @slot;
+  }
+}
+
+/* Focus ring shared by every interactive control. */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 1px solid color-mix(in srgb, var(--color-violet-300) 82%, transparent);
+    outline-offset: 4px;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-violet-500) 16%, transparent);
+  }
+}
+
+/* The accent line of a face title: from a light tint of the face's accent to
+   the accent itself. */
+@utility text-accent-gradient {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--section-accent, var(--color-violet-500)) 60%, var(--color-white)),
+    var(--accent)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Per-face accent (ADR 003): visual.json sets --section-accent on the element
+   that shows a face; its tones are derived where it is set, so this is a
+   utility, not a :root variable. */
+@utility accent-scope {
+  --accent: var(--section-accent, var(--color-violet-300));
+  --accent-line: color-mix(in srgb, var(--section-accent, var(--color-violet-500)) 42%, transparent);
+  --accent-faint: color-mix(in srgb, var(--section-accent, var(--color-violet-500)) 16%, transparent);
+  --accent-glow: color-mix(in srgb, var(--section-accent, var(--color-violet-500)) 28%, transparent);
+}

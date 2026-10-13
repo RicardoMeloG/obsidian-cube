@@ -5,6 +5,7 @@ import { CUBE_FACE_ORDER } from '../../kernel/faces'
 import { ErrorBoundary } from '../../lib/ErrorBoundary'
 import { hasWebGL } from '../../lib/hasWebGL'
 import { useLayoutMode } from '../../styles/layoutModes'
+import { SegmentedControl } from '../../ui/SegmentedControl'
 import type { CubeSectionDetail, CubeSectionId } from '../../kernel/faces'
 import { CubeSectionNav } from './CubeSectionNav'
 import { useSiteContent } from '../content/useSiteContent'
@@ -66,6 +67,11 @@ function readInitialSectionId(): CubeSectionId {
   const requestedSection = new URLSearchParams(window.location.search).get('section')
   return CUBE_FACE_ORDER.includes(requestedSection as CubeSectionId) ? (requestedSection as CubeSectionId) : 'agentic'
 }
+
+const LOCALE_OPTIONS = [
+  { value: 'en', label: 'EN' },
+  { value: 'es', label: 'ES' },
+] as const
 
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
@@ -404,34 +410,34 @@ export function PremiumCubePrototype() {
         )}
       </div>
 
-      <div className="prototype-chrome">
-        <header className="prototype-kicker">
-          <h1 className="prototype-kicker__name">{content.identity.displayName}</h1>
-          <p className="prototype-kicker__role">{content.identity.role}</p>
-          {content.identity.keywords && <p className="prototype-kicker__keywords">{content.identity.keywords}</p>}
+      {/* `prototype-chrome` and `language-toggle` are hooks for the intro
+          choreography in App.css; their styles are the utilities below. The
+          chrome sits above the rails (their scrim used to dim the name) and
+          takes no pointer events, so the rails stay clickable. */}
+      <div className="prototype-chrome pointer-events-none absolute inset-0 z-6 grid grid-rows-[auto_1fr_auto] transition-opacity duration-480 motion-reduce:duration-1 stacked:bottom-auto stacked:h-[52svh]">
+        <header className="grid gap-[0.34rem] self-start justify-self-start pt-edge-top pl-edge uppercase">
+          <h1 className="m-0 text-name text-ink-50/97 text-shadow-name narrow:text-name-narrow">
+            {content.identity.displayName}
+          </h1>
+          <p className="m-0 text-role text-violet-200/90 narrow:text-role-narrow">{content.identity.role}</p>
+          {content.identity.keywords && (
+            <p className="m-0 text-keywords normal-case text-ink-300/70 narrow:text-keywords-narrow">{content.identity.keywords}</p>
+          )}
         </header>
-        <div className="prototype-mark">{content.identity.handle}</div>
-        <div className="prototype-status">{content.identity.fullName}</div>
+        {/* The full name under the cube, on stacked layouts only: on desktop the
+            face strip carries it. */}
+        <p className="hidden w-[min(70vw,520px)] translate-y-[0.4rem] grid-cols-[1fr_auto] items-center gap-[0.9rem] self-end justify-self-end pr-edge pb-[clamp(1.5rem,4vw,3.4rem)] text-right text-signature uppercase text-steel-300/48 before:h-px before:bg-linear-to-r before:from-transparent before:to-steel-400/28 before:content-[''] stacked:grid narrow:w-[min(88vw,420px)] narrow:gap-[0.7rem] narrow:text-signature-narrow">
+          {content.identity.fullName}
+        </p>
       </div>
 
-      <div className="language-toggle" aria-label="Language">
-        <button
-          aria-pressed={locale === 'en'}
-          className={locale === 'en' ? 'is-active' : ''}
-          type="button"
-          onClick={() => setLocale('en')}
-        >
-          EN
-        </button>
-        <button
-          aria-pressed={locale === 'es'}
-          className={locale === 'es' ? 'is-active' : ''}
-          type="button"
-          onClick={() => setLocale('es')}
-        >
-          ES
-        </button>
-      </div>
+      <SegmentedControl
+        className="language-toggle absolute top-corner right-corner z-10"
+        label="Language"
+        options={LOCALE_OPTIONS}
+        value={locale}
+        onChange={setLocale}
+      />
 
       {displayedSection && (
         <SidePanels
