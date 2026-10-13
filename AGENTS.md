@@ -126,7 +126,7 @@ Stack (do not change without a spec justifying it):
 Before reporting a change complete (definition of done; items marked with a phase start when that phase of `specs/010-architecture` lands):
 
 1. `npm run build`, `npm run lint` (site and server), `npm run typecheck:server` and `npm test` pass.
-2. `npm run check:budget`, `npm run check:privacy` and `npm run check:docs` pass.
+2. `npm run check:budget`, `npm run check:privacy`, `npm run check:docs` and `npm run check:tokens` pass.
 3. `npm run check:layout` passes: no layout or accessibility failure beyond the known ones in `scripts/checks/layout-known.json`. A fix removes its entry; a new entry needs a reason in the commit.
 4. The pre-push hook is enabled (`git config core.hooksPath .githooks`).
 5. Visual changes are verified with Playwright: desktop at 1440px or wider, a short desktop (1366×768) and a 390px phone.
@@ -147,7 +147,7 @@ The overview, the module map and the status of every rule (in force, or the phas
 
 - **Content kernel** (`src/kernel/`): schemas, catalog, defaults, example content, SEO renderer, layout budgets. Pure TypeScript, no DOM, depends on `zod` only. The admin server imports the kernel and nothing else from `src/`.
 - **Scene and DOM are separate.** Scene code (R3F, three) and DOM features never import each other; they meet in the experience store (from P3).
-- **Styling.** Tailwind utilities and tokens; hand-written CSS only for what utilities express poorly, commented with why. `App.css` is legacy being migrated (P2b–P4): do not grow it except for the P2a short-screen fix.
+- **Styling.** Tailwind utilities with the tokens and layout-mode variants of `src/styles/tokens.css`; reusable pieces in `src/ui/`. Hand-written CSS only for what utilities express poorly (scrims, choreography, layered gradients), next to its component, in the `components` layer, commented with why. `App.css` is legacy being migrated (P4): never grow it; its colour literals may only go down (`check:tokens`).
 - **Layout modes** come from one source, `src/styles/layoutModes.ts`: `stacked`, `desktop`, `desktop-short` (height ≤ 900px, compact rhythm). No numeric breakpoints in components; the CSS repeats the same queries and a test keeps them equal.
 - **Content budgets** (`src/kernel/layoutBudgets.json`, visible characters and item counts) and link rules are publish rules: the admin refuses content that would not fit or links nowhere; the site renders with the tolerant schema. Change a budget only with a layout check run that proves the stress content still fits.
 - **No blank page.** Without WebGL the scene is replaced by a still image (`hasWebGL`); a scene or world error is contained by `src/lib/ErrorBoundary`. The name, rails and strip are DOM and always stay.

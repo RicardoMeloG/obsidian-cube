@@ -18,7 +18,7 @@ A single-screen experience built around a persistent obsidian cube.
 
 - React + TypeScript + Vite
 - Three.js / @react-three/fiber / drei
-- Tailwind v4 (tokens in `src/index.css`)
+- Tailwind v4 (tokens and layout-mode variants in `src/styles/tokens.css`, primitives in `src/ui/`)
 - Zod for content schema validation (schemas shared with the admin)
 - Web Audio API (gesture-driven, no auto-play)
 - NestJS admin API + vanilla admin page (`server/`), Postgres for drafts, versions and admin users
@@ -53,6 +53,7 @@ npm test
 npm run check:budget     # first-view size, a ratchet
 npm run check:privacy    # no personal data in publishable files
 npm run check:docs       # no undated measurements in living docs
+npm run check:tokens     # no colour literal outside the tokens
 npm run check:layout     # layout and accessibility on a viewport matrix (Playwright)
 git config core.hooksPath .githooks   # once per clone: privacy check before every push
 ```

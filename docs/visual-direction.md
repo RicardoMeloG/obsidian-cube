@@ -176,7 +176,7 @@ Tailwind is the implementation layer for the whole interface: the home rails and
 Setup:
 
 - Tailwind v4 installed via `@tailwindcss/vite`.
-- Tokens defined in `src/index.css` using Tailwind v4 `@theme` (mirrors the Color Tokens section above).
+- Tokens defined in `src/styles/tokens.css` using Tailwind v4 `@theme`: colours (page, obsidian, night, ink, violet, steel, ice), type roles (`text-name`, `text-face-title`, `text-label`…), spacing, motion and the layout-mode variants (`desktop`, `desktop-short`, `stacked`, `narrow`…). `npm run check:tokens` fails on a colour literal outside it.
 - Three.js scene styling stays controlled by scene code and focused CSS — Tailwind does not improvise around the cube material or 3D scene.
 
 Token rules:

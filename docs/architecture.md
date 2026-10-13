@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-12):** P0, P1 and P2a done. Next: P2b, P3 and P4, the normalization stage of ADR 007; content and release follow it, in that order. Phases are defined in `specs/010-architecture/spec.md`, section 7.
+**Migration status (2026-10-12):** P0, P1, P2a and P2b done. Next: P3 and P4, the rest of the normalization stage of ADR 007; content and release follow it, in that order. Phases are defined in `specs/010-architecture/spec.md`, section 7.
 
 ## System
 
@@ -35,7 +35,7 @@ Two layers: the repository holds code and example content; the owner's content i
 
 ## Site modules
 
-**Today:** `src/kernel/` (content contract), `src/features/content/` (loaders, locale, sanitizer, `RichText`, content hooks), `src/styles/layoutModes.ts` (layout modes), `src/lib/` (`ErrorBoundary`, `hasWebGL`), and everything else under `src/features/premium-cube/` (one folder), plus `src/App.tsx`, `src/App.css`, `src/index.css`. `PremiumCubePrototype.tsx` owns most behaviour.
+**Today:** `src/kernel/` (content contract), `src/features/content/` (loaders, locale, sanitizer, `RichText`, content hooks), `src/styles/` (`tokens.css`, `layoutModes.ts`), `src/ui/` (`SegmentedControl`, `Eyebrow`, `GlyphTile`, `NumberBadge`, `PillButton`, `cx`), `src/lib/` (`ErrorBoundary`, `hasWebGL`), and everything else under `src/features/premium-cube/` (one folder), plus `src/App.tsx`, `src/App.css` (legacy: strip, dialog, intro, shell), `src/index.css`. The header, language switch and rails are Tailwind; `PremiumCubePrototype.tsx` still owns most behaviour.
 
 **Target** (ADR 006; folders appear in the phase noted):
 
@@ -49,8 +49,8 @@ src/
     navigation/      face strip, language switch, contact links         P3
     content/         loaders, sanitizer, UI copy dictionary              done (loaders), P3
     audio/  dev/     ambient sound; diagnostics and showcase (DEV only)  P3
-  ui/                Tailwind primitives                                P2b
-  styles/            tokens.css, scene.css, layoutModes.ts              done (layoutModes), P2b
+  ui/                Tailwind primitives                                done (P2b)
+  styles/            tokens.css, layoutModes.ts                         done
   lib/               React utilities any layer may use: ErrorBoundary   done
   kernel/            ADR 005                                            done
 ```
@@ -83,7 +83,7 @@ Dependency rules (target, linted from P3): `kernel` imports only `zod`; `lib` im
 | Accessibility: no axe violations | In force, no known failures | `npm run check:layout` (H-13) |
 | First-view budget, ratchet | In force | `npm run check:budget`, limit in `scripts/checks/budget.json` (H-07) |
 | Deploy never deletes content | In force | `scripts/checks/deployWorkflow.test.ts` (H-14) |
-| No colour literals outside tokens | P2b | CI (H-08b) |
+| No colour literals outside tokens; App.css literals only go down | In force | `npm run check:tokens` (H-08b) |
 | Module boundaries | P3 | Lint (H-04) |
 | DOM-layer files ≤ 250 lines | P3 | Script (H-16) |
 | The served font is the one measured (Inter) | In force | `font-not-loaded` in `npm run check:layout` (AD-10) |

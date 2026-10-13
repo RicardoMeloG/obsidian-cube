@@ -11,7 +11,7 @@ on:
 # Gates of spec 010 (docs/architecture.md, "Rules and their gates").
 jobs:
   frontend:
-    name: Lint · Types · Test · Build · Budget · Privacy · Docs
+    name: Lint · Types · Test · Build · Budget · Privacy · Docs · Tokens
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +30,7 @@ jobs:
           # Owner's private values, one per line; never committed.
           PRIVACY_DENYLIST: ${{ secrets.PRIVACY_DENYLIST }}
       - run: npm run check:docs
+      - run: npm run check:tokens
 
   layout:
     name: Layout · Accessibility

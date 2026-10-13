@@ -382,3 +382,14 @@ Every decision was checked against the project's goal (ADR 007, Context). Contra
 | Audience 3 called developers "secondary" while ADR 007 makes the repository evidence | Audience 3 names technical hiring managers and the repository's role |
 
 E-22 (2026-10-12): a client name appears in the contents of two commits on `main` (`476849f`, added to `vite.config.ts`; `75e18b6`, removed). Reproduce with `git log --all -S"<value>" -i` using the local denylist; the value is not written here.
+
+**P2b (2026-10-12)**
+
+- `src/styles/tokens.css` holds every colour, type role, spacing value, text shadow, motion curve and keyframe, and the layout modes as block-form custom variants (`tight`, `desktop`, `desktop-short`, `stacked`, `stacked-wide`, `narrow`, `phone`, `phone-small`), declared in cascade order. `layoutModes.ts` gained `stackedWide`, `tight`, `phone` and `phoneSmall`; the legacy media-query list shrank to `340px` (strip) and reduced motion.
+- The 54 distinct colours of the migrated components became a short palette (page, obsidian, night, ink, violet, steel, ice) with opacity modifiers; near-identical tones were merged (at most 4 RGB units apart).
+- Header, language switch and rails are Tailwind. Primitives in `src/ui/`: `SegmentedControl`, `Eyebrow`, `GlyphTile`, `NumberBadge`, `PillButton`, `cx`. Hand-written CSS kept, in the `components` layer so utilities override it: the rail scrims, the face-change choreography and three gradient decorations (`SidePanels.css`), the layered backgrounds of the primitives (`src/ui/ornaments.css`).
+- `index.css` base rules moved into `@layer base`: unlayered, `button { font: inherit }` overrode the utilities.
+- The class names `side-panels`, `side-panels__rail`, `side-panels__cta`, `prototype-chrome` and `language-toggle` stay as unstyled hooks for the intro (App.css), the choreography and the layout check. The transition state is a `data-transition` attribute.
+- Removed: `.prototype-mark`, invisible on every layout but read by screen readers. The language switch's focus ring is now the shared one.
+- Parity: 108 deterministic screenshots (9 sizes covering every layout mode, both locales, six faces, without WebGL) and five interaction states (hover, keyboard focus, mid-transition) compared pixel by pixel against the code before P2b: no pixel differs by more than 11/255. `App.css` went from 1,813 to 916 lines.
+- H-08b in force: `npm run check:tokens`.
