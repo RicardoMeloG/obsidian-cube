@@ -83,7 +83,7 @@ export function DetailDialog({ detail, faceLabel, closeLabel, onClose, restoreFo
 
   return (
     <dialog
-      aria-labelledby="detail-modal-title"
+      aria-labelledby="detail-dialog-title"
       className="detail-dialog m-auto flex max-h-[min(76vh,46rem)] w-[min(46rem,calc(100vw-2*clamp(1rem,4vw,3rem)))] max-w-none flex-col overflow-hidden rounded-[10px] border border-violet-300/34 p-[clamp(1.25rem,3vw,2.2rem)] text-ink-50/94"
       ref={dialogRef}
       onCancel={(event) => {
@@ -105,7 +105,7 @@ export function DetailDialog({ detail, faceLabel, closeLabel, onClose, restoreFo
         <p className="m-0 mb-3 pr-[2.9rem] text-[0.66rem] font-extrabold tracking-[0.3em] text-violet-300/88 uppercase">{faceLabel}</p>
         <h2
           className="m-0 max-w-[12ch] pr-[2.9rem] text-[clamp(2.2rem,4vw,4rem)] leading-[0.96] text-ink-50/98 focus:outline-none focus-visible:outline focus-visible:outline-offset-4 focus-visible:outline-violet-300/55"
-          id="detail-modal-title"
+          id="detail-dialog-title"
           ref={titleRef}
           tabIndex={-1}
         >

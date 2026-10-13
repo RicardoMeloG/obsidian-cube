@@ -1,8 +1,8 @@
 import DOMPurify from 'dompurify'
 
-// Single security boundary for admin-authored rich content.
-// Every rich field renders through this whitelist. Keep the config here so the
-// future Node admin (Etapa 3) can reuse the exact same allow-list server-side.
+// Single security boundary for admin-authored rich content: every rich field
+// renders through this allow-list, in the browser. It needs the DOM, so it
+// stays out of the kernel (ADR 005); the kernel only measures visible text.
 //
 // Inline-only on purpose: the layout treats each face as a single-viewport
 // "poster", so block tags (p, ul, headings) are disallowed to avoid breaking it.

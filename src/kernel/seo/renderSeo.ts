@@ -145,7 +145,7 @@ export function renderHeadTags(content: SeoInput): string {
 }
 
 // Plain HTML version of the page for clients without JavaScript. Hidden for
-// JavaScript visitors (the `js` class set in index.html) and replaced by React
+// JavaScript visitors (the `js` class that /js-flag.js sets) and replaced by React
 // on mount, so people never see it flash.
 export function renderStaticBody(content: SeoInput): string {
   const { identity, hero } = content

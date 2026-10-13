@@ -8,7 +8,7 @@
   /* Scrims: a soft darkening behind each rail so the background never competes
      with the text, fading out well before the cube. Lighter on SYSTEMS, whose
      wireframe city is the face's protagonist. None when stacked. */
-  .side-panels {
+  .face-rails {
     --scrim-edge: 0.82;
     --scrim-mid: 0.5;
     background:
@@ -30,7 +30,7 @@
     }
   }
 
-  .side-panels[data-section='systems'] {
+  .face-rails[data-section='systems'] {
     --scrim-edge: 0.24;
     --scrim-mid: 0.1;
   }
@@ -38,7 +38,7 @@
   /* Choreography. On first show each rail rises in; on a face change the rails
      blur out, then each part rises in order (its --rise-delay). Stacked rails
      skip the first rise but keep the face change. */
-  .side-panels__rail {
+  .face-rails__rail {
     opacity: 0;
     animation: var(--animate-rail-in);
 
@@ -48,20 +48,20 @@
     }
   }
 
-  .side-panels[data-transition='exiting'] .side-panels__rail {
+  .face-rails[data-transition='exiting'] .face-rails__rail {
     pointer-events: none;
     animation: var(--animate-rail-out);
   }
 
-  .side-panels[data-transition='entering'] .side-panels__rail {
+  .face-rails[data-transition='entering'] .face-rails__rail {
     animation: var(--animate-rail-enter);
   }
 
-  .side-panels[data-transition='entering'] .side-panels__rail + .side-panels__rail {
+  .face-rails[data-transition='entering'] .face-rails__rail + .face-rails__rail {
     animation-delay: 55ms;
   }
 
-  .side-panels[data-transition='entering'] [data-rise] {
+  .face-rails[data-transition='entering'] [data-rise] {
     opacity: 0;
     animation: var(--animate-rail-item);
     animation-delay: var(--rise-delay, 0ms);
@@ -69,7 +69,7 @@
 
   /* Declared priority (ADR 006): on short desktops the secondary lines give
      way first. */
-  .side-panels [data-priority='secondary'] {
+  .face-rails [data-priority='secondary'] {
     @variant desktop-short {
       display: none;
     }

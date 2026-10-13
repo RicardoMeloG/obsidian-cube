@@ -36,11 +36,11 @@ function createResearchConceptDetail(concept: FaceResearchConcept, source: strin
 }
 
 // Layout of the two rails around the cube (desktop grid, stacked flow), by
-// layout mode (src/styles/tokens.css). `side-panels`, `side-panels__rail` and
-// `side-panels__cta` are hooks for the intro, the choreography and the layout
+// layout mode (src/styles/tokens.css). `face-rails`, `face-rails__rail` and
+// `face-rails__cta` are hooks for the intro, the choreography and the layout
 // check (FaceRails.css, src/app/intro.css, scripts/check-layout.mjs).
 const PANELS = cx(
-  'side-panels accent-scope pointer-events-none absolute inset-0 z-5 grid grid-cols-[minmax(18rem,30vw)_1fr_minmax(16rem,24vw)] grid-rows-[clamp(4rem,9vh,6.5rem)_1fr] gap-[clamp(1rem,2vw,2rem)] px-[clamp(1.1rem,3vw,2.6rem)] pt-[clamp(1.1rem,3vw,2.6rem)] pb-[clamp(5.8rem,11vh,7.2rem)]',
+  'face-rails accent-scope pointer-events-none absolute inset-0 z-5 grid grid-cols-[minmax(18rem,30vw)_1fr_minmax(16rem,24vw)] grid-rows-[clamp(4rem,9vh,6.5rem)_1fr] gap-[clamp(1rem,2vw,2rem)] px-[clamp(1.1rem,3vw,2.6rem)] pt-[clamp(1.1rem,3vw,2.6rem)] pb-[clamp(5.8rem,11vh,7.2rem)]',
   'tight:grid-cols-[minmax(16rem,32vw)_1fr_minmax(14rem,26vw)]',
   'desktop:grid-rows-[clamp(4rem,9vh,6.5rem)_minmax(0,1fr)]',
   'desktop-short:grid-rows-[clamp(3.6rem,8vh,5rem)_minmax(0,1fr)] desktop-short:pb-[clamp(4.6rem,10vh,5.6rem)]',
@@ -54,7 +54,7 @@ const PANELS = cx(
 // desktop: content that still does not fit scrolls inside it (the padding and
 // equal negative margin keep the glows inside the clip).
 const RAIL = cx(
-  'side-panels__rail pointer-events-auto row-start-2 grid gap-[clamp(0.9rem,1.4vw,1.4rem)] self-center text-ink-100/92',
+  'face-rails__rail pointer-events-auto row-start-2 grid gap-[clamp(0.9rem,1.4vw,1.4rem)] self-center text-ink-100/92',
   'desktop:-m-4 desktop:max-h-[calc(100%+2rem)] desktop:overflow-y-auto desktop:overscroll-contain desktop:p-4 desktop:[scrollbar-color:var(--accent-line)_transparent] desktop:[scrollbar-width:thin]',
   'desktop-short:gap-[clamp(0.6rem,1.3vh,0.9rem)]',
   'stacked:max-w-full stacked:self-stretch stacked:text-left',
@@ -63,7 +63,7 @@ const RAIL = cx(
 
 // On desktop the call to action stays in view at the bottom of a rail that scrolls.
 const CTA =
-  'side-panels__cta mt-[0.3rem] desktop:sticky desktop:bottom-0 narrow:min-h-11 narrow:px-[0.85rem] narrow:py-[0.55rem] narrow:text-[0.62rem]'
+  'face-rails__cta mt-[0.3rem] desktop:sticky desktop:bottom-0 narrow:min-h-11 narrow:px-[0.85rem] narrow:py-[0.55rem] narrow:text-[0.62rem]'
 
 // Rise order of each part on a face change (FaceRails.css).
 const rise = (delay: number) => ({ 'data-rise': true, style: { '--rise-delay': `${delay}ms` } as CSSProperties })

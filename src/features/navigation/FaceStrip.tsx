@@ -30,7 +30,7 @@ export function FaceStrip({
 
     function findSectionId(event: Event) {
       const target = event.target instanceof Element ? event.target : null
-      const link = target?.closest<HTMLAnchorElement>('.cube-section-nav a[data-section-id]')
+      const link = target?.closest<HTMLAnchorElement>('.face-strip a[data-section-id]')
       if (!link || !nav?.contains(link)) return null
       return link.dataset.sectionId as FaceId | undefined
     }
@@ -103,9 +103,9 @@ export function FaceStrip({
 // Fixed at the bottom. Desktop: one line with the name at the right.
 // Stacked: a solid bar above the scrolling page, compact labels that scroll
 // sideways. Phones: two rows of three, nothing clipped, nothing to scroll.
-// `cube-section-nav` is a hook for the intro and the layout check.
+// `face-strip` is a hook for the intro and the layout check.
 const NAV = cx(
-  'cube-section-nav strip-backdrop pointer-events-auto fixed right-[clamp(1rem,3vw,2.6rem)] bottom-[clamp(0.8rem,1.7vw,1.35rem)] left-[clamp(1rem,3vw,2.6rem)] z-12 flex flex-wrap items-center justify-between gap-[1.4rem] border-t border-violet-500/22 px-[0.2rem] pt-[0.7rem] pb-0',
+  'face-strip strip-backdrop pointer-events-auto fixed right-[clamp(1rem,3vw,2.6rem)] bottom-[clamp(0.8rem,1.7vw,1.35rem)] left-[clamp(1rem,3vw,2.6rem)] z-12 flex flex-wrap items-center justify-between gap-[1.4rem] border-t border-violet-500/22 px-[0.2rem] pt-[0.7rem] pb-0',
   'desktop:flex-nowrap',
   'stacked:z-14 stacked:flex-nowrap stacked:gap-2 stacked:border-violet-500/34 stacked:px-[clamp(0.9rem,4vw,1.5rem)] stacked:pt-[0.55rem] stacked:pb-[calc(0.55rem+env(safe-area-inset-bottom,0px))]',
   'narrow:gap-[0.38rem] narrow:pt-[0.42rem]',

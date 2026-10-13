@@ -110,7 +110,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   return (
     <main
       className={cx(
-        'prototype-shell relative block h-svh min-h-svh w-screen max-w-none overflow-hidden text-page-ink stacked:h-auto stacked:overflow-visible',
+        'experience-shell relative block h-svh min-h-svh w-screen max-w-none overflow-hidden text-page-ink stacked:h-auto stacked:overflow-visible',
         CURSOR[cursor],
       )}
       aria-label={copy.experienceLabel}

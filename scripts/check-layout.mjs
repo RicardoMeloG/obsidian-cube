@@ -8,7 +8,7 @@
 // shrinks.
 //
 //   node scripts/check-layout.mjs              PR matrix (3 viewports)
-//   node scripts/check-layout.mjs --full       full matrix (8 viewports)
+//   node scripts/check-layout.mjs --full       full matrix (9 viewports)
 //   node scripts/check-layout.mjs --update-known   record current failures as known
 //   node scripts/check-layout.mjs --content=stress every field at its budget
 //   node scripts/check-layout.mjs --content=example  the committed example
@@ -175,7 +175,7 @@ function measureFace({ queries }) {
   const vh = window.innerHeight
   const stacked = window.matchMedia(queries.stacked).matches
   const mode = stacked ? 'stacked' : window.matchMedia(queries.short).matches ? 'desktop-short' : 'desktop'
-  const strip = document.querySelector('.cube-section-nav')?.getBoundingClientRect()
+  const strip = document.querySelector('.face-strip')?.getBoundingClientRect()
 
   // Name first: the page's single h1, in the top-left quarter, not covered.
   const headings = document.querySelectorAll('h1')
@@ -200,20 +200,49 @@ function measureFace({ queries }) {
     if (!hit || !name.contains(hit)) failures.push('name-covered')
   }
 
-  const ctas = [...document.querySelectorAll('.side-panels__cta')]
+  // Fixed chrome never overlaps (audit-2 B-23): the identity block, the
+  // language toggle and the strip, against each other and against every
+  // visible leaf of the rails.
+  const visible = (element) => {
+    const style = getComputedStyle(element)
+    const box = element.getBoundingClientRect()
+    return style.visibility !== 'hidden' && Number(style.opacity) > 0 && box.width > 0 && box.height > 0
+  }
+  const overlaps = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+  // Containers may span the screen; what paints is their visible leaves.
+  const leaves = (selector) =>
+    [...document.querySelectorAll(`${selector} *`)].filter((element) => element.children.length === 0 && visible(element)).map((element) => element.getBoundingClientRect())
+  const collide = (a, b) => a.some((boxA) => b.some((boxB) => overlaps(boxA, boxB)))
+  const chrome = [
+    ['identity', leaves('.identity-chrome')],
+    ['language', leaves('.language-toggle')],
+    ['strip', leaves('.face-strip')],
+  ]
+  for (const [index, [nameA, a]] of chrome.entries()) {
+    for (const [nameB, b] of chrome.slice(index + 1)) if (collide(a, b)) failures.push(`chrome-${nameA}-over-${nameB}`)
+  }
+  // Stacked pages scroll under the fixed strip by design; their CTAs are
+  // checked against it after scrolling (below).
+  const rails = leaves('.face-rails__rail')
+  for (const [name, boxes] of chrome) {
+    if (mode === 'stacked' && name === 'strip') continue
+    if (collide(boxes, rails)) failures.push(`chrome-${name}-over-rail`)
+  }
+
+  const ctas = [...document.querySelectorAll('.face-rails__cta')]
 
   if (mode === 'stacked') {
     for (const [index, cta] of ctas.entries()) {
       cta.scrollIntoView({ block: 'center' })
       const box = cta.getBoundingClientRect()
-      const stripNow = document.querySelector('.cube-section-nav')?.getBoundingClientRect()
+      const stripNow = document.querySelector('.face-strip')?.getBoundingClientRect()
       if (stripNow && box.bottom > stripNow.top + 1) failures.push(`cta-${index}-under-strip`)
     }
     return { mode, failures }
   }
 
   const warnings = []
-  for (const [index, rail] of document.querySelectorAll('.side-panels__rail').entries()) {
+  for (const [index, rail] of document.querySelectorAll('.face-rails__rail').entries()) {
     const side = index === 0 ? 'left' : 'right'
     const clips = getComputedStyle(rail).overflowY !== 'visible'
     // A clipping rail (the safety net) shows only its own box; otherwise any
@@ -233,7 +262,7 @@ function measureFace({ queries }) {
     const box = cta.getBoundingClientRect()
     if (box.top < 0 || box.left < 0 || box.bottom > vh || box.right > vw) failures.push(`cta-${index}-outside`)
     // Inside the viewport but scrolled out of its rail still means unseen.
-    const rail = cta.closest('.side-panels__rail')
+    const rail = cta.closest('.face-rails__rail')
     const railBox = rail?.getBoundingClientRect()
     if (railBox && (box.bottom > railBox.bottom + 1 || box.top < railBox.top - 1)) failures.push(`cta-${index}-hidden-in-rail`)
   }
@@ -275,7 +304,7 @@ async function checkPage(browser, viewport, locale) {
 async function measurePage(page, viewport, locale) {
   const results = { layout: [], axe: [] }
   await page.goto(`${BASE}/?intro=0&lang=${locale}`)
-  await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
+  await page.waitForSelector('.face-rails[data-transition="idle"]', { timeout: 60000 })
   await page.evaluate(() => document.fonts.ready)
   // The layout is measured with the served font (ADR 006, AD-10).
   if (!(await page.evaluate(() => document.fonts.check('16px "Inter Variable"')))) {
@@ -290,10 +319,10 @@ async function measurePage(page, viewport, locale) {
 
   let mode = ''
   for (const face of FACES) {
-    const current = await page.getAttribute('.side-panels', 'data-section')
+    const current = await page.getAttribute('.face-rails', 'data-section')
     if (current !== face) {
-      await page.click(`.cube-section-nav a[data-section-id="${face}"]`)
-      await page.waitForSelector(`.side-panels[data-transition="idle"][data-section="${face}"]`, { timeout: 15000 })
+      await page.click(`.face-strip a[data-section-id="${face}"]`)
+      await page.waitForSelector(`.face-rails[data-transition="idle"][data-section="${face}"]`, { timeout: 15000 })
     }
     const measured = await page.evaluate(measureFace, { queries: MODE_QUERIES })
     mode = measured.mode
@@ -322,7 +351,7 @@ async function checkDegradation(noWebglBrowser) {
     watchCsp(page, 'degradation no-webgl')
     page.on('pageerror', (error) => errors.push(`no-webgl: ${error.message}`))
     await page.goto(`${BASE}/?intro=1&lang=en`)
-    await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
+    await page.waitForSelector('.face-rails[data-transition="idle"]', { timeout: 60000 })
     const state = await page.evaluate(() => {
       const poster = document.querySelector('.cube-canvas__poster')
       const visible = (selector) => {
@@ -333,8 +362,8 @@ async function checkDegradation(noWebglBrowser) {
       return {
         poster: Boolean(poster?.complete && poster.naturalWidth > 0),
         name: visible('h1'),
-        rails: document.querySelectorAll('.side-panels__rail').length === 2 && visible('.side-panels__rail'),
-        strip: visible('.cube-section-nav'),
+        rails: document.querySelectorAll('.face-rails__rail').length === 2 && visible('.face-rails__rail'),
+        strip: visible('.face-strip'),
         introDone: !document.querySelector('[data-intro]'),
       }
     })
@@ -361,9 +390,9 @@ async function checkDegradation(noWebglBrowser) {
     })
     await page.route('**/assets/productsWorld-*.js', (route) => route.abort())
     await page.goto(`${BASE}/?intro=0&lang=en`)
-    await page.waitForSelector('.side-panels[data-transition="idle"]')
-    await page.click('.cube-section-nav a[data-section-id="products"]')
-    await page.waitForSelector('.side-panels[data-transition="idle"][data-section="products"]')
+    await page.waitForSelector('.face-rails[data-transition="idle"]')
+    await page.click('.face-strip a[data-section-id="products"]')
+    await page.waitForSelector('.face-rails[data-transition="idle"][data-section="products"]')
     await page.waitForTimeout(1500)
     const state = await page.evaluate(() => ({
       canvas: Boolean(document.querySelector('.cube-canvas canvas')),
@@ -394,8 +423,8 @@ async function checkBehaviour(noWebglBrowser) {
     const page = await context.newPage()
     watchCsp(page, 'behaviour dialog')
     await page.goto(`${BASE}/?intro=0&lang=en&section=agentic`)
-    await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
-    const trigger = page.locator('.side-panels__rail').first().locator('button.side-panels__cta')
+    await page.waitForSelector('.face-rails[data-transition="idle"]', { timeout: 60000 })
+    const trigger = page.locator('.face-rails__rail').first().locator('button.face-rails__cta')
     await trigger.focus()
     await page.keyboard.press('Enter')
     await page.waitForSelector('dialog[open]', { timeout: 5000 })
@@ -403,7 +432,7 @@ async function checkBehaviour(noWebglBrowser) {
     const opened = await page.evaluate(() => {
       const dialog = document.querySelector('dialog[open]')
       // The page behind a modal dialog is inert: a control there cannot take focus.
-      const behind = document.querySelector('.cube-section-nav a')
+      const behind = document.querySelector('.face-strip a')
       behind?.focus()
       const backgroundInert = Boolean(behind) && document.activeElement !== behind
       dialog?.querySelector('h2')?.focus()
@@ -429,7 +458,7 @@ async function checkBehaviour(noWebglBrowser) {
     await page.keyboard.press('Escape')
     await page.waitForSelector('dialog[open]', { state: 'detached', timeout: 5000 }).catch(() => fail('dialog-escape'))
     const closed = await page.evaluate(() => ({
-      focusReturned: document.activeElement?.classList.contains('side-panels__cta') ?? false,
+      focusReturned: document.activeElement?.classList.contains('face-rails__cta') ?? false,
       backgroundRestored: !document.querySelector('main [inert]'),
       scrollRestored: document.documentElement.style.overflow !== 'hidden',
     }))
@@ -449,10 +478,18 @@ async function checkBehaviour(noWebglBrowser) {
     await page.goto(`${BASE}/?intro=1&lang=en`)
     const pending = await page.waitForSelector('[data-intro="pending"]', { timeout: 30000 }).then(() => true).catch(() => false)
     if (!pending) fail('intro-not-pending')
+    // The choreography hooks (intro.css) must reach every piece it hides.
+    const shown = await page.evaluate(() =>
+      ['.identity-chrome', '.face-rails', '.face-strip', '.language-toggle'].filter((selector) => {
+        const element = document.querySelector(selector)
+        return !element || getComputedStyle(element).visibility !== 'hidden'
+      }),
+    )
+    for (const selector of shown) fail(`intro-pending-shows ${selector}`)
     await page.keyboard.press('Space')
     const skipped = await page.waitForFunction(() => !document.querySelector('[data-intro]'), null, { timeout: 8000 }).then(() => true).catch(() => false)
     if (!skipped) fail('intro-skip')
-    const visible = await page.evaluate(() => getComputedStyle(document.querySelector('.side-panels')).visibility !== 'hidden')
+    const visible = await page.evaluate(() => getComputedStyle(document.querySelector('.face-rails')).visibility !== 'hidden')
     if (!visible) fail('intro-rails-hidden-after-skip')
   } finally {
     await webglBrowser.close()

@@ -70,7 +70,8 @@ export class StaticSiteStack extends cdk.Stack {
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         responseHeadersPolicy: headersPolicy,
       },
-      // SPA client-side routing: hand deep links back to index.html.
+      // Unknown paths answer with the page (status 200). The site has no routes,
+      // so this goes in the release stage (spec 010, AD-09): real 404s.
       errorResponses: [
         { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
         { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },

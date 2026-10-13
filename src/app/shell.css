@@ -6,7 +6,7 @@
 @layer components {
   /* The violet field: a glow behind the cube and one low on the right, over a
      vertical fade into the scene's fog colour. */
-  .prototype-shell {
+  .experience-shell {
     background:
       radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--color-violet-haze) 10%, transparent), transparent 32%),
       radial-gradient(circle at 80% 86%, color-mix(in srgb, var(--color-violet-deep) 8%, transparent), transparent 36%),
@@ -15,8 +15,8 @@
 
   /* A faint grid that fades out from the centre, and a vignette above it.
      Hidden when stacked: the page scrolls and the cube is a hero. */
-  .prototype-shell::before,
-  .prototype-shell::after {
+  .experience-shell::before,
+  .experience-shell::after {
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -28,7 +28,7 @@
     }
   }
 
-  .prototype-shell::before {
+  .experience-shell::before {
     z-index: 1;
     background:
       linear-gradient(color-mix(in srgb, var(--color-white) 2.1%, transparent) 1px, transparent 1px),
@@ -38,7 +38,7 @@
     opacity: 0.82;
   }
 
-  .prototype-shell::after {
+  .experience-shell::after {
     z-index: 2;
     background:
       radial-gradient(circle at 50% 56%, color-mix(in srgb, var(--color-ice-300) 8%, transparent), transparent 22%),
