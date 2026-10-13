@@ -146,11 +146,13 @@ Admin and backend rules:
 The overview, the module map and the status of every rule (in force, or the phase that brings it) are in `docs/architecture.md`; the reasoning is in ADR 005, ADR 006 and `specs/010-architecture/`. Read `docs/architecture.md` before changing code. In short:
 
 - **Content kernel** (`src/kernel/`): schemas, catalog, defaults, example content, SEO renderer, layout budgets. Pure TypeScript, no DOM, depends on `zod` only. The admin server imports the kernel and nothing else from `src/`.
-- **Scene and DOM are separate.** Scene code (R3F, three) and DOM features never import each other; they meet in the experience store (from P3).
+- **Scene and DOM are separate.** Scene code (R3F, three) and DOM features never import each other; they meet in the experience store (`src/features/experience`): typed events, a pure reducer, `useExperience(selector)`. Module boundaries are lint rules; imports across modules use `@/`.
 - **Styling.** Tailwind utilities with the tokens and layout-mode variants of `src/styles/tokens.css`; reusable pieces in `src/ui/`. Hand-written CSS only for what utilities express poorly (scrims, choreography, layered gradients), next to its component, in the `components` layer, commented with why. `App.css` is legacy being migrated (P4): never grow it; its colour literals may only go down (`check:tokens`).
 - **Layout modes** come from one source, `src/styles/layoutModes.ts`: `stacked`, `desktop`, `desktop-short` (height ≤ 900px, compact rhythm). No numeric breakpoints in components; the CSS repeats the same queries and a test keeps them equal.
 - **Content budgets** (`src/kernel/layoutBudgets.json`, visible characters and item counts) and link rules are publish rules: the admin refuses content that would not fit or links nowhere; the site renders with the tolerant schema. Change a budget only with a layout check run that proves the stress content still fits.
 - **No blank page.** Without WebGL the scene is replaced by a still image (`hasWebGL`); a scene or world error is contained by `src/lib/ErrorBoundary`. The name, rails and strip are DOM and always stay.
+- **Interface copy** (labels, hints, `aria-label`s) comes from `src/features/content/copy.ts`; interface code never compares locales.
+- **Size.** DOM-layer files have at most 250 lines (a test); a component that grows past it is doing more than one thing.
 - **Unchecked rules** (review only) say so where they are written.
 
 ## Content Strategy

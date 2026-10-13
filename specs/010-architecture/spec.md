@@ -393,3 +393,14 @@ E-22 (2026-10-12): a client name appears in the contents of two commits on `main
 - Removed: `.prototype-mark`, invisible on every layout but read by screen readers. The language switch's focus ring is now the shared one.
 - Parity: 108 deterministic screenshots (9 sizes covering every layout mode, both locales, six faces, without WebGL) and five interaction states (hover, keyboard focus, mid-transition) compared pixel by pixel against the code before P2b: no pixel differs by more than 11/255. `App.css` went from 1,813 to 916 lines.
 - H-08b in force: `npm run check:tokens`.
+
+**P3 (2026-10-12)**
+
+- `src/features/premium-cube` was split by responsibility: `app/` (App, Experience, IdentityChrome), `features/{experience,scene,faces,navigation,content,audio,dev}`, with `@/` for imports across modules. The move was its own commit, verified unchanged before any logic moved.
+- The experience store (AD-04): a pure reducer with typed events behind `useSyncExternalStore`, unit-tested. The scene and the DOM meet only there: the strip dispatches `faceRequested`; `SceneLayer` turns the cube and dispatches `faceEntered`; without a scene the reducer changes the face at once (`sceneReady`). The scene's imperative handle no longer leaves `features/scene`.
+- `localeChanged` is not a store event: the locale belongs to the content feature (`useSiteContent`), which already owns it and the URL's `lang`.
+- Found while modelling the reducer: returning to the face the rails still showed, before the exit animation ended, cleared the timers and left the rails faded out. The reducer now cancels the transition; a unit test covers it.
+- Intro planning (session, `?intro=`, reduced motion) moved from the scene's timeline to `features/experience/introPlan.ts`; the scene receives `returnTurn` instead of turn instants.
+- Interface copy dictionary (AD-07): the English `aria-label`s, the rotate hint, the close label and the research note that showed in Spanish in both languages. The main landmark is labelled "Portfolio" / "Portafolio".
+- H-04 in force with the folder table of `docs/architecture.md`, plus two syntax rules for interface code (no locale comparisons, no lazy loading); the rules are proved by `boundaries.test.ts`. H-16 in force as a test over the DOM layers (largest file: FaceRails, 230 lines). `PremiumCubePrototype.tsx` (515 lines) became `Experience.tsx` (153) plus the components it composes.
+- Behaviour checks added to `check:layout` before the refactor and passed after it: the dialog's focus and keyboard contract, the intro's hand-over and skip. A deliberate fault (no focus return) made them fail. Visual parity: 60 screenshots identical within 10/255; the interaction states identical except one mid-animation frame sampled a few milliseconds apart.

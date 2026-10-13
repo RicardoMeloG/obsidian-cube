@@ -11,6 +11,11 @@ async function restrictedImports(filePath: string, code: string): Promise<string
   return result.messages.filter((message) => message.ruleId === 'no-restricted-imports').map((message) => message.message)
 }
 
+async function restrictedSyntax(filePath: string, code: string): Promise<string[]> {
+  const [result] = await eslint.lintText(code, { filePath })
+  return result.messages.filter((message) => message.ruleId === 'no-restricted-syntax').map((message) => message.message)
+}
+
 describe('content kernel boundary', () => {
   it('rejects React, three and the DOM sanitizer', async () => {
     const code = "import React from 'react'\nimport * as THREE from 'three'\nimport DOMPurify from 'dompurify'\nexport { React, THREE, DOMPurify }\n"
@@ -18,7 +23,7 @@ describe('content kernel boundary', () => {
   })
 
   it('rejects imports from the site', async () => {
-    const code = "import { SidePanels } from '../features/premium-cube/SidePanels'\nexport { SidePanels }\n"
+    const code = "import { FaceRails } from '../features/faces/FaceRails'\nexport { FaceRails }\n"
     expect(await restrictedImports('src/kernel/probe.ts', code)).toHaveLength(1)
   })
 
@@ -31,7 +36,7 @@ describe('content kernel boundary', () => {
 
 describe('admin server boundary', () => {
   it('rejects site modules outside the kernel', async () => {
-    const code = "import { SidePanels } from '../../src/features/premium-cube/SidePanels'\nexport { SidePanels }\n"
+    const code = "import { FaceRails } from '../../src/features/faces/FaceRails'\nexport { FaceRails }\n"
     expect(await restrictedImports('server/content/probe.ts', code)).toHaveLength(1)
   })
 
@@ -40,3 +45,38 @@ describe('admin server boundary', () => {
     expect(await restrictedImports('server/content/probe.ts', code)).toEqual([])
   })
 })
+
+describe('site module boundaries (ADR 006)', () => {
+  const imports = (from: string, specifier: string) => restrictedImports(from, `import { x } from '${specifier}'\nexport { x }\n`)
+
+  it('keep the scene and the DOM features apart; they meet in the experience store', async () => {
+    expect(await imports('src/features/faces/probe.tsx', '@/features/scene/CubeScene')).toHaveLength(1)
+    expect(await imports('src/features/navigation/probe.tsx', '@/features/scene/SceneLayer')).toHaveLength(1)
+    expect(await imports('src/features/scene/probe.tsx', '@/features/faces/FaceRails')).toHaveLength(1)
+    expect(await imports('src/features/faces/probe.tsx', 'three')).toHaveLength(1)
+    expect(await imports('src/features/scene/probe.tsx', '@/features/experience/experienceStore')).toEqual([])
+    expect(await imports('src/features/faces/probe.tsx', '@/features/experience/experienceStore')).toEqual([])
+  })
+
+  it('keep ui primitives, lib and the experience store free of features', async () => {
+    expect(await imports('src/ui/probe.tsx', '@/features/content/copy')).toHaveLength(1)
+    expect(await imports('src/lib/probe.ts', '@/kernel/faces')).toHaveLength(1)
+    expect(await imports('src/features/experience/probe.ts', '@/ui/cx')).toHaveLength(1)
+    expect(await imports('src/features/experience/probe.ts', '@/features/scene/CubeScene')).toHaveLength(1)
+    expect(await imports('src/features/experience/probe.ts', '@/kernel/faces')).toEqual([])
+  })
+
+  it('reject relative paths that climb into another module', async () => {
+    expect(await imports('src/features/faces/probe.tsx', '../scene/CubeScene')).not.toEqual([])
+    expect(await imports('src/features/faces/probe.tsx', '../../ui/cx')).not.toEqual([])
+  })
+
+  it('keep locale comparisons and lazy loading out of the interface', async () => {
+    const compare = "export const label = (locale: string) => (locale === 'es' ? 'Cerrar' : 'Close')\n"
+    const lazy = "export const load = () => import('./x')\n"
+    expect(await restrictedSyntax('src/features/faces/probe.tsx', compare)).toHaveLength(1)
+    expect(await restrictedSyntax('src/features/faces/probe.tsx', lazy)).toHaveLength(1)
+    expect(await restrictedSyntax('src/features/scene/probe.tsx', lazy)).toEqual([])
+  })
+})
+

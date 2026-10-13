@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-12):** P0, P1, P2a and P2b done. Next: P3 and P4, the rest of the normalization stage of ADR 007; content and release follow it, in that order. Phases are defined in `specs/010-architecture/spec.md`, section 7.
+**Migration status (2026-10-12):** P0, P1, P2a, P2b and P3 done. Next: P4, the last phase of the normalization stage of ADR 007; content and release follow it, in that order. Phases are defined in `specs/010-architecture/spec.md`, section 7.
 
 ## System
 
@@ -26,7 +26,7 @@ Two layers: the repository holds code and example content; the owner's content i
 
 | Path | What | Notes |
 |---|---|---|
-| `src/` | Public site: React 19, TypeScript, Vite, React Three Fiber, Tailwind v4 | One package with the admin server |
+| `src/` | Public site: React 19, TypeScript, Vite, React Three Fiber, Tailwind v4 | One package with the admin server; `@/` is `src/` |
 | `src/kernel/` | Content kernel: render schemas, publish rules and layout budgets (`publishRules.ts`, `layoutBudgets.json`), face and world catalogs, defaults (the bundled example), SEO renderer | ADR 005 |
 | `server/` | Local NestJS admin, `127.0.0.1:5182` | Retired by ADR 004 slice 6; imports only `src/kernel`; linted and type-checked |
 | `infra/` | AWS CDK | Own `package.json`, lockfile and TypeScript version |
@@ -35,27 +35,45 @@ Two layers: the repository holds code and example content; the owner's content i
 
 ## Site modules
 
-**Today:** `src/kernel/` (content contract), `src/features/content/` (loaders, locale, sanitizer, `RichText`, content hooks), `src/styles/` (`tokens.css`, `layoutModes.ts`), `src/ui/` (`SegmentedControl`, `Eyebrow`, `GlyphTile`, `NumberBadge`, `PillButton`, `cx`), `src/lib/` (`ErrorBoundary`, `hasWebGL`), and everything else under `src/features/premium-cube/` (one folder), plus `src/App.tsx`, `src/App.css` (legacy: strip, dialog, intro, shell), `src/index.css`. The header, language switch and rails are Tailwind; `PremiumCubePrototype.tsx` still owns most behaviour.
-
-**Target** (ADR 006; folders appear in the phase noted):
-
 ```
 src/
-  app/               composition                                        P3
+  app/               composition: App (home or dev showcase), Experience (store + page), IdentityChrome
   features/
-    experience/      store and typed events                            P3
-    scene/           R3F scene, intro, worlds, environment              P3 (moved as is)
-    faces/           rails, evidence, flow, research map, dialog        P3
-    navigation/      face strip, language switch, contact links         P3
-    content/         loaders, sanitizer, UI copy dictionary              done (loaders), P3
-    audio/  dev/     ambient sound; diagnostics and showcase (DEV only)  P3
-  ui/                Tailwind primitives                                done (P2b)
-  styles/            tokens.css, layoutModes.ts                         done
-  lib/               React utilities any layer may use: ErrorBoundary   done
-  kernel/            ADR 005                                            done
+    experience/      the experience store: state, typed events, reducer (experienceStore.ts);
+                     face transition, intro lifecycle, face in the URL, intro planning
+    scene/           R3F: SceneLayer (canvas, still-image fallback, wiring to the store),
+                     CubeScene, PremiumCube, environment, intro timeline, vector worlds
+    faces/           FaceRails (the two rails), FeatureGlyph, DetailDialog
+    navigation/      FaceStrip, RotateHint
+    content/         loaders, locale, sanitizer, RichText, interface copy dictionary
+    audio/           the gesture-driven cube sounds (no autoplay), used by the scene
+    dev/             world showcase and its shortcut (development only)
+  ui/                Tailwind primitives: SegmentedControl, Eyebrow, GlyphTile, NumberBadge, PillButton, cx
+  styles/            tokens.css (tokens, layout-mode variants), layoutModes.ts (their single source)
+  lib/               React utilities any layer may use: ErrorBoundary, hasWebGL, useViewportSize
+  kernel/            the content contract (ADR 005)
 ```
 
-Dependency rules (target, linted from P3): `kernel` imports only `zod`; `lib` imports only React and anyone may import it; `ui` imports no feature, three or R3F; `scene` and the DOM features (`faces`, `navigation`) never import each other and meet in `experience`; `experience` imports only `kernel`; `app` may import everything.
+`src/App.css` is legacy (P4): the shell, the face strip, the dialog, the rotate hint and the intro choreography.
+
+**How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the strip dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the rails follow `displayedFace` through the transition; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
+
+**Dependency rules** (in force, `eslint.config.js`, tested by `scripts/checks/boundaries.test.ts`):
+
+| Module | Must not import |
+|---|---|
+| `kernel` | anything but `zod` and its own files |
+| `lib`, `styles` | anything under `@/` |
+| `ui` | features, app, three, R3F |
+| `features/experience` | other features, ui, app, three, R3F |
+| `features/scene` | faces, navigation, content, dev, ui, app |
+| `features/faces`, `features/navigation` | scene, audio, dev, app, three, R3F |
+| `features/content` | other features, ui, app, three |
+| `features/audio` | anything under `@/` |
+| `features/dev` | app |
+| `app` | — |
+
+Imports across top-level modules use `@/`; a relative path that climbs into another module is an error. Interface code does not compare locales (strings come from `features/content/copy.ts`) and does not load code lazily (only the scene's worlds and the app's dev showcase do).
 
 ## Flows
 
@@ -84,8 +102,8 @@ Dependency rules (target, linted from P3): `kernel` imports only `zod`; `lib` im
 | First-view budget, ratchet | In force | `npm run check:budget`, limit in `scripts/checks/budget.json` (H-07) |
 | Deploy never deletes content | In force | `scripts/checks/deployWorkflow.test.ts` (H-14) |
 | No colour literals outside tokens; App.css literals only go down | In force | `npm run check:tokens` (H-08b) |
-| Module boundaries | P3 | Lint (H-04) |
-| DOM-layer files ≤ 250 lines | P3 | Script (H-16) |
+| Module boundaries; no locale comparisons or lazy loading in interface code | In force | `npm run lint`, rules tested by `scripts/checks/boundaries.test.ts` (H-04) |
+| DOM-layer files ≤ 250 lines | In force | `scripts/checks/fileSize.test.ts` (H-16) |
 | The served font is the one measured (Inter) | In force | `font-not-loaded` in `npm run check:layout` (AD-10) |
 | Living docs carry no undated measurements | In force | `npm run check:docs` (H-11) |
 | Architecture doc updated with boundary changes | Unchecked | PR template |
