@@ -66,9 +66,26 @@ function seoFromContent(): Plugin {
   }
 }
 
+// Inter's latin file is on every first view (ADR 006): preloading it lets the
+// browser fetch it with the stylesheet instead of after it. The hash is known
+// only once the bundle exists, hence a post-build hook.
+function preloadLatinFont(): Plugin {
+  return {
+    name: 'preload-latin-font',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, context) {
+        const font = Object.keys(context.bundle ?? {}).find((file) => /inter-latin-wght-normal-[^/]+\.woff2$/.test(file))
+        if (!font) return
+        return [{ tag: 'link', attrs: { rel: 'preload', href: `/${font}`, as: 'font', type: 'font/woff2', crossorigin: '' }, injectTo: 'head' }]
+      },
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), seoFromContent()],
+  plugins: [react(), tailwindcss(), seoFromContent(), preloadLatinFont()],
   // `@/` is src/: imports across top-level modules use it (ADR 006).
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // A port of its own, so it does not clash with other projects on 5173;

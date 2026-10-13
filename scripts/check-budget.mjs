@@ -33,13 +33,19 @@ const builtFiles = readdirSync(join(DIST, 'assets')).map((name) => `assets/${nam
 const resolve = (pattern) =>
   pattern.includes('*') ? builtFiles.filter((file) => new RegExp(`^${pattern.replace(/[.]/g, '\\.').replace('*', '[^/]+')}$`).test(file)) : [pattern]
 
-const files = ['index.html', ...new Set(referenced), ...budget.alwaysLoaded.flatMap(resolve)]
+const files = [...new Set(['index.html', ...referenced, ...budget.alwaysLoaded.flatMap(resolve)])]
 const sizes = files.map((file) => ({ file, gzip: gzipSync(readFileSync(join(DIST, file))).length }))
 const total = sizes.reduce((sum, entry) => sum + entry.gzip, 0)
 const kb = (bytes) => `${(bytes / 1024).toFixed(1)} KB`
 
 for (const entry of sizes) console.log(`  ${kb(entry.gzip).padStart(9)}  ${entry.file}`)
 console.log(`First view: ${kb(total)} gzip (limit ${kb(budget.limitBytes)})`)
+
+// A built file the first view always needs is announced in index.html, so the
+// browser fetches it at once instead of after the CSS that names it (ADR 006).
+const late = budget.alwaysLoaded.flatMap(resolve).filter((file) => file.startsWith('assets/') && !referenced.includes(file))
+for (const file of late) console.log(`Not preloaded from index.html: ${file}`)
+if (late.length > 0) process.exitCode = 1
 
 if (process.argv.includes('--update')) {
   if (total > budget.limitBytes) {
