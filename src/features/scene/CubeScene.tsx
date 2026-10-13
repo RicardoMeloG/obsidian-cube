@@ -15,7 +15,7 @@ import type { FaceId } from '@/kernel/faces'
 import { useLayoutMode } from '@/styles/layoutModes'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import type { DiagnosticFx } from './diagnosticFx'
-import { CampusEnvironment } from './CampusEnvironment'
+import { ReflectionEnvironment } from './ReflectionEnvironment'
 import { PremiumCube } from './PremiumCube'
 import { VectorWorldStage } from './vector-worlds/VectorWorldStage'
 import { IntroSparks } from './intro/IntroSparks'
@@ -534,7 +534,7 @@ export function CubeScene({
         fov={isNarrow ? 40 : isStackedFrame ? 39 : 37}
         onUpdate={(camera) => camera.lookAt(0, cameraTargetY, 0)}
       />
-      <CampusEnvironment />
+      <ReflectionEnvironment />
 
       <ambientLight intensity={0.08} />
 
