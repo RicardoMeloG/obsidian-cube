@@ -2,7 +2,7 @@ import type { SiteContent } from '@/kernel/siteContent'
 
 // Who the page is about, first thing read: name (the page's h1), role and
 // keywords in the top-left corner; on stacked layouts the full name also signs
-// the cube. `prototype-chrome` is a hook for the intro choreography (App.css).
+// the cube. `prototype-chrome` is a hook for the intro choreography (intro.css).
 // It sits above the rails, whose scrim used to dim the name, and takes no
 // pointer events, so the rails stay clickable.
 export function IdentityChrome({ identity }: { identity: SiteContent['identity'] }) {

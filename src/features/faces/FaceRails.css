@@ -1,7 +1,7 @@
 /* What the rails need beyond utilities (ADR 006): the scrims behind them, the
    face-change choreography, and three decorations drawn with gradients. In the
    components layer, so utilities still override them. The class names are
-   hooks shared with the intro (App.css) and the layout check. */
+   hooks shared with the intro (src/app/intro.css) and the layout check. */
 @reference "../../index.css";
 
 @layer components {

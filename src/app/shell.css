@@ -1,0 +1,63 @@
+/* The page around the cube (ADR 006): layered gradients and a masked grid,
+   which read worse as utilities. In the components layer, so utilities still
+   override them. */
+@reference "../index.css";
+
+@layer components {
+  /* The violet field: a glow behind the cube and one low on the right, over a
+     vertical fade into the scene's fog colour. */
+  .prototype-shell {
+    background:
+      radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--color-violet-haze) 10%, transparent), transparent 32%),
+      radial-gradient(circle at 80% 86%, color-mix(in srgb, var(--color-violet-deep) 8%, transparent), transparent 36%),
+      linear-gradient(180deg, var(--color-abyss) 0%, var(--color-abyss-glow) 52%, var(--color-abyss) 100%);
+  }
+
+  /* A faint grid that fades out from the centre, and a vignette above it.
+     Hidden when stacked: the page scrolls and the cube is a hero. */
+  .prototype-shell::before,
+  .prototype-shell::after {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    content: '';
+    transition: opacity 520ms ease;
+
+    @variant stacked {
+      display: none;
+    }
+  }
+
+  .prototype-shell::before {
+    z-index: 1;
+    background:
+      linear-gradient(color-mix(in srgb, var(--color-white) 2.1%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--color-white) 1.8%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(circle at 50% 48%, black 0 38%, transparent 72%);
+    opacity: 0.82;
+  }
+
+  .prototype-shell::after {
+    z-index: 2;
+    background:
+      radial-gradient(circle at 50% 56%, color-mix(in srgb, var(--color-ice-300) 8%, transparent), transparent 22%),
+      radial-gradient(ellipse at center, transparent 0 36%, color-mix(in srgb, var(--color-black) 52%, transparent) 82%),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-black) 28%, transparent),
+        transparent 24%,
+        color-mix(in srgb, var(--color-black) 42%, transparent)
+      );
+  }
+
+  /* The canvas fills its box: React Three Fiber writes an inline size, hence
+     !important. touch-action: none, or mobile browsers treat a drag on the
+     cube as a page scroll and cancel the rotation. */
+  .cube-canvas canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    touch-action: none;
+  }
+}

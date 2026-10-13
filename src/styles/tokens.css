@@ -8,6 +8,12 @@
   --color-page: #03050b;
   --color-page-ink: #eef3f8;
 
+  /* The field behind the cube: the deep violet the scene's fog fades into. */
+  --color-abyss: #08050d;
+  --color-abyss-glow: #100820;
+  --color-violet-haze: rgb(120 90 200);
+  --color-violet-deep: rgb(116 69 255);
+
   /* Obsidian surfaces, darkest first. */
   --color-obsidian-950: #020307;
   --color-obsidian-900: #05070d;
@@ -102,6 +108,12 @@
   --text-concept--font-weight: 800;
   --text-concept-summary: 0.76rem;
   --text-concept-summary--line-height: 1.34;
+  --text-strip: 0.62rem;
+  --text-strip--letter-spacing: 0.28em;
+  --text-strip--font-weight: 700;
+  --text-hint: 0.62rem;
+  --text-hint--letter-spacing: 0.32em;
+  --text-hint--font-weight: 600;
   --text-control: 0.68rem;
   --text-control--letter-spacing: 0.08em;
   --text-control--font-weight: 700;
@@ -143,7 +155,7 @@
    single source; layoutModes.test.ts fails if they drift. Block form, because
    the short form breaks on queries joined by a comma. The order is the cascade
    order: a later mode wins where two apply (tight < desktop-short, stacked <
-   stacked-wide < narrow < phone < phone-small). */
+   stacked-wide < narrow < phone < phone-small < tiny). */
 @custom-variant tight {
   @media (max-width: 1100px) {
     @slot;
@@ -188,6 +200,12 @@
 
 @custom-variant phone-small {
   @media (max-width: 389px) {
+    @slot;
+  }
+}
+
+@custom-variant tiny {
+  @media (max-width: 340px) {
     @slot;
   }
 }

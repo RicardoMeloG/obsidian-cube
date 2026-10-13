@@ -12,6 +12,7 @@ import { useSyncExternalStore } from 'react'
 //   tight          any layout up to 1100px wide: narrower rail columns
 //   phone          phones up to 680px: the face strip takes two rows
 //   phone-small    phones up to 389px: research concepts in one column
+//   tiny           phones up to 340px: the tightest face strip
 // tokens.css turns each into a Tailwind variant of the same name.
 export const LAYOUT_QUERIES = {
   stacked: '(max-width: 900px), (max-aspect-ratio: 4 / 3)',
@@ -20,6 +21,7 @@ export const LAYOUT_QUERIES = {
   tight: '(max-width: 1100px)',
   phone: '(max-width: 680px)',
   phoneSmall: '(max-width: 389px)',
+  tiny: '(max-width: 340px)',
   desktop: '(not ((max-width: 900px) or (max-aspect-ratio: 4 / 3)))',
   desktopShort: '(not ((max-width: 900px) or (max-aspect-ratio: 4 / 3))) and (max-height: 900px)',
 } as const

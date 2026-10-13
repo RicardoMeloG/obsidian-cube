@@ -60,7 +60,7 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
     rememberInSession(CUBE_ENGAGED_KEY)
   }, [store])
 
-  const poster = <img className="cube-canvas__poster" src="/og-image.jpg" alt="" />
+  const poster = <img className="cube-canvas__poster block size-full object-cover" src="/og-image.jpg" alt="" />
   if (!webglAvailable) return poster
 
   return (

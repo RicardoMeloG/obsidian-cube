@@ -69,6 +69,16 @@ async function serveContent(context) {
 
 // Vite's own entry point, run with this Node: no shell, so killing the child
 // stops the server on every platform.
+// Content security policy: vite preview serves the production policy
+// (infra/security-headers.json), enforced; any violation on any page fails.
+const cspViolations = []
+function watchCsp(page, where) {
+  page.on('console', (message) => {
+    const text = message.text()
+    if (text.includes('Content Security Policy')) cspViolations.push(`csp ${where}: ${text.slice(0, 140)}`)
+  })
+}
+
 function startPreview() {
   const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url))
   return spawn(process.execPath, [vite, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], {
@@ -108,12 +118,17 @@ function measureFace({ queries }) {
     const box = name.getBoundingClientRect()
     if (box.left > vw / 2 || box.top > vh / 2) failures.push('name-position')
     // Hit-test with pointer events forced on, so layers that ignore the pointer
-    // (the chrome, the scrims) still count as covering.
-    const probe = document.createElement('style')
-    probe.textContent = '* { pointer-events: auto !important; }'
-    document.head.append(probe)
+    // (the chrome, the scrims) still count as covering. Through the CSSOM, not
+    // an injected <style>: the content security policy blocks inline styles.
+    const elements = [...document.querySelectorAll('*')]
+    const saved = elements.map((element) => [element.style.getPropertyValue('pointer-events'), element.style.getPropertyPriority('pointer-events')])
+    for (const element of elements) element.style.setProperty('pointer-events', 'auto', 'important')
     const hit = document.elementFromPoint(box.left + Math.min(box.width, 40) / 2, box.top + box.height / 2)
-    probe.remove()
+    elements.forEach((element, index) => {
+      const [value, priority] = saved[index]
+      if (value) element.style.setProperty('pointer-events', value, priority)
+      else element.style.removeProperty('pointer-events')
+    })
     if (!hit || !name.contains(hit)) failures.push('name-covered')
   }
 
@@ -167,6 +182,7 @@ async function checkPage(browser, viewport, locale) {
   const context = await browser.newContext({ viewport: { width, height } })
   await serveContent(context)
   const page = await context.newPage()
+  watchCsp(page, `${viewport} ${locale}`)
   const pageErrors = []
   page.on('pageerror', (error) => pageErrors.push(`pageerror: ${error.message}`))
   page.on('crash', () => pageErrors.push('crash: the page process crashed'))
@@ -233,6 +249,7 @@ async function checkDegradation(noWebglBrowser) {
   const noWebglContext = await noWebglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
   try {
     const page = await noWebglContext.newPage()
+    watchCsp(page, 'degradation no-webgl')
     page.on('pageerror', (error) => errors.push(`no-webgl: ${error.message}`))
     await page.goto(`${BASE}/?intro=1&lang=en`)
     await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
@@ -264,6 +281,7 @@ async function checkDegradation(noWebglBrowser) {
   context.setDefaultTimeout(120000)
   try {
     const page = await context.newPage()
+    watchCsp(page, 'degradation world')
     // React Three Fiber reports errors through window.reportError even when a
     // boundary caught them, so a page error is expected here; what matters is
     // that the world's own boundary caught it and the page kept working.
@@ -304,21 +322,25 @@ async function checkBehaviour(noWebglBrowser) {
   const context = await noWebglBrowser.newContext({ viewport: { width: 1440, height: 900 } })
   try {
     const page = await context.newPage()
+    watchCsp(page, 'behaviour dialog')
     await page.goto(`${BASE}/?intro=0&lang=en&section=agentic`)
     await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
     const trigger = page.locator('.side-panels__rail').first().locator('button.side-panels__cta')
     await trigger.focus()
     await page.keyboard.press('Enter')
-    await page.waitForSelector('[role="dialog"]', { timeout: 5000 })
+    await page.waitForSelector('dialog[open]', { timeout: 5000 })
 
     const opened = await page.evaluate(() => {
-      const dialog = document.querySelector('[role="dialog"]')
-      const shell = dialog?.parentElement
-      const siblings = shell ? [...shell.children].filter((child) => child !== dialog) : []
+      const dialog = document.querySelector('dialog[open]')
+      // The page behind a modal dialog is inert: a control there cannot take focus.
+      const behind = document.querySelector('.cube-section-nav a')
+      behind?.focus()
+      const backgroundInert = Boolean(behind) && document.activeElement !== behind
+      dialog?.querySelector('h2')?.focus()
       return {
-        modal: dialog?.getAttribute('aria-modal') === 'true',
+        modal: dialog?.matches(':modal') ?? false,
         titleFocused: document.activeElement === document.getElementById(dialog?.getAttribute('aria-labelledby') ?? ''),
-        backgroundInert: siblings.length > 0 && siblings.every((child) => child.hasAttribute('inert')),
+        backgroundInert,
         scrollLocked: document.documentElement.style.overflow === 'hidden',
       }
     })
@@ -327,7 +349,7 @@ async function checkBehaviour(noWebglBrowser) {
     // Tab and Shift+Tab stay inside the dialog.
     for (const keys of [['Tab'], ['Tab'], ['Shift+Tab'], ['Shift+Tab']]) {
       await page.keyboard.press(keys[0])
-      const inside = await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))
+      const inside = await page.evaluate(() => Boolean(document.activeElement?.closest('dialog[open]')))
       if (!inside) {
         fail(`dialog-focus-escapes ${keys[0]}`)
         break
@@ -335,7 +357,7 @@ async function checkBehaviour(noWebglBrowser) {
     }
 
     await page.keyboard.press('Escape')
-    await page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 }).catch(() => fail('dialog-escape'))
+    await page.waitForSelector('dialog[open]', { state: 'detached', timeout: 5000 }).catch(() => fail('dialog-escape'))
     const closed = await page.evaluate(() => ({
       focusReturned: document.activeElement?.classList.contains('side-panels__cta') ?? false,
       backgroundRestored: !document.querySelector('main [inert]'),
@@ -353,6 +375,7 @@ async function checkBehaviour(noWebglBrowser) {
   webglContext.setDefaultTimeout(120000)
   try {
     const page = await webglContext.newPage()
+    watchCsp(page, 'behaviour intro')
     await page.goto(`${BASE}/?intro=1&lang=en`)
     const pending = await page.waitForSelector('[data-intro="pending"]', { timeout: 30000 }).then(() => true).catch(() => false)
     if (!pending) fail('intro-not-pending')
@@ -390,6 +413,7 @@ async function main() {
       found.layout.push(...(await checkDegradation(browser)))
       found.layout.push(...(await checkBehaviour(browser)))
     }
+    found.layout.push(...cspViolations)
 
     if (args.has('--update-known') && contentMode !== 'built') {
       console.log('Known failures are recorded only for the built content.')
@@ -399,7 +423,7 @@ async function main() {
 
     if (args.has('--update-known')) {
       // A blank page is never accepted as known debt.
-      const degradation = found.layout.filter((id) => id.startsWith('degradation') || id.startsWith('behaviour'))
+      const degradation = found.layout.filter((id) => /^(degradation|behaviour|csp) /.test(id))
       if (degradation.length > 0) {
         for (const id of degradation) console.log(`FAIL ${id}`)
         console.log('Degradation and behaviour failures cannot be recorded as known.')

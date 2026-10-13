@@ -19,8 +19,14 @@ import { SceneLayer } from '@/features/scene/SceneLayer'
 import { hasWebGL } from '@/lib/hasWebGL'
 import { useViewportSize } from '@/lib/useViewportSize'
 import { useLayoutMode } from '@/styles/layoutModes'
+import { cx } from '@/ui/cx'
 import { SegmentedControl } from '@/ui/SegmentedControl'
 import { IdentityChrome } from './IdentityChrome'
+import './intro.css'
+import './shell.css'
+
+// The cursor follows what the pointer can do with the cube.
+const CURSOR = { default: 'cursor-default', grab: 'cursor-grab', grabbing: 'cursor-grabbing' } as const
 
 const LOCALE_OPTIONS = [
   { value: 'en', label: 'EN' },
@@ -60,7 +66,6 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const copy = interfaceCopy(locale)
   const viewport = useViewportSize()
   const { stacked } = useLayoutMode()
-  const shellRef = useRef<HTMLElement | null>(null)
   // The control that opened the detail dialog; focus returns to it on close.
   const restoreFocusRef = useRef<HTMLElement | null>(null)
   const [isTouch] = useState(() => typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches ?? false))
@@ -103,14 +108,20 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
 
   return (
     <main
-      className={`prototype-shell is-${cursor}`}
+      className={cx(
+        'prototype-shell relative block h-svh min-h-svh w-screen max-w-none overflow-hidden text-page-ink stacked:h-auto stacked:overflow-visible',
+        CURSOR[cursor],
+      )}
       aria-label={copy.experienceLabel}
       data-intro={intro !== 'done' ? intro : undefined}
-      ref={shellRef}
       onDoubleClick={import.meta.env.DEV ? (event) => openWorldShowcase(event, activeFace) : undefined}
       style={pinned}
     >
-      <div className="cube-canvas" aria-hidden="true" style={pinned}>
+      <div
+        className="cube-canvas absolute inset-0 z-0 h-svh w-screen max-w-none transition-opacity delay-120 duration-520 motion-reduce:duration-1 stacked:relative stacked:inset-auto stacked:h-[52svh] stacked:min-h-72 stacked:w-full"
+        aria-hidden="true"
+        style={pinned}
+      >
         <SceneLayer sections={resolvedSections} plan={plan} webglAvailable={webglAvailable} />
         {plan.showHint && webglAvailable && <RotateHint visible={hintVisible} label={isTouch ? copy.hintTouch : copy.hintPointer} />}
       </div>
@@ -144,7 +155,6 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
           faceLabel={activeSection?.label ?? ''}
           closeLabel={copy.close}
           onClose={closeDetail}
-          shellRef={shellRef}
           restoreFocusRef={restoreFocusRef}
         />
       )}

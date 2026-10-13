@@ -1,0 +1,202 @@
+/* The world showcase (?bg=<world>, ?bg=only, ?tune=1): development tooling,
+   loaded only with its lazy chunk in development, never shipped to visitors,
+   so it keeps its own literal colours (exempt in check:tokens). */
+
+.wave-showcase {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100dvw;
+  height: 100dvh;
+  min-width: 100dvw;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #08050d;
+  color: rgba(232, 232, 252, 0.86);
+  font-family: inherit;
+}
+
+.wave-showcase__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.wave-showcase__canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Full name in the corner of every showcase screen — discreet, matching the
+   cube experience's bottom-right signature. */
+.wave-showcase__signature {
+  position: absolute;
+  right: clamp(1rem, 2.4vw, 1.6rem);
+  bottom: clamp(1rem, 2.4vw, 1.6rem);
+  z-index: 2;
+  color: rgba(216, 218, 244, 0.5);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.wave-showcase__chrome {
+  position: absolute;
+  top: clamp(1rem, 2.4vw, 1.6rem);
+  left: clamp(1rem, 2.4vw, 1.6rem);
+  right: clamp(1rem, 2.4vw, 1.6rem);
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.wave-showcase__chrome > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.wave-showcase__chrome span {
+  color: rgba(184, 174, 255, 0.92);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.wave-showcase__chrome small {
+  color: rgba(216, 218, 244, 0.5);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.wave-showcase__chrome a {
+  pointer-events: auto;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(122, 109, 255, 0.42);
+  border-radius: 999px;
+  color: rgba(216, 218, 244, 0.84);
+  background: linear-gradient(180deg, rgba(12, 14, 30, 0.7), rgba(3, 4, 12, 0.85));
+  text-decoration: none;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.wave-showcase__chrome a:hover {
+  border-color: rgba(184, 174, 255, 0.82);
+  background: linear-gradient(180deg, rgba(18, 20, 38, 0.84), rgba(5, 6, 16, 0.92));
+}
+
+.wave-showcase__switcher {
+  pointer-events: auto;
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.wave-showcase__switcher a {
+  padding: 0.42rem 0.7rem;
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 1px solid rgba(122, 109, 255, 0.22);
+  background: rgba(6, 8, 18, 0.65);
+  color: rgba(216, 218, 244, 0.58);
+}
+
+.wave-showcase__switcher a.is-active {
+  border-color: rgba(184, 174, 255, 0.92);
+  color: rgba(232, 234, 255, 0.96);
+  background: linear-gradient(180deg, rgba(34, 28, 70, 0.86), rgba(8, 6, 20, 0.92));
+  box-shadow: 0 0 0 1px rgba(184, 174, 255, 0.22) inset;
+}
+
+.world-tune {
+  position: absolute;
+  left: clamp(1rem, 2.4vw, 1.6rem);
+  bottom: clamp(1rem, 2.4vw, 1.6rem);
+  z-index: 3;
+  display: grid;
+  gap: 0.55rem;
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(62vh, 34rem);
+  padding: 0.8rem;
+  border: 1px solid rgba(122, 109, 255, 0.28);
+  border-radius: 8px;
+  color: rgba(232, 232, 252, 0.82);
+  background: rgba(4, 5, 14, 0.72);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.34);
+  overflow-y: auto;
+}
+
+.world-tune header,
+.world-tune__row {
+  display: grid;
+  grid-template-columns: minmax(5.2rem, 1fr) auto auto auto;
+  gap: 0.42rem;
+  align-items: center;
+}
+
+.world-tune header {
+  grid-template-columns: 1fr auto;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(122, 109, 255, 0.18);
+}
+
+.world-tune span,
+.world-tune strong {
+  color: rgba(184, 174, 255, 0.88);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.world-tune button {
+  min-width: 2rem;
+  min-height: 1.65rem;
+  border: 1px solid rgba(122, 109, 255, 0.34);
+  border-radius: 5px;
+  color: rgba(232, 232, 252, 0.88);
+  background: rgba(10, 12, 28, 0.8);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.world-tune button:hover {
+  border-color: rgba(184, 174, 255, 0.76);
+  background: rgba(20, 18, 48, 0.88);
+}
+
+.world-tune code {
+  min-width: 4rem;
+  padding: 0.22rem 0.44rem;
+  border: 1px solid rgba(122, 109, 255, 0.18);
+  border-radius: 5px;
+  color: rgba(244, 246, 255, 0.9);
+  background: rgba(0, 0, 0, 0.26);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.world-tune p {
+  margin: 0;
+  color: rgba(216, 218, 244, 0.58);
+  font-size: 0.62rem;
+  line-height: 1.45;
+}

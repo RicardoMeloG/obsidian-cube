@@ -36,6 +36,21 @@
     overflow: hidden;
   }
 
+  /* Stacked layouts scroll: the cube is a hero at the top that scrolls away
+     with the content; only the face strip stays fixed at the bottom. */
+  @variant stacked {
+    html,
+    body,
+    #root {
+      height: auto;
+      min-height: 100%;
+    }
+
+    body {
+      overflow: visible;
+    }
+  }
+
   button,
   input,
   textarea,

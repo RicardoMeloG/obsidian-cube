@@ -37,7 +37,7 @@ function createResearchConceptDetail(concept: CubeSectionResearchConcept, source
 // Layout of the two rails around the cube (desktop grid, stacked flow), by
 // layout mode (src/styles/tokens.css). `side-panels`, `side-panels__rail` and
 // `side-panels__cta` are hooks for the intro, the choreography and the layout
-// check (FaceRails.css, App.css, scripts/check-layout.mjs).
+// check (FaceRails.css, src/app/intro.css, scripts/check-layout.mjs).
 const PANELS = cx(
   'side-panels accent-scope pointer-events-none absolute inset-0 z-5 grid grid-cols-[minmax(18rem,30vw)_1fr_minmax(16rem,24vw)] grid-rows-[clamp(4rem,9vh,6.5rem)_1fr] gap-[clamp(1rem,2vw,2rem)] px-[clamp(1.1rem,3vw,2.6rem)] pt-[clamp(1.1rem,3vw,2.6rem)] pb-[clamp(5.8rem,11vh,7.2rem)]',
   'tight:grid-cols-[minmax(16rem,32vw)_1fr_minmax(14rem,26vw)]',

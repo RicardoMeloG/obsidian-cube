@@ -7,6 +7,7 @@ import { isWorldId, WORLD_REGISTRY } from '@/features/scene/vector-worlds/regist
 import { WORLD_IDS } from '@/kernel/worlds'
 import type { WorldId } from '@/kernel/worlds'
 import type { WorldComposition } from '@/features/scene/vector-worlds/types'
+import './VectorWorldShowcase.css'
 
 type ProductTuneState = {
   yaw: number
