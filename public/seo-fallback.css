@@ -1,0 +1,10 @@
+/* The plain HTML version of the page, for clients without JavaScript
+   (src/kernel/seo/renderSeo.ts). Hidden as soon as /js-flag.js marks the page.
+   A file, not an inline <style>, so the content security policy needs no
+   hashes (infra/security-headers.json). */
+html.js .seo-fallback { display: none; }
+.seo-fallback { max-width: 42rem; margin: 0 auto; padding: 2rem 1rem; color: #e8eef5; background: #08050d; font-family: system-ui, sans-serif; line-height: 1.5; }
+.seo-fallback a { color: #b8aeff; }
+.seo-fallback h1 { margin: 0; font-size: 1.6rem; }
+.seo-fallback h2 { margin: 1.4rem 0 0.2rem; font-size: 1rem; }
+.seo-fallback p, .seo-fallback ul { margin: 0 0 0.5rem; }

@@ -14,6 +14,22 @@ import type { SeoInput } from './src/kernel/seo/renderSeo.ts'
 const CONTENT_DIR = new URL('./public/content/', import.meta.url)
 const SEO_SOURCES = ['site.en.json', 'site.example.en.json']
 
+function previewSecurityHeaders(): Record<string, string> {
+  const policy = JSON.parse(readFileSync(new URL('./infra/security-headers.json', import.meta.url), 'utf8')) as {
+    contentSecurityPolicy: Record<string, string[]>
+    referrerPolicy: string
+  }
+  const csp = Object.entries(policy.contentSecurityPolicy)
+    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
+    .join('; ')
+  return {
+    'Content-Security-Policy': csp,
+    'Referrer-Policy': policy.referrerPolicy,
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+  }
+}
+
 function readSeoContent(): { file: string; content: SeoInput } {
   for (const file of SEO_SOURCES) {
     const url = new URL(file, CONTENT_DIR)
@@ -63,5 +79,8 @@ export default defineConfig({
   preview: {
     port: 5181,
     strictPort: true,
+    // The production security headers (infra/security-headers.json), enforced,
+    // so the layout check exercises the built site under its content security policy.
+    headers: previewSecurityHeaders(),
   },
 })
