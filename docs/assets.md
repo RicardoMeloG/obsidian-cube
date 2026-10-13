@@ -4,9 +4,11 @@ Every file served from `public/` (except the content documents in `public/conten
 
 | Path | Source | Licence |
 |---|---|---|
-| `environments/udec-frontis.jpg` | Photograph used as the cube's reflection environment; origin not recorded | pending |
+| `environments/udec-frontis.jpg` | Photograph used as the cube's reflection environment, resized to 1536 px wide on 2026-10-12; origin not recorded | pending |
 | `favicon.svg` | Vite's logo, left by the project template; to be replaced by the site's own icon | pending |
+| `js-flag.js` | Written for this site: marks the page as running JavaScript before it paints | Same as the repository |
 | `og-image.jpg` | Rendered from this site (the cube on the AGENTIC face, interface hidden), 2026-10-12 | Same as the repository |
+| `seo-fallback.css` | Written for this site: the style of the plain HTML fallback for clients without JavaScript | Same as the repository |
 
 Bundled from npm (not in `public/`, so not in the table the test reads):
 

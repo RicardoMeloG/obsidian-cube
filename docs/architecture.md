@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-12):** P0, P1, P2a, P2b and P3 done. Next: P4, the last phase of the normalization stage of ADR 007; content and release follow it, in that order. Phases are defined in `specs/010-architecture/spec.md`, section 7.
+**Migration status (2026-10-12):** P0 to P4 done. Next: the independent audit that closes the normalization stage of ADR 007; content and release follow it, in that order. Phases are defined in `specs/010-architecture/spec.md`, section 7.
 
 ## System
 
@@ -54,7 +54,7 @@ src/
   kernel/            the content contract (ADR 005)
 ```
 
-`src/App.css` is legacy (P4): the shell, the face strip, the dialog, the rotate hint and the intro choreography.
+Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's gradients and grid, the canvas box), `src/app/intro.css` (the intro choreography, deliberately unlayered), `FaceRails.css`, `FaceStrip.css`, `DetailDialog.css` (layered gradients, decorations, choreography) and `src/ui/ornaments.css`. The dev showcase's stylesheet travels only with its development chunk. There is no global stylesheet besides `src/index.css` (Tailwind, tokens, base layer).
 
 **How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the strip dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the rails follow `displayedFace` through the transition; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
 
@@ -99,9 +99,10 @@ Imports across top-level modules use `@/`; a relative path that climbs into anot
 | One source for layout modes; no numeric breakpoints in components | In force | `src/styles/layoutModes.test.ts` (H-17) |
 | No blank page without WebGL or when a world fails | In force | Degradation checks in `npm run check:layout` (H-18) |
 | Accessibility: no axe violations | In force, no known failures | `npm run check:layout` (H-13) |
+| Security headers (CSP, HSTS, nosniff, frame and referrer policy); no inline code in `index.html` | In force: enforced in `vite preview` and the layout check, report-only in CloudFront | `infra/security-headers.json`; violations fail `npm run check:layout`; `scripts/checks/indexHtml.test.ts` |
 | First-view budget, ratchet | In force | `npm run check:budget`, limit in `scripts/checks/budget.json` (H-07) |
 | Deploy never deletes content | In force | `scripts/checks/deployWorkflow.test.ts` (H-14) |
-| No colour literals outside tokens; App.css literals only go down | In force | `npm run check:tokens` (H-08b) |
+| No colour literals outside tokens | In force | `npm run check:tokens` (H-08b) |
 | Module boundaries; no locale comparisons or lazy loading in interface code | In force | `npm run lint`, rules tested by `scripts/checks/boundaries.test.ts` (H-04) |
 | DOM-layer files ≤ 250 lines | In force | `scripts/checks/fileSize.test.ts` (H-16) |
 | The served font is the one measured (Inter) | In force | `font-not-loaded` in `npm run check:layout` (AD-10) |

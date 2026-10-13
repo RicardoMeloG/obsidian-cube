@@ -16,7 +16,10 @@ GitHub Actions ──(OIDC)──> AWS
 - **S3**: private bucket (all public access blocked, SSE-S3, TLS enforced). Never
   served directly.
 - **CloudFront**: fronts the bucket via Origin Access Control; redirects to HTTPS;
-  serves `index.html` for 403/404 so client-side routing works.
+  serves `index.html` for 403/404 so client-side routing works (to be removed in
+  the release stage, spec 010 AD-09); adds the security headers of
+  `infra/security-headers.json` (content security policy report-only until it
+  has run clean in production; set `reportOnly` to `false` to enforce it).
 - **CI/CD**: `.github/workflows/ci.yml` (lint/test/build + `cdk synth`) and
   `deploy.yml` (build → `aws s3 sync` → CloudFront invalidation), authenticating
   with a short-lived **OIDC role** — no long-lived AWS keys in GitHub.
