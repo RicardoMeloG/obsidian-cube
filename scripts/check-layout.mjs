@@ -294,6 +294,81 @@ async function checkDegradation(noWebglBrowser) {
   return failures
 }
 
+// Behaviour (spec 010, P3 exit criteria): the detail dialog's keyboard and
+// focus contract, and the first-visit intro handing over to the interface.
+// Run without WebGL except the intro, which needs the scene to land.
+async function checkBehaviour(noWebglBrowser) {
+  const failures = []
+  const fail = (id) => failures.push(`behaviour ${id}`)
+
+  const context = await noWebglBrowser.newContext({ viewport: { width: 1440, height: 900 } })
+  try {
+    const page = await context.newPage()
+    await page.goto(`${BASE}/?intro=0&lang=en&section=agentic`)
+    await page.waitForSelector('.side-panels[data-transition="idle"]', { timeout: 60000 })
+    const trigger = page.locator('.side-panels__rail').first().locator('button.side-panels__cta')
+    await trigger.focus()
+    await page.keyboard.press('Enter')
+    await page.waitForSelector('[role="dialog"]', { timeout: 5000 })
+
+    const opened = await page.evaluate(() => {
+      const dialog = document.querySelector('[role="dialog"]')
+      const shell = dialog?.parentElement
+      const siblings = shell ? [...shell.children].filter((child) => child !== dialog) : []
+      return {
+        modal: dialog?.getAttribute('aria-modal') === 'true',
+        titleFocused: document.activeElement === document.getElementById(dialog?.getAttribute('aria-labelledby') ?? ''),
+        backgroundInert: siblings.length > 0 && siblings.every((child) => child.hasAttribute('inert')),
+        scrollLocked: document.documentElement.style.overflow === 'hidden',
+      }
+    })
+    for (const [check, ok] of Object.entries(opened)) if (!ok) fail(`dialog-open ${check}`)
+
+    // Tab and Shift+Tab stay inside the dialog.
+    for (const keys of [['Tab'], ['Tab'], ['Shift+Tab'], ['Shift+Tab']]) {
+      await page.keyboard.press(keys[0])
+      const inside = await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))
+      if (!inside) {
+        fail(`dialog-focus-escapes ${keys[0]}`)
+        break
+      }
+    }
+
+    await page.keyboard.press('Escape')
+    await page.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 }).catch(() => fail('dialog-escape'))
+    const closed = await page.evaluate(() => ({
+      focusReturned: document.activeElement?.classList.contains('side-panels__cta') ?? false,
+      backgroundRestored: !document.querySelector('main [inert]'),
+      scrollRestored: document.documentElement.style.overflow !== 'hidden',
+    }))
+    for (const [check, ok] of Object.entries(closed)) if (!ok) fail(`dialog-close ${check}`)
+  } finally {
+    await context.close()
+  }
+
+  // The intro hides the interface while the cube falls, then hands over; any
+  // key skips it at once.
+  const webglBrowser = await launch(SOFTWARE_WEBGL)
+  const webglContext = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
+  webglContext.setDefaultTimeout(120000)
+  try {
+    const page = await webglContext.newPage()
+    await page.goto(`${BASE}/?intro=1&lang=en`)
+    const pending = await page.waitForSelector('[data-intro="pending"]', { timeout: 30000 }).then(() => true).catch(() => false)
+    if (!pending) fail('intro-not-pending')
+    await page.keyboard.press('Space')
+    const skipped = await page.waitForFunction(() => !document.querySelector('[data-intro]'), null, { timeout: 8000 }).then(() => true).catch(() => false)
+    if (!skipped) fail('intro-skip')
+    const visible = await page.evaluate(() => getComputedStyle(document.querySelector('.side-panels')).visibility !== 'hidden')
+    if (!visible) fail('intro-rails-hidden-after-skip')
+  } finally {
+    await webglBrowser.close()
+  }
+
+  console.log(`  behaviour: ${failures.length} failures`)
+  return failures
+}
+
 async function main() {
   const known = JSON.parse(readFileSync(KNOWN_PATH, 'utf8'))
   const preview = startPreview()
@@ -311,7 +386,10 @@ async function main() {
       }
     }
 
-    if (contentMode === 'built') found.layout.push(...(await checkDegradation(browser)))
+    if (contentMode === 'built') {
+      found.layout.push(...(await checkDegradation(browser)))
+      found.layout.push(...(await checkBehaviour(browser)))
+    }
 
     if (args.has('--update-known') && contentMode !== 'built') {
       console.log('Known failures are recorded only for the built content.')
@@ -321,10 +399,10 @@ async function main() {
 
     if (args.has('--update-known')) {
       // A blank page is never accepted as known debt.
-      const degradation = found.layout.filter((id) => id.startsWith('degradation'))
+      const degradation = found.layout.filter((id) => id.startsWith('degradation') || id.startsWith('behaviour'))
       if (degradation.length > 0) {
         for (const id of degradation) console.log(`FAIL ${id}`)
-        console.log('Degradation failures cannot be recorded as known.')
+        console.log('Degradation and behaviour failures cannot be recorded as known.')
         process.exitCode = 1
         return
       }
