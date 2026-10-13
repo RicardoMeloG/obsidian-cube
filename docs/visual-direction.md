@@ -107,7 +107,7 @@ Surface rules (for side-panel cards and pills):
 
 ## Deep-dive Pages (Secondary)
 
-Long-form content (the methodology behind a face, the actual project archive, the full research index) lives on separate routes reached via the side-panel CTAs ("VER METODOLOGÍA", "EXPLORAR ENFOQUE", etc.).
+None exist yet: today a face's long form opens in its detail dialog. If long-form content (the methodology behind a face, the project archive, the full research index) gets pages of its own (decision D-8, release stage, spec 010), they are reached from the rail CTAs and follow these rules.
 
 - These pages may use the existing static obsidian page styling.
 - They are not part of the single-screen experience and may scroll.
@@ -116,16 +116,7 @@ Long-form content (the methodology behind a face, the actual project archive, th
 
 ## Color Tokens
 
-Working palette:
-
-- `obsidian-950`: `#020307`
-- `obsidian-900`: `#05070d`
-- `obsidian-800`: `#090d14`
-- `ice-300`: `#9acbf2`
-- `ice-100`: `#eef7ff`
-- `mineral-500`: `#8a97a6`
-- `copper-400`: `#c08b5a`
-- `glass-line`: `rgba(222, 232, 242, 0.14)`
+The palette lives in `src/styles/tokens.css`, the single source: page and abyss, obsidian and night surfaces, ink text, the violet signature, steel and ice. `npm run check:tokens` fails on a colour literal outside it and on a token nothing uses. Per-face accents are presentation content (`public/content/visual.json`, ADR 003).
 
 ## Typography
 
@@ -181,7 +172,7 @@ Setup:
 
 Token rules:
 
-- Use project tokens first (`obsidian-950/900/800`, `ice-300/100`, `mineral-500`, `copper-400`, `glass-line`).
+- Use project tokens first (`src/styles/tokens.css`); there is no other palette, Tailwind's default one is removed.
 - Avoid arbitrary colors unless there is a documented design reason.
 
 Usage rules:

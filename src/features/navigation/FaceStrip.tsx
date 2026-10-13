@@ -93,7 +93,7 @@ export function FaceStrip({
       </ul>
       {/* The full name signs the strip on desktop; it gives way first when the
           strip runs out of room (it is already the page's h1). */}
-      <span className="min-w-0 overflow-hidden text-[0.6rem] font-semibold tracking-[0.28em] text-ellipsis whitespace-nowrap text-ink-200/42 uppercase stacked:hidden">
+      <span className="min-w-0 overflow-hidden text-strip-name text-ellipsis whitespace-nowrap text-ink-200/42 uppercase stacked:hidden">
         {fullName}
       </span>
     </nav>

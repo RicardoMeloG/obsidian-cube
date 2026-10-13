@@ -1,10 +1,12 @@
-// Token check (spec 010, H-08b; ADR 006): colours come from src/styles/tokens.css.
-//
-// Fails on a colour literal in any source file or public stylesheet outside the
-// exempt paths below: hex, the colour functions (rgb, hsl, hwb, lab, lch,
-// oklab, oklch, color), and named colours in CSS declarations or in arbitrary
-// Tailwind values. Tailwind's default palette is removed in tokens.css, so a
-// utility such as `text-red-500` does not exist.
+// Token check (spec 010, H-08b; ADR 006): colours and type come from
+// src/styles/tokens.css. Fails on:
+// - a colour literal in any source file or public stylesheet outside the
+//   exempt paths below: hex, the colour functions (rgb, hsl, hwb, lab, lch,
+//   oklab, oklch, color), and named colours in CSS declarations or in
+//   arbitrary Tailwind values. Tailwind's default palette is removed in
+//   tokens.css, so a utility such as `text-red-500` does not exist;
+// - an arbitrary size, leading or tracking that is not a per-mode refinement;
+// - a colour token nothing uses.
 //
 //   node scripts/check-tokens.mjs
 
@@ -47,6 +49,25 @@ for (const file of sources) {
     ...[...text.matchAll(file.endsWith('.css') ? NAMED_IN_CSS : NAMED_IN_CLASS)].map((match) => match[1]),
   ]
   for (const literal of new Set(found)) problems.push(`${file}: ${literal}`)
+}
+
+// Type comes from the roles in tokens.css (`text-face-title`…): an arbitrary
+// size, leading or tracking is allowed only as a per-mode refinement
+// (`narrow:text-[0.62rem]`), never as an element's base type (audit-2 B-13).
+const BASE_TYPE = /(?<![\w:-])(?:text-\[(?:[\d.]+(?:rem|px|em)|clamp\([^\]]*)\]|tracking-\[[^\]]+\]|leading-\[[^\]]+\])/g
+for (const file of sources.filter((file) => file.endsWith('.tsx'))) {
+  if (EXEMPT.some(([prefix]) => file.startsWith(prefix))) continue
+  for (const value of new Set(readFileSync(join(ROOT, file), 'utf8').match(BASE_TYPE) ?? [])) problems.push(`${file}: ${value} (use a type role)`)
+}
+
+// Every colour token is used: as a utility (`text-ink-50/80`) or a variable
+// (`var(--color-ink-50)`), in a component or in another token (audit-2 B-13).
+const tokensFile = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8')
+const everything = sources.map((file) => readFileSync(join(ROOT, file), 'utf8')).join('\n')
+for (const [, name] of tokensFile.matchAll(/^\s*--color-([a-z0-9-]+):/gm)) {
+  const uses = everything.match(new RegExp(`-${name}(?![\\w-])`, 'g'))?.length ?? 0
+  // One match is the definition itself.
+  if (uses <= 1) problems.push(`src/styles/tokens.css: --color-${name} is never used`)
 }
 
 for (const problem of problems) console.log(problem)

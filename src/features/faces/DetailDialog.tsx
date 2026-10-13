@@ -93,7 +93,7 @@ export function DetailDialog({ detail, faceLabel, closeLabel, onClose, restoreFo
       onClick={handleClick}
     >
       <button
-        className="focus-ring absolute top-[0.6rem] right-[0.6rem] grid size-11 cursor-pointer place-items-center rounded-full border border-violet-300/22 bg-night-950/78 font-[inherit] text-[1.15rem] leading-none text-ink-50/78"
+        className="focus-ring absolute top-[0.6rem] right-[0.6rem] grid size-11 cursor-pointer place-items-center rounded-full border border-violet-300/22 bg-night-950/78 font-[inherit] text-dialog-close text-ink-50/78"
         type="button"
         aria-label={closeLabel}
         onClick={onClose}
@@ -102,22 +102,22 @@ export function DetailDialog({ detail, faceLabel, closeLabel, onClose, restoreFo
       </button>
       <div className="min-h-0 overflow-auto overscroll-contain">
         {/* The first lines share the top-right corner with the close button. */}
-        <p className="m-0 mb-3 pr-[2.9rem] text-[0.66rem] font-extrabold tracking-[0.3em] text-violet-300/88 uppercase">{faceLabel}</p>
+        <p className="m-0 mb-3 pr-[2.9rem] text-dialog-eyebrow text-violet-300/88 uppercase">{faceLabel}</p>
         <h2
-          className="m-0 max-w-[12ch] pr-[2.9rem] text-[clamp(2.2rem,4vw,4rem)] leading-[0.96] text-ink-50/98 focus:outline-none focus-visible:outline focus-visible:outline-offset-4 focus-visible:outline-violet-300/55"
+          className="m-0 max-w-[12ch] pr-[2.9rem] text-dialog-title text-ink-50/98 focus:outline-none focus-visible:outline focus-visible:outline-offset-4 focus-visible:outline-violet-300/55"
           id="detail-dialog-title"
           ref={titleRef}
           tabIndex={-1}
         >
           {detail.title}
         </h2>
-        <RichText as="p" className="mt-4 mb-0 max-w-[42rem] text-[clamp(0.98rem,1.2vw,1.08rem)] leading-[1.62] text-ink-200/82" html={detail.summary} />
+        <RichText as="p" className="mt-4 mb-0 max-w-[42rem] text-dialog-lead text-ink-200/82" html={detail.summary} />
         {detail.points && detail.points.length > 0 && (
           <ul className="mt-[1.35rem] mb-0 grid list-none gap-[0.72rem] border-t border-violet-500/24 px-0 pt-5 pb-0">
             {detail.points.map((point) => (
               <RichText
                 as="li"
-                className="relative pl-[1.15rem] text-[0.92rem] leading-[1.52] text-ink-200/76 before:absolute before:top-[0.58em] before:left-0 before:size-[0.42rem] before:rotate-45 before:bg-violet-300/90 before:shadow-[0_0_12px_color-mix(in_srgb,var(--color-violet-300)_58%,transparent)] before:content-['']"
+                className="relative pl-[1.15rem] text-dialog-point text-ink-200/76 before:absolute before:top-[0.58em] before:left-0 before:size-[0.42rem] before:rotate-45 before:bg-violet-300/90 before:shadow-[0_0_12px_color-mix(in_srgb,var(--color-violet-300)_58%,transparent)] before:content-['']"
                 key={point}
                 html={point}
               />
@@ -147,5 +147,5 @@ export function DetailDialog({ detail, faceLabel, closeLabel, onClose, restoreFo
 }
 
 const LINK_TILE = 'grid min-h-[5.8rem] gap-[0.35rem] bg-night-950/90 p-4 text-ink-50/90 no-underline'
-const LINK_LABEL = 'text-[0.78rem] tracking-[0.18em] uppercase'
-const LINK_NOTE = 'text-[0.82rem] leading-[1.4] text-ink-200/66'
+const LINK_LABEL = 'text-link-label uppercase'
+const LINK_NOTE = 'text-link-note text-ink-200/66'

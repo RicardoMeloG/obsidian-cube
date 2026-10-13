@@ -24,8 +24,6 @@
 
   /* Obsidian surfaces, darkest first. */
   --color-obsidian-950: #020307;
-  --color-obsidian-900: #05070d;
-  --color-obsidian-800: #090d14;
   --color-night-950: rgb(3 4 11);
   --color-night-900: rgb(7 9 20);
   --color-night-800: rgb(12 14 30);
@@ -47,9 +45,6 @@
   --color-steel-400: rgb(140 180 220);
 
   --color-ice-300: #9acbf2;
-  --color-ice-100: #eef7ff;
-  --color-mineral-500: #8a97a6;
-  --color-copper-400: #c08b5a;
 
   --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
@@ -125,6 +120,26 @@
   --text-control: 0.68rem;
   --text-control--letter-spacing: 0.08em;
   --text-control--font-weight: 700;
+  --text-strip-name: 0.6rem;
+  --text-strip-name--letter-spacing: 0.28em;
+  --text-strip-name--font-weight: 600;
+
+  /* The detail dialog. */
+  --text-dialog-close: 1.15rem;
+  --text-dialog-close--line-height: 1;
+  --text-dialog-eyebrow: 0.66rem;
+  --text-dialog-eyebrow--letter-spacing: 0.3em;
+  --text-dialog-eyebrow--font-weight: 800;
+  --text-dialog-title: clamp(2.2rem, 4vw, 4rem);
+  --text-dialog-title--line-height: 0.96;
+  --text-dialog-lead: clamp(0.98rem, 1.2vw, 1.08rem);
+  --text-dialog-lead--line-height: 1.62;
+  --text-dialog-point: 0.92rem;
+  --text-dialog-point--line-height: 1.52;
+  --text-link-label: 0.78rem;
+  --text-link-label--letter-spacing: 0.18em;
+  --text-link-note: 0.82rem;
+  --text-link-note--line-height: 1.4;
 
   /* Text shadows: the name lifted off the field, the face title given depth. */
   --text-shadow-name: 0 1px 18px rgb(0 0 0 / 0.7);
