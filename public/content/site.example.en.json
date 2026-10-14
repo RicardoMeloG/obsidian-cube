@@ -4,11 +4,13 @@
     "displayName": "Portfolio Owner",
     "fullName": "Portfolio Owner",
     "handle": "your-handle",
-    "role": "Agentic Product Engineer"
+    "role": "Agentic Product Engineer",
+    "keywords": "AI Engineer · LLM agents · Python · AWS"
   },
   "seo": {
     "title": "Agentic Portfolio | Agentic Product Engineer",
-    "description": "Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research."
+    "description": "Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research.",
+    "image": "/og-image.jpg"
   },
   "hero": {
     "headline": "Agentic Product Engineer building AI-assisted products from real-world systems experience.",
@@ -19,6 +21,7 @@
       "id": "agentic",
       "label": "AGENTIC",
       "title": "Agentic Product Engineering",
+      "eyebrow": "Positioning",
       "summary": "Design and construction of <strong>autonomous systems</strong> that perceive, decide, and act to deliver <em>real impact</em>.",
       "features": [
         { "glyph": "eye", "label": "Practical Vision", "description": "Agents that turn intent into measurable results." },
@@ -49,6 +52,7 @@
       "id": "products",
       "label": "PRODUCTS",
       "title": "Public Products",
+      "eyebrow": "Open Source",
       "summary": "Open-source tools and product experiments that demonstrate execution, safety, and usability.",
       "features": [
         { "glyph": "rocket", "label": "Main Repository", "description": "The project that best shows current direction." },
@@ -86,6 +90,7 @@
       "id": "systems",
       "label": "SYSTEMS",
       "title": "Production Systems",
+      "eyebrow": "Architecture",
       "summary": "Legacy modernization, databases, architecture, cloud direction, and real operational constraints.",
       "features": [
         { "glyph": "shield", "label": "Legacy Modernization", "description": "Move forward without breaking what already works." },
@@ -116,6 +121,7 @@
       "id": "security",
       "label": "SECURITY",
       "title": "Security Mindset",
+      "eyebrow": "Risk Control",
       "summary": "Secure defaults, MFA, rate limiting, validation, and production risk awareness.",
       "features": [
         { "glyph": "lock", "label": "Secure Defaults", "description": "Least privilege, no secrets in repos, signed releases." },
@@ -146,6 +152,7 @@
       "id": "research",
       "label": "RESEARCH",
       "title": "Independent Research",
+      "eyebrow": "Research",
       "summary": "Philosophy applied to AI: separating output from truth, representation from reality, and behavior from agency.",
       "features": [
         { "glyph": "eye", "label": "Truth", "description": "Criteria for representations that stay accountable to reality." },
@@ -206,6 +213,7 @@
       "id": "contact",
       "label": "CONTACT",
       "title": "Contact",
+      "eyebrow": "Reach Out",
       "summary": "Professional links and contact channels for collaboration and opportunities.",
       "features": [
         { "glyph": "spark", "label": "Public Name", "description": "Use the searchable full name for record." },

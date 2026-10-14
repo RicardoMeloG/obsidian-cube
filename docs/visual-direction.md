@@ -30,7 +30,7 @@ The design should read as premium because it is precise, not because it is decor
 - The cube is not a one-shot portal. Selecting a face updates the surrounding side panels in place; the cube does not disappear, navigate, or fade out.
 - The cube rotates on drag and snaps to the selected face on click. Audio cues stay subtle and gesture-driven.
 - All six faces share the same frame: inset bevel, corner brackets, double-diamond, section label, "OBSIDIAN CUBE" subtitle, three accent dots. Inside the frame each face carries its own accent color and a quiet inner glyph in that accent (ADR 003). The frame, bevel, brackets and typography never change per face.
-- Per-face accents (from `visual.json`, defaults in `cubeSections.ts`): agentic violet `#b8aeff`, products copper `#c08b5a`, systems steel blue `#8bb4dd`, security mint `#89d6c7`, research lavender `#9fa9ef`, contact sand `#f0d2b4`. The same accent drives the second title line and the eyebrow in the side panels.
+- Per-face accents (from `visual.json`, defaults in `src/kernel/faces.ts`): agentic violet `#b8aeff`, products copper `#c08b5a`, systems steel blue `#8bb4dd`, security mint `#89d6c7`, research lavender `#9fa9ef`, contact sand `#f0d2b4`. The same accent drives the second title line and the eyebrow in the side panels.
 - Material direction: deep obsidian (`#010208`), high metalness (≈0.92), low-to-mid roughness (≈0.13), strong clearcoat. Edges should catch a clean top rim highlight; the underside should bathe in violet underglow.
 - Avoid postprocessing that creates instability.
 - `Bloom` is prohibited for production because it caused visible flicker.
@@ -107,7 +107,7 @@ Surface rules (for side-panel cards and pills):
 
 ## Deep-dive Pages (Secondary)
 
-Long-form content (the methodology behind a face, the actual project archive, the full research index) lives on separate routes reached via the side-panel CTAs ("VER METODOLOGÍA", "EXPLORAR ENFOQUE", etc.).
+None exist yet: today a face's long form opens in its detail dialog. If long-form content (the methodology behind a face, the project archive, the full research index) gets pages of its own (decision D-8, release stage, spec 010), they are reached from the rail CTAs and follow these rules.
 
 - These pages may use the existing static obsidian page styling.
 - They are not part of the single-screen experience and may scroll.
@@ -116,16 +116,7 @@ Long-form content (the methodology behind a face, the actual project archive, th
 
 ## Color Tokens
 
-Working palette:
-
-- `obsidian-950`: `#020307`
-- `obsidian-900`: `#05070d`
-- `obsidian-800`: `#090d14`
-- `ice-300`: `#9acbf2`
-- `ice-100`: `#eef7ff`
-- `mineral-500`: `#8a97a6`
-- `copper-400`: `#c08b5a`
-- `glass-line`: `rgba(222, 232, 242, 0.14)`
+The palette lives in `src/styles/tokens.css`, the single source: page and abyss, obsidian and night surfaces, ink text, the violet signature, steel and ice. `npm run check:tokens` fails on a colour literal outside it and on a token nothing uses. Per-face accents are presentation content (`public/content/visual.json`, ADR 003).
 
 ## Typography
 
@@ -139,7 +130,7 @@ Working palette:
 
 ## Responsive Density
 
-- Treat `1600px-2200px` CSS width as the primary desktop review range.
+- Review desktops from 1280×720 to 2048×1152, with 1366×768, 1600×725 and 1920×1080 as the reference sizes (the layout check's matrix, `scripts/check-layout.mjs`).
 - Use wide page containers, not giant centered blocks.
 - Keep first-screen content high enough that the structure is visible without excessive scrolling.
 - Avoid using `vw` alone for major typography; always cap with conservative `clamp()` limits.
@@ -171,22 +162,22 @@ Working palette:
 
 ## Tailwind Implementation
 
-Tailwind is the implementation layer for static pages and future admin UI. It must follow the Obsidian Interface System above.
+Tailwind is the implementation layer for the whole interface: the home rails and chrome, static pages and the admin UI (ADR 006, which supersedes the earlier "static pages and future admin UI" scope; the home migrates by phases, see `docs/architecture.md`). It must follow the Obsidian Interface System above.
 
 Setup:
 
 - Tailwind v4 installed via `@tailwindcss/vite`.
-- Tokens defined in `src/index.css` using Tailwind v4 `@theme` (mirrors the Color Tokens section above).
+- Tokens defined in `src/styles/tokens.css` using Tailwind v4 `@theme`: colours (page, obsidian, night, ink, violet, steel, ice), type roles (`text-name`, `text-face-title`, `text-label`…), spacing, motion and the layout-mode variants (`desktop`, `desktop-short`, `stacked`, `narrow`…). `npm run check:tokens` fails on a colour literal outside it.
 - Three.js scene styling stays controlled by scene code and focused CSS — Tailwind does not improvise around the cube material or 3D scene.
 
 Token rules:
 
-- Use project tokens first (`obsidian-950/900/800`, `ice-300/100`, `mineral-500`, `copper-400`, `glass-line`).
+- Use project tokens first (`src/styles/tokens.css`); there is no other palette, Tailwind's default one is removed.
 - Avoid arbitrary colors unless there is a documented design reason.
 
 Usage rules:
 
-- Use Tailwind for static page layouts, typography, spacing, and future admin UI.
+- Use Tailwind for layout, typography, spacing and states across the interface; hand-written CSS only where utilities are poor (canvas, scrims, keyframes), commented with why.
 - Prefer reusable React components for repeated page patterns (planned components tracked in `docs/roadmap.md`).
 - Do not introduce generic SaaS/landing-page visual patterns.
 - Keep pages semantic and readable for recruiters and AI parsers.

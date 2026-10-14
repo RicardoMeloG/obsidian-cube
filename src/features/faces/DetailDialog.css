@@ -1,0 +1,54 @@
+/* The dialog's surface: a blurred backdrop, a layered panel and two corner
+   brackets, which read worse as utilities. In the components layer, so
+   utilities still override them. */
+@reference "../../index.css";
+
+@layer components {
+  .detail-dialog {
+    position: fixed;
+    color-scheme: dark;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--color-violet-500) 12%, transparent), transparent 38%),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-night-800) 96%, transparent),
+        color-mix(in srgb, var(--color-night-950) 98%, transparent)
+      );
+    box-shadow:
+      0 36px 120px color-mix(in srgb, var(--color-black) 72%, transparent),
+      0 0 56px color-mix(in srgb, var(--color-violet-500) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-ink-50) 9%, transparent);
+  }
+
+  .detail-dialog::backdrop {
+    background:
+      radial-gradient(circle at 50% 48%, color-mix(in srgb, var(--color-violet-500) 16%, transparent), transparent 34rem),
+      color-mix(in srgb, var(--color-obsidian-950) 72%, transparent);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+  }
+
+  .detail-dialog::before,
+  .detail-dialog::after {
+    position: absolute;
+    width: 2.8rem;
+    height: 2.8rem;
+    pointer-events: none;
+    content: '';
+  }
+
+  .detail-dialog::before {
+    top: 0.85rem;
+    left: 0.85rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-violet-300) 76%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--color-violet-300) 52%, transparent);
+    box-shadow: -8px -8px 28px color-mix(in srgb, var(--color-violet-500) 18%, transparent);
+  }
+
+  .detail-dialog::after {
+    right: 0.85rem;
+    bottom: 0.85rem;
+    border-right: 1px solid color-mix(in srgb, var(--color-violet-300) 52%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-violet-300) 76%, transparent);
+  }
+}

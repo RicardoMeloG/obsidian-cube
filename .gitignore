@@ -30,3 +30,9 @@ public/content/visual.json
 *.njsproj
 *.sln
 *.sw?
+
+# Private values the privacy check looks for (scripts/check-privacy.mjs)
+.privacy-denylist
+
+# Layout check evidence on failure (scripts/check-layout.mjs)
+layout-report/

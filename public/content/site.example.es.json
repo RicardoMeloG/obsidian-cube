@@ -4,11 +4,13 @@
     "displayName": "Portfolio Owner",
     "fullName": "Portfolio Owner",
     "handle": "your-handle",
-    "role": "Ingeniero de Productos Agénticos"
+    "role": "Ingeniero de Productos Agénticos",
+    "keywords": "AI Engineer · LLM agents · Python · AWS"
   },
   "seo": {
     "title": "Portfolio Agéntico | Ingeniero de Productos Agénticos",
-    "description": "Prototipo open source de portfolio agéntico para desarrollo asistido por IA, sistemas productivos, seguridad e investigación."
+    "description": "Prototipo open source de portfolio agéntico para desarrollo asistido por IA, sistemas productivos, seguridad e investigación.",
+    "image": "/og-image.jpg"
   },
   "hero": {
     "headline": "Ingeniero de productos agénticos construyendo software asistido por IA desde experiencia real en sistemas productivos.",
@@ -19,9 +21,10 @@
       "id": "agentic",
       "label": "AGÉNTICO",
       "title": "Productos Agénticos",
+      "eyebrow": "INGENIERÍA AGÉNTICA",
       "summary": "Diseño y construcción de <strong>sistemas autónomos</strong> que perciben, deciden y ejecutan acciones para generar <em>impacto real</em>.",
       "features": [
-        { "glyph": "eye", "label": "Visión Práctica", "description": "Agentes no para improvisar más, sino para convertir intención en resultados." },
+        { "glyph": "eye", "label": "Visión Práctica", "description": "Agentes que convierten la intención en resultados, no en improvisación." },
         { "glyph": "shield", "label": "Sistemas Verificables", "description": "Diseño con restricciones reales, observabilidad y decisiones auditables." },
         { "glyph": "rocket", "label": "Del Diseño a Producción", "description": "De prototipos rápidos a soluciones confiables y escalables." },
         { "glyph": "chart", "label": "Impacto Real", "description": "Soluciones que generan valor medible en el negocio y en las personas." }
@@ -49,6 +52,7 @@
       "id": "products",
       "label": "PRODUCTOS",
       "title": "Productos Públicos",
+      "eyebrow": "PRODUCTO ABIERTO",
       "summary": "Herramientas open source y experimentos de producto que demuestran ejecución, seguridad y usabilidad.",
       "features": [
         { "glyph": "rocket", "label": "Repositorio Principal", "description": "El proyecto que mejor muestra la dirección actual." },
@@ -86,6 +90,7 @@
       "id": "systems",
       "label": "SISTEMAS",
       "title": "Sistemas Productivos",
+      "eyebrow": "ARQUITECTURA",
       "summary": "Modernización legacy, bases de datos, arquitectura, dirección hacia cloud y restricciones operativas reales.",
       "features": [
         { "glyph": "shield", "label": "Modernización Legacy", "description": "Avanzar sin romper lo que ya funciona." },
@@ -116,6 +121,7 @@
       "id": "security",
       "label": "SEGURIDAD",
       "title": "Criterio de Seguridad",
+      "eyebrow": "CONTROL DE RIESGO",
       "summary": "Defaults seguros, MFA, rate limiting, validación y conciencia de riesgo productivo.",
       "features": [
         { "glyph": "lock", "label": "Defaults Seguros", "description": "Mínimo privilegio, sin secretos en el repo, releases firmados." },
@@ -146,6 +152,7 @@
       "id": "research",
       "label": "INVESTIGACIÓN",
       "title": "Investigación Independiente",
+      "eyebrow": "INVESTIGACIÓN",
       "summary": "Filosofía aplicada a IA: distinguir salida de verdad, representación de realidad y conducta de agencia.",
       "features": [
         { "glyph": "eye", "label": "Verdad", "description": "Criterios para que una representación responda ante lo real." },
@@ -206,6 +213,7 @@
       "id": "contact",
       "label": "CONTACTO",
       "title": "Contacto",
+      "eyebrow": "CONTACTO",
       "summary": "Links profesionales y canales de contacto para colaboración y oportunidades.",
       "features": [
         { "glyph": "spark", "label": "Nombre Público", "description": "Usar el nombre completo buscable como referencia." },

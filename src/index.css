@@ -1,58 +1,60 @@
 @import 'tailwindcss';
+@import './styles/tokens.css';
 
-@theme {
-  --color-obsidian-950: #020307;
-  --color-obsidian-900: #05070d;
-  --color-obsidian-800: #090d14;
-  --color-ice-300: #9acbf2;
-  --color-ice-100: #eef7ff;
-  --color-mineral-500: #8a97a6;
-  --color-copper-400: #c08b5a;
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
+/* Base styles sit in the base layer, under the utilities, so a component's
+   utilities always win over them. */
+@layer base {
+  :root {
+    font-family: var(--font-sans);
+    color: var(--color-page-ink);
+    background: var(--color-page);
+    /* Only Inter's upright file is served (first-view budget); the browser slants
+       it for the few <em> in rich text. Bold is never synthesised. */
+    font-synthesis: style;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-:root {
-  --ink: #eef3f8;
-  --paper: #03050b;
-  --muted: #8a97a6;
-  --line: rgba(222, 232, 242, 0.14);
-  --warm: #c08b5a;
-  --cool: #92c7e9;
-  --violet: #8f7ad6;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
-  color: var(--ink);
-  background: var(--paper);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  * {
+    box-sizing: border-box;
+  }
 
-* {
-  box-sizing: border-box;
-}
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: 100%;
+    min-height: 100%;
+    background: var(--color-page);
+  }
 
-html,
-body,
-#root {
-  width: 100%;
-  max-width: none;
-  min-width: 0;
-  height: 100%;
-  min-height: 100%;
-  background: var(--paper);
-}
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
 
-body {
-  margin: 0;
-  overflow: hidden;
-}
+  /* Stacked layouts scroll: the cube is a hero at the top that scrolls away
+     with the content; only the face strip stays fixed at the bottom. */
+  @variant stacked {
+    html,
+    body,
+    #root {
+      height: auto;
+      min-height: 100%;
+    }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+    body {
+      overflow: visible;
+    }
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
 }

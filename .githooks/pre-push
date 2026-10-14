@@ -1,0 +1,4 @@
+#!/bin/sh
+# Privacy check before anything leaves the machine (spec 010, H-08a).
+# Enable once per clone: git config core.hooksPath .githooks
+npm run --silent check:privacy

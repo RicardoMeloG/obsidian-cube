@@ -4,10 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- seo:head — title, description, share preview and JSON-LD, rendered at build time from the site content (src/kernel/seo/renderSeo.ts) -->
     <title>Obsidian Cube</title>
+    <!-- /seo:head -->
+    <!-- No inline script or style: the content security policy allows only
+         files from this site (infra/security-headers.json). -->
+    <script src="/js-flag.js"></script>
+    <link rel="stylesheet" href="/seo-fallback.css" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!-- seo:body --></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

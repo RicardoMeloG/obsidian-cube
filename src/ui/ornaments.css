@@ -1,0 +1,35 @@
+/* Layered gradients and glows of the ui primitives. Hand-written because a
+   background that stacks a gradient over a colour, and a shadow that stacks a
+   glow over an inner highlight, read worse as arbitrary utilities. In the
+   components layer, so utilities still override them. */
+@reference "../index.css";
+
+@layer components {
+  .glyph-tile {
+    background:
+      linear-gradient(135deg, var(--accent-faint), transparent 70%),
+      color-mix(in srgb, var(--color-night-900) 78%, transparent);
+    box-shadow:
+      0 0 18px var(--accent-glow),
+      inset 0 1px 0 color-mix(in srgb, var(--color-ink-200) 6%, transparent);
+  }
+
+  .pill {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-night-800) 84%, transparent),
+      color-mix(in srgb, var(--color-night-950) 92%, transparent)
+    );
+    box-shadow:
+      0 0 24px var(--accent-glow),
+      inset 0 1px 0 color-mix(in srgb, var(--color-ink-200) 8%, transparent);
+  }
+
+  .pill:hover {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-night-700) 92%, transparent),
+      color-mix(in srgb, var(--color-night-950) 94%, transparent)
+    );
+  }
+}

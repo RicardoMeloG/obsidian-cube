@@ -9,26 +9,30 @@ The project is an open-source, public, agentic portfolio prototype for Ricardo M
 A review on 2026-10-09 found the engineering well ahead of the product: the site was not yet published and no face linked to a real artifact, so the priority moved from the container to the content. Full reasoning in `docs/decisions/002-evidence-before-spectacle.md`.
 
 - **Evidence before spectacle.** The cube is the invitation, not the proof. What makes the owner stand out is inspectable work: every face must link to at least one concrete artifact (repo, demo, write-up) with one line of result.
-- **Publish before building more.** No further infrastructure, admin features or 3D worlds until the site is live with real identity and real links.
+- **Stages, in order; build nothing more until the release.** The path to the first public release is normalization, then content, then release; a stage starts only when the previous one met its exit criteria, and its decisions are taken at its entry (`docs/decisions/007-staged-path-to-publishing.md`). Normalizing the existing code to the declared architecture is not building more: the public repository is evidence too. New features, infrastructure, admin functions or 3D worlds wait until the site is live.
 - **The site is its own case study.** The methodology deep-dive explains how this site was built with agents: decisions, gates, what went wrong. It is the one page that aligns the cube with the positioning.
-- **Name and thesis at the top of the hierarchy.** The owner's name and role must be the most prominent text on screen, above the cube's own label.
+- **Name first, message largest.** The owner's name and role are the first text a visitor reads: top-left, the page's `h1`, never covered, AA contrast. The face title stays the largest text, because two headlines of equal weight compete; the name wins by position and contrast, not size.
 - **Backgrounds must be perceivable.** A world that cannot be seen in a static frame behind the cube is not doing its retention job.
 
-Priority order: (1) real content and publish, (2) one artifact per face, (3) methodology page and static SEO, (4) thesis/presentation state, (5) admin hardening and admin-to-deploy-target publishing, (6) cleanup. `docs/roadmap.md` carries the detail.
+**Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository. In production it reaches the site through the admin, which moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`); how it reaches production for the first release is decision D-6, taken at the entry of the release stage.
+
+Stages (ADR 007): (1) normalization, spec 010 P2b–P4 and the developer-facing docs; (2) content, the face set, one artifact per face and the real copy; (3) release. After the release: methodology page (unless D-8 brings it into the release), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility and composition variety. `docs/roadmap.md` carries the detail.
 
 ## Identity
 
 - Public display name: Ricardo Melo
 - SEO/legal full name: Ricardo Hernan Melo Gallardo
-- Technical handle: OlemOdracir
+- Technical handle: RicardoMeloG
 - Primary positioning: Agentic Product Engineer
 - Secondary positioning: Senior Software Engineer, AI-assisted product builder, open-source tool builder
 
 ## Audience
 
+Evidence and segments behind this list: `docs/visitor-profile.md` (2026-10-10). Machines that read raw HTML are the largest audience; most AI crawlers do not execute JavaScript.
+
 1. **Recruiters / hiring managers**: must understand in under 30 seconds what Ricardo is becoming professionally, why his senior systems background matters, what he can build with agentic workflows, and how to contact him.
 2. **AI / recruiter systems**: indexable, semantic HTML with clear keywords (Agentic Product Engineer, AI-assisted development, React, TypeScript, Python, PostgreSQL, AWS, Security, Legacy modernization, Open source, Production systems).
-3. **Developers** (secondary): inspect the repo and find clear architecture, reproducible setup, design rules, and a professional commit/spec history.
+3. **Developers and technical hiring managers**: inspect the repo and find clear architecture, reproducible setup, design rules, and a professional commit/spec history. The repository is evidence, not an appendix (ADR 007).
 
 ## Narrative
 
@@ -99,7 +103,7 @@ Design:
 - The cube is the persistent focal element; selecting a face updates side panels in place — the cube does not disappear.
 - Each face's primary content must fit a single viewport on desktop without scroll, and collapse responsively on narrow viewports.
 - All six cube faces share the same frame; accent color and inner glyph vary per face, nothing else.
-- The owner's name and role are the top of the visual hierarchy on every face and must meet AA contrast.
+- The owner's name and role are the first text read on every face (top-left, `h1`, not covered by any layer) and must meet AA contrast; the face title may be larger.
 - Fixed chrome (face strip, identity block, language toggle) never overlaps scrolling content on narrow viewports.
 - Do **not** use `Bloom` in production — it caused visible flicker.
 - Do **not** add auto-playing audio. Audio is gesture-driven and subtle.
@@ -113,24 +117,44 @@ Stack (do not change without a spec justifying it):
 
 - React + TypeScript + Vite (public site, `src/`)
 - Three.js / @react-three/fiber for 3D
-- Tailwind v4 with project tokens (see `docs/visual-direction.md`)
+- Tailwind v4 with project tokens (see `docs/visual-direction.md`; styling rules in ADR 006)
 - Zod for content schema validation — the same schemas are shared by the site and the admin
-- NestJS admin API plus a vanilla admin page (`server/`), Postgres via `docker-compose.yml` for drafts, versions and admin users; `npm run server` on `127.0.0.1:5182`
+- Admin in production (ADR 004, in progress): static page under `/admin/`, Amazon Cognito User Pool (TOTP MFA, managed login, code + PKCE), API Gateway HTTP API with a Cognito JWT authorizer, one Lambda, S3 for published content, drafts and versions. No database in the cloud.
+- Admin locally until ADR 004 is complete: NestJS API plus a vanilla admin page (`server/`), Postgres via `docker-compose.yml`; `npm run server` on `127.0.0.1:5182`. Retired once the Lambda path covers every operation.
 - AWS CDK (`infra/`): private S3 + CloudFront with OAC, deployed by GitHub Actions over OIDC (`docs/deploy-aws.md`)
 
-Before reporting a change complete:
+Before reporting a change complete (definition of done; items marked with a phase start when that phase of `specs/010-architecture` lands):
 
-1. Run `npm run build` (passes).
-2. Run `npm run lint` (passes).
-3. Run `npm test` (passes).
-4. Verify visually with Playwright when the change is visual: desktop at 1440px or wider and a 390px phone.
-5. Keep changes scoped to one product hito per commit.
+1. `npm run build`, `npm run lint` (site and server), `npm run typecheck:server` and `npm test` pass.
+2. `npm run check:budget`, `npm run check:privacy`, `npm run check:docs` and `npm run check:tokens` pass.
+3. `npm run check:layout` passes: no layout or accessibility failure beyond the known ones in `scripts/checks/layout-known.json`. A fix removes its entry; a new entry needs a reason in the commit.
+4. The pre-push hook is enabled (`git config core.hooksPath .githooks`).
+5. Visual changes are verified with Playwright: desktop at 1440px or wider, a short desktop (1366×768) and a 390px phone.
+6. `docs/architecture.md` is updated in the same change when a boundary, flow or rule status changes.
+7. Changes stay scoped to one product hito per commit.
 
 Admin and backend rules:
 
-- The admin binds to `127.0.0.1` and stays there until it has login rate limiting, `secure` cookies behind HTTPS and a persistent session store. Password + TOTP MFA are already required.
-- "Publish" must reach the deploy target. Today it writes `public/content/*.json` on the server's disk, which only the local dev site reads. Before the admin is called production, publish must also upload to the static bucket and invalidate the CDN.
-- Backend changes ship with tests against `pg-mem` (installed, unused as of 2026-10-09).
+- The custom login (bcrypt + TOTP in `server/auth/`) never leaves `127.0.0.1`. Authentication in production is Cognito's; do not add homegrown auth to the cloud path (ADR 004).
+- The owner's personal data (email, admin user) is never written in code or committed; the Cognito user is created out of band.
+- "Publish" must reach the deploy target: validate, write to the site bucket under `content/`, invalidate `/content/*`. The local NestJS publish writes to disk only and is not production.
+- Code deploys never delete or overwrite private content: `deploy.yml` excludes `content/*` from the deleting sync and uploads hashed `assets/` without deleting old ones (spec 010, AD-11; gated by `scripts/checks/deployWorkflow.test.ts`).
+- Admin backend logic lives in plain functions tested with Vitest against an S3 stub.
+
+## Architecture Rules
+
+The overview, the module map and the status of every rule (in force, or the phase that brings it) are in `docs/architecture.md`; the reasoning is in ADR 005, ADR 006 and `specs/010-architecture/`. Read `docs/architecture.md` before changing code. In short:
+
+- **Content kernel** (`src/kernel/`): schemas, catalog, defaults, example content, SEO renderer, layout budgets. Pure TypeScript, no DOM, depends on `zod` only. The admin server imports the kernel and nothing else from `src/`.
+- **Scene and DOM are separate.** Scene code (R3F, three) and DOM features never import each other; they meet in the experience store (`src/features/experience`): typed events, a pure reducer, `useExperience(selector)`. Module boundaries are lint rules; imports across modules use `@/`.
+- **Styling.** Tailwind utilities with the tokens and layout-mode variants of `src/styles/tokens.css`; reusable pieces in `src/ui/`. Hand-written CSS only for what utilities express poorly (scrims, choreography, layered gradients), next to its component, in the `components` layer, commented with why; the one exception outside a layer is the intro choreography (`src/app/intro.css`), which must win over the elements' own transitions. No colour literal outside the tokens (`check:tokens`).
+- **Layout modes** come from one source, `src/styles/layoutModes.ts`: three modes, `stacked`, `desktop`, `desktop-short` (height ≤ 900px, compact rhythm), and six width refinements inside them (`stacked-wide`, `tight`, `narrow`, `phone`, `phone-small`, `tiny`; see `docs/architecture.md`). No numeric breakpoints or loose width variants in components; Tailwind's own breakpoints are removed, and a test keeps CSS and JavaScript equal.
+- **Content budgets** (`src/kernel/layoutBudgets.json`, visible characters and item counts) and link rules are publish rules: the admin refuses content that would not fit or links nowhere; the site renders with the tolerant schema. Change a budget only with a layout check run that proves the stress content still fits.
+- **Security headers** come from `infra/security-headers.json`: CloudFront serves them (the content security policy as report-only until it has run clean in production) and `vite preview` enforces them, so the layout check fails on any violation. No inline script or style in `index.html` (a test): the policy has no hashes.
+- **No blank page.** Without WebGL the scene is replaced by a still image (`hasWebGL`); a scene or world error is contained by `src/lib/ErrorBoundary`. The name, rails and strip are DOM and always stay.
+- **Interface copy** (labels, hints, `aria-label`s) comes from `src/features/content/copy.ts`; interface code never compares locales.
+- **Size.** DOM-layer files have at most 250 lines (a test); a component that grows past it is doing more than one thing.
+- **Unchecked rules** (review only) say so where they are written.
 
 ## Content Strategy
 
@@ -148,7 +172,7 @@ Content files (paths):
 - Private deploy (gitignored): `public/content/site.en.json`, `public/content/site.es.json`
 - Visual layer, world and accent per face: `public/content/visual.example.json` (committed) / `public/content/visual.json` (gitignored)
 
-Loading order: try private → fall back to example → fall back to embedded defaults. Validate shape (Zod) before rendering. Prose fields accept inline HTML only, sanitized at render time by `sanitizeRichText` (no block tags, no Markdown).
+Loading order: the private document if present and valid, otherwise the example, which is bundled as the defaults; a field a published face leaves empty comes from the example in the same language. Validate shape (Zod) before rendering. Prose fields accept inline HTML only, sanitized at render time by `sanitizeRichText` (no block tags, no Markdown).
 
 Face content shape (primary scene, must stay minimal):
 
@@ -157,7 +181,7 @@ Face content shape (primary scene, must stay minimal):
 - `flowTitle` + `flow`: 4 short procedural steps for the right rail
 - `ctaPrimary` + `ctaSecondary` — at least one of them, or one `detail.links` entry, must carry a real `href` to an artifact
 - `label` (the face name on the cube and the bottom strip): 13 characters at most — "INVESTIGACIÓN" is the ceiling that fits the 320px strip without clipping
-- `researchConcepts` (RESEARCH face only): the side panel shows the first 4; extra entries are silently ignored
+- `researchConcepts` (RESEARCH face only): 4 at most, the number the side panel shows (a publish rule)
 - Copy must name concrete things (a tool, a system, a result). Generic consultancy phrasing ("real impact", "practical vision") is a defect, not content.
 
 Extended content (`detail.title`, `detail.summary`, `detail.points`, `detail.links`) is for the modal — not the rails. Full essays and project archives belong on future deep-dive routes.
@@ -174,11 +198,20 @@ Privacy:
 - README must explain setup, content strategy, and project intent.
 - Use specs (see `specs/`) for large changes.
 
+## Working Method
+
+Large changes follow: spec (`specs/NNN-*/`) → independent audit by an agent without prior context, recorded next to the spec → revision → build → gates → visual verification → Conventional Commit. The method is part of what the site presents as its own case study; `specs/010-architecture/audit-1.md` is the first record. Unchecked: enforced by review.
+
 ## Commits
 
 - Commit only coherent milestones.
 - Commit messages describe the product hito, not the file diff.
 - Do not mix unrelated refactors with feature changes.
+- Messages follow Conventional Commits: `type(scope): summary`, lowercase after the colon except proper names (AWS, Cognito), no trailing period.
+- Language: the summary and body are written in Spanish; types, scopes and footers (`BREAKING CHANGE:`, `Co-Authored-By:`) stay in English because tooling reads them. Example: `feat(cube): intro de primera visita e invitación a girar`.
+  - Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`.
+  - Scopes are optional; reuse the existing ones: `cube`, `admin`, `content`, `infra`, `a11y`, `mobile`.
+  - A breaking change to the content schema or a public contract adds `!` after the type and a `BREAKING CHANGE:` footer.
 
 ## MVP Definition
 
@@ -189,18 +222,21 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, stacked rails, fixed face strip at the viewport bottom with the content padded above it.
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
-- [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet.
-- [ ] Static SEO in `index.html` (`<title>`, description, JSON-LD) — the title is still the scaffold placeholder, fixed at runtime only.
-- [ ] README explains the agentic process and architecture — it covers the site, not the admin or the infra.
+- [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
+- [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`. CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
+- [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [ ] Real identity and at least one real artifact per face, live at a public URL.
-- [x] `npm run build`, `npm run lint` and `npm test` pass.
+- [x] The CI gates pass (build, lint, types, tests, budget, privacy, docs, layout).
 
 ## Other References (load on demand)
 
 - `docs/visual-direction.md` — design system (materials, color, motion, layout, tokens)
 - `docs/project-memory.md` — owner direction that must survive across sessions (future-state positioning, presentation layer, market reframing)
 - `docs/roadmap.md` — phase status, known gaps, priority order
-- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph)
+- `docs/architecture.md` — code architecture overview, module map, flows and the status of every rule
+- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture, 007 normalize before publishing)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
+- `docs/assets.md` — source and licence of every public asset
+- `docs/visitor-profile.md` — who visits, with sources: recruiters, hiring managers, peers, AI crawlers, link previews, sourcing tools
 - `docs/research-philosophy.md` — content brief for the RESEARCH face (what of the private archive may be shown)
 - `specs/NNN-*/` — feature specs (lightweight markdown; Spec Kit drafts 002/003 kept as input)

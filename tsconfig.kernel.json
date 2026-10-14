@@ -1,0 +1,24 @@
+{
+  // Kernel purity gate (ADR 005): src/kernel must compile without the DOM
+  // library, so it runs unchanged in the browser, in Node (admin, Vite
+  // config) and in a Lambda.
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.kernel.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "esnext",
+    "types": [],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src/kernel"],
+  "exclude": ["src/kernel/**/*.test.ts"]
+}

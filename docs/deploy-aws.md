@@ -16,10 +16,15 @@ GitHub Actions ──(OIDC)──> AWS
 - **S3**: private bucket (all public access blocked, SSE-S3, TLS enforced). Never
   served directly.
 - **CloudFront**: fronts the bucket via Origin Access Control; redirects to HTTPS;
-  serves `index.html` for 403/404 so client-side routing works.
-- **CI/CD**: `.github/workflows/ci.yml` (lint/test/build + `cdk synth`) and
-  `deploy.yml` (build → `aws s3 sync` → CloudFront invalidation), authenticating
-  with a short-lived **OIDC role** — no long-lived AWS keys in GitHub.
+  serves `index.html` for 403/404 so client-side routing works (to be removed in
+  the release stage, spec 010 AD-09); adds the security headers of
+  `infra/security-headers.json` (content security policy report-only until it
+  has run clean in production; set `reportOnly` to `false` to enforce it).
+- **CI/CD**: `.github/workflows/ci.yml` (every gate listed in
+  `docs/architecture.md`, plus `cdk synth`) and `deploy.yml` (on demand, or
+  after a green CI run on main: build → `aws s3 sync` → CloudFront
+  invalidation), authenticating with a short-lived **OIDC role**, with no
+  long-lived AWS keys in GitHub.
 
 Defined in `infra/` with the **AWS CDK (TypeScript)**.
 
@@ -55,6 +60,6 @@ npm run synth   # generates CloudFormation into cdk.out/ — fully offline
 
 ## Not yet included
 
-- RDS/Aurora Postgres + admin backend deploy (Fargate/Lambda).
-- Custom domain + ACM certificate (CloudFront currently serves its default domain).
-- Cognito / WAF.
+- Custom domain + ACM certificate (CloudFront currently serves its default domain; decision D-7, release stage).
+- Cognito-authenticated admin (HTTP API + Lambda + S3, no database in the cloud), decided in ADR 004, built after the release.
+- WAF.

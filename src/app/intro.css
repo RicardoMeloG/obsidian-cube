@@ -1,0 +1,41 @@
+/* First-visit intro (specs/009-cube-intro): the interface waits while the cube
+   falls, then appears in order after the landing — name, rails, strip and
+   language switch, then the rotate hint. Driven by `data-intro` on the page.
+
+   Deliberately outside any cascade layer: unlayered CSS wins over Tailwind's
+   layers, and the choreography must win over each element's own transition
+   utilities while it runs, as it did before the migration. `translate` (not
+   `transform`) so it never collides with transforms those elements use. */
+
+.experience-shell[data-intro] :is(.identity-chrome, .face-rails, .face-strip, .language-toggle) {
+  transition:
+    opacity 700ms var(--ease-obsidian),
+    translate 700ms var(--ease-obsidian),
+    visibility 0s linear;
+}
+
+.experience-shell[data-intro='pending'] :is(.identity-chrome, .face-rails, .face-strip, .language-toggle) {
+  opacity: 0;
+  translate: 0 0.5rem;
+  visibility: hidden;
+}
+
+.experience-shell[data-intro='reveal'] .identity-chrome {
+  transition-delay: 100ms;
+}
+
+.experience-shell[data-intro='reveal'] .face-rails {
+  transition-delay: 350ms;
+}
+
+.experience-shell[data-intro='reveal'] :is(.face-strip, .language-toggle) {
+  transition-delay: 600ms;
+}
+
+.experience-shell[data-intro='pending'] .cube-hint {
+  opacity: 0;
+}
+
+.experience-shell[data-intro='reveal'] .cube-hint {
+  transition-delay: 1100ms;
+}

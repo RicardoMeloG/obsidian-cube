@@ -27,3 +27,7 @@ Per-face accent color and inner glyph are the rule, not an experiment.
 - The visual layer (`visual.json`, admin "Presentación" section) is a first-class part of the product, not a debug surface.
 - Any new face treatment is a change to the glyph or accent, never to the frame.
 - The "OBSIDIAN CUBE" subtitle on every face is kept by this ADR but questioned by ADR 002 (it outranks the owner's name in the hierarchy). A later ADR may replace it with the owner's name or remove it.
+
+## Later notes
+
+- 2026-10-13: `cubeSections.ts` no longer exists. The face catalog is `src/kernel/faces.ts` (ADR 005) and the default accents are `public/content/visual.example.json`, which the kernel reads (spec 010, audit-2 B-12).

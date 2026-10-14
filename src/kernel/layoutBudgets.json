@@ -1,0 +1,30 @@
+{
+  "chars": {
+    "label": 13,
+    "eyebrow": 24,
+    "title": 28,
+    "summary": 112,
+    "featureLabel": 24,
+    "featureDescription": 72,
+    "flowTitle": 20,
+    "flowLabel": 12,
+    "flowDescription": 68,
+    "ctaLabel": 20,
+    "conceptAxis": 16,
+    "conceptLabel": 18,
+    "conceptSummary": 60
+  },
+  "counts": {
+    "features": {
+      "min": 3,
+      "max": 4
+    },
+    "flow": {
+      "min": 3,
+      "max": 4
+    },
+    "researchConcepts": {
+      "max": 4
+    }
+  }
+}

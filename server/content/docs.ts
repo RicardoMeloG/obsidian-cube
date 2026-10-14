@@ -1,10 +1,11 @@
 import type { ZodType } from 'zod'
-import { SiteContentSchema } from '../../src/features/premium-cube/content/siteContent'
-import { VisualContentSchema } from '../../src/features/premium-cube/content/visualContent'
+import { PublishableSiteContentSchema } from '../../src/kernel/publishRules'
+import { VisualContentSchema } from '../../src/kernel/visualContent'
 
-// The three editable documents. Each maps to the SAME Zod schema the frontend
-// validates against, plus its published file and a committed example used as the
-// first-load fallback. This whitelist is also the path-traversal guard: only
+// The three editable documents. Each maps to the kernel schema the frontend
+// renders with — for the site documents, plus the publish rules (layout budgets,
+// links, no placeholders) — its published file and a committed example used as
+// the first-load fallback. This whitelist is also the path-traversal guard: only
 // these ids ever reach the filesystem.
 export type DocId = 'site.en' | 'site.es' | 'visual'
 
@@ -22,14 +23,14 @@ export const DOCS: Record<DocId, DocDescriptor> = {
     label: 'Contenido — Inglés (EN)',
     file: 'site.en.json',
     example: 'site.example.en.json',
-    schema: SiteContentSchema,
+    schema: PublishableSiteContentSchema,
   },
   'site.es': {
     id: 'site.es',
     label: 'Contenido — Español (ES)',
     file: 'site.es.json',
     example: 'site.example.es.json',
-    schema: SiteContentSchema,
+    schema: PublishableSiteContentSchema,
   },
   visual: {
     id: 'visual',

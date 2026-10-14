@@ -1,0 +1,26 @@
+/* The strip's backdrop: two stacked gradients, which read worse as utilities.
+   Desktop: a fade from transparent, so the field shows through the top of the
+   strip. Stacked: a nearly solid bar above the scrolling page. In the
+   components layer, so utilities still override it. */
+@reference "../../index.css";
+
+@layer components {
+  .strip-backdrop {
+    background:
+      linear-gradient(
+        180deg,
+        transparent,
+        color-mix(in srgb, var(--color-obsidian-950) 64%, transparent) 36%,
+        color-mix(in srgb, var(--color-obsidian-950) 88%, transparent)
+      ),
+      linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-violet-500) 8%, transparent), transparent);
+
+    @variant stacked {
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-obsidian-950) 92%, transparent),
+        color-mix(in srgb, var(--color-obsidian-950) 99%, transparent)
+      );
+    }
+  }
+}

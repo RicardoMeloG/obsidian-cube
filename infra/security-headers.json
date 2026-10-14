@@ -1,0 +1,20 @@
+{
+  "//": "Security headers of the public site (spec 010, 5.13). One source: the CDK stack serves them from CloudFront and vite preview applies them, so the layout check runs the built site under the same policy. reportOnly sends the policy as Content-Security-Policy-Report-Only until it has run in production without reports; vite preview always enforces it.",
+  "reportOnly": true,
+  "contentSecurityPolicy": {
+    "default-src": ["'self'"],
+    "script-src": ["'self'"],
+    "style-src": ["'self'"],
+    "img-src": ["'self'", "data:", "blob:"],
+    "font-src": ["'self'"],
+    "connect-src": ["'self'"],
+    "media-src": ["'self'"],
+    "worker-src": ["'self'", "blob:"],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"]
+  },
+  "strictTransportSecuritySeconds": 63072000,
+  "referrerPolicy": "strict-origin-when-cross-origin"
+}
