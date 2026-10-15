@@ -1,7 +1,8 @@
 /* The stage (spec 011): shell, top bar, content grid, shared blocks, hint and
    dock; each template's placement lives next to it in templates/. Everything
    is sized in em from the stage's font size, which follows the viewport, so
-   one composition holds from 1366×768 to 1920×1080. Colours come from the tokens and the face accent. */
+   one composition holds from 1366×768 to 1920×1080. Colours come from the
+   tokens and the face accent. Stacked screens: see "The hero" at the end. */
 @reference "../../index.css";
 
 @layer components {
@@ -526,29 +527,155 @@
     content: '';
     background: linear-gradient(90deg, var(--accent), transparent);
   }
-}
 
-/* Intro (outside the layers, like src/app/intro.css): the stage waits while
-   the cube falls, then appears in order. */
-.experience-shell[data-intro] :is(.stage-top, .stage-content, .stage-dock) {
-  transition:
-    opacity 700ms var(--ease-obsidian),
-    translate 700ms var(--ease-obsidian),
-    visibility 0s linear;
-}
+  /* ── The hero (stacked screens) ──────────────────────────────
+     The cube on top in its own box (the shell), the top bar over it, the
+     face's composition below in reading order, one column, and the dock
+     fixed at the bottom. The page scrolls; nothing is pinned to the cube. */
+  .stage {
+    @variant stacked {
+      --edge: 1rem;
+      position: static;
+      z-index: auto;
+      display: block;
+      padding: 0 var(--edge) 6.5em;
+      pointer-events: auto;
+      font-size: clamp(13px, 3.4vw, 16px);
+    }
 
-.experience-shell[data-intro='pending'] :is(.stage-top, .stage-content, .stage-dock) {
-  opacity: 0;
-  translate: 0 0.5rem;
-  visibility: hidden;
-}
+    @variant phone {
+      padding-bottom: 9em;
+    }
+  }
 
-.experience-shell[data-intro='reveal'] .stage-content {
-  transition-delay: 450ms;
-}
+  .stage::before {
+    @variant stacked {
+      display: none;
+    }
+  }
 
-.experience-shell[data-intro='reveal'] .stage-dock {
-  transition-delay: 700ms;
+  .stage-top {
+    @variant stacked {
+      top: 1rem;
+      z-index: 6;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.8em;
+    }
+  }
+
+  /* A veil behind the top bar, so a long name wrapping over the cube's top
+     still reads at AA (the layout check measures it). */
+  .stage-top::before {
+    @variant stacked {
+      position: absolute;
+      inset: -1rem calc(var(--edge) * -1) auto;
+      z-index: -1;
+      height: calc(100% + 2.5rem);
+      pointer-events: none;
+      content: '';
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-night-950) 86%, transparent),
+        color-mix(in srgb, var(--color-night-950) 62%, transparent) 62%,
+        transparent
+      );
+    }
+  }
+
+  .stage-explore,
+  .stage-hint {
+    @variant stacked {
+      display: none;
+    }
+  }
+
+  /* Phones show the icons only; the label stays for assistive technology. */
+  .stage-link > span {
+    @variant phone {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  .stage-link {
+    @variant phone {
+      padding: 0 0.7em;
+    }
+  }
+
+  .stage-locale {
+    @variant phone {
+      margin-left: 0.2em;
+    }
+  }
+
+  .stage-content {
+    @variant stacked {
+      position: static;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
+      gap: 1em;
+      max-width: 46rem;
+      margin: 1.4em auto 0;
+    }
+  }
+
+  .stage .stage-content > * {
+    @variant stacked {
+      max-height: none;
+      overflow: visible;
+    }
+  }
+
+  .stage-dock {
+    @variant stacked {
+      position: fixed;
+      right: 0.5rem;
+      bottom: max(0.5rem, env(safe-area-inset-bottom));
+      left: 0.5rem;
+      z-index: 20;
+      padding: 0.35em 0.4em;
+      background: color-mix(in srgb, var(--color-night-950) 92%, transparent);
+    }
+  }
+
+  .stage-dock ul {
+    /* Phones: two rows of three, nothing clipped, nothing to scroll. */
+    @variant phone {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      row-gap: 0.2em;
+    }
+  }
+
+  .stage-dock ul > li + li {
+    @variant phone {
+      border-left: 0;
+    }
+  }
+
+  .stage-dock__item {
+    @variant stacked {
+      gap: 0.5em;
+      padding: 0.4em 0.5em;
+    }
+  }
+
+  .stage-dock__icon {
+    @variant stacked {
+      width: 2em;
+      height: 2em;
+    }
+  }
+
+  .stage-dock__text small {
+    @variant stacked {
+      display: none;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,21 +1,28 @@
-/* Stage template `showcase` (spec 011, AD-01): placement on the stage's
-   12-column grid and the blocks particular to it. */
+/* Stage template `showcase` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
 @reference "../../../index.css";
 
 @layer components {
   .sh-left {
-    grid-column: 1 / span 5;
-    align-self: center;
     gap: 0.65em;
     padding-block: 1em;
+
+    @variant desktop {
+      grid-column: 1 / span 5;
+      align-self: center;
+    }
   }
 
   .sh-right {
-    grid-column: 8 / span 5;
-    align-self: center;
     display: flex;
     flex-direction: column;
     gap: 0.9em;
+
+    @variant desktop {
+      grid-column: 8 / span 5;
+      align-self: center;
+    }
   }
 
   .sh-featured {

@@ -27,19 +27,6 @@
       "title": "Agentic Product Engineering",
       "eyebrow": "Positioning",
       "summary": "Design and construction of <strong>autonomous systems</strong> that perceive, decide, and act to deliver <em>real impact</em>.",
-      "features": [
-        { "glyph": "eye", "label": "Practical Vision", "description": "Agents that turn intent into measurable results." },
-        { "glyph": "shield", "label": "Verifiable Systems", "description": "Real constraints, observability, auditable decisions." },
-        { "glyph": "rocket", "label": "Design to Production", "description": "Fast prototypes to reliable, scalable solutions." },
-        { "glyph": "chart", "label": "Real Impact", "description": "Value measurable in business and in people." }
-      ],
-      "flowTitle": "AGENTIC FLOW",
-      "flow": [
-        { "label": "SPECIFY", "description": "Define objective, context, and verifiable constraints." },
-        { "label": "PROTOTYPE", "description": "Build fast, iterate with real data, validate assumptions." },
-        { "label": "VERIFY", "description": "Measure, test, ensure the agent meets its purpose." },
-        { "label": "SHIP", "description": "Deploy with monitoring, traceability, and continuous control." }
-      ],
       "ctaPrimary": { "label": "EXPLORE APPROACH" },
       "ctaSecondary": { "label": "VIEW METHODOLOGY" },
       "detail": {
@@ -102,19 +89,6 @@
       "title": "Public Products",
       "eyebrow": "Open Source",
       "summary": "Open-source tools and product experiments that demonstrate execution, safety, and usability.",
-      "features": [
-        { "glyph": "rocket", "label": "Main Repository", "description": "The project that best shows current direction." },
-        { "glyph": "spark", "label": "This Prototype", "description": "The site itself as evidence of the workflow." },
-        { "glyph": "eye", "label": "Design Judgment", "description": "Choices made under real constraints, not on a whiteboard." },
-        { "glyph": "chart", "label": "Maintainability", "description": "Code that survives past the demo." }
-      ],
-      "flowTitle": "RELEASE FLOW",
-      "flow": [
-        { "label": "SCOPE", "description": "Pick what is worth shipping and what is not." },
-        { "label": "BUILD", "description": "Working software over polished promises." },
-        { "label": "HARDEN", "description": "Tests, docs, error paths, observability." },
-        { "label": "PUBLISH", "description": "Open the artifact and own its evolution." }
-      ],
       "ctaPrimary": { "label": "OPEN REPOSITORY", "href": "https://github.com/your-handle/your-project" },
       "ctaSecondary": { "label": "VIEW PROJECTS" },
       "detail": {
@@ -210,19 +184,6 @@
       "title": "Production Systems",
       "eyebrow": "Architecture",
       "summary": "Legacy modernization, databases, architecture, cloud direction, and real operational constraints.",
-      "features": [
-        { "glyph": "shield", "label": "Legacy Modernization", "description": "Move forward without breaking what already works." },
-        { "glyph": "spark", "label": "Data and Integrations", "description": "Schemas, contracts, and reliable boundaries." },
-        { "glyph": "rocket", "label": "Cloud Direction", "description": "A pragmatic path toward serverless and managed services." },
-        { "glyph": "chart", "label": "Operational Continuity", "description": "Uptime, runbooks, and humane on-call." }
-      ],
-      "flowTitle": "DELIVERY FLOW",
-      "flow": [
-        { "label": "OBSERVE", "description": "See the real system before changing it." },
-        { "label": "CONTAIN", "description": "Stabilize the riskiest seams first." },
-        { "label": "EVOLVE", "description": "Incremental rewrites under feature flags." },
-        { "label": "OPERATE", "description": "Logs, metrics, traces, and clear ownership." }
-      ],
       "ctaPrimary": { "label": "VIEW ARCHITECTURE" },
       "ctaSecondary": { "label": "CASE STUDIES" },
       "detail": {
@@ -278,19 +239,6 @@
       "title": "Security Mindset",
       "eyebrow": "Risk Control",
       "summary": "Secure defaults, MFA, rate limiting, validation, and production risk awareness.",
-      "features": [
-        { "glyph": "lock", "label": "Secure Defaults", "description": "Least privilege, no secrets in repos, signed releases." },
-        { "glyph": "shield", "label": "Strong Auth", "description": "MFA, short-lived tokens, audit trail." },
-        { "glyph": "eye", "label": "Input Validation", "description": "Schema-first inputs, rate limits, abuse controls." },
-        { "glyph": "chart", "label": "Risk Proportion", "description": "Controls matched to actual blast radius." }
-      ],
-      "flowTitle": "CONTROLS FLOW",
-      "flow": [
-        { "label": "INVENTORY", "description": "Know what you protect and why." },
-        { "label": "HARDEN", "description": "MFA, secrets, dependency hygiene, WAF where it pays." },
-        { "label": "MONITOR", "description": "Detect abuse, log carefully, avoid sensitive content in logs." },
-        { "label": "RESPOND", "description": "Rotate, contain, write a clean post-mortem." }
-      ],
       "ctaPrimary": { "label": "VIEW CONTROLS" },
       "ctaSecondary": { "label": "THREAT MODEL" },
       "detail": {
@@ -332,49 +280,6 @@
       "title": "Independent Research",
       "eyebrow": "Research",
       "summary": "Philosophy applied to AI: separating output from truth, representation from reality, and behavior from agency.",
-      "features": [
-        { "glyph": "eye", "label": "Truth", "description": "Criteria for representations that stay accountable to reality." },
-        { "glyph": "spark", "label": "Meaning", "description": "Understanding as reconstruction and experiential injection." },
-        { "glyph": "shield", "label": "Purpose", "description": "Separating own direction from borrowed purpose." },
-        { "glyph": "chart", "label": "AI", "description": "Taxonomies that avoid confusing simulation with subjectivity." }
-      ],
-      "researchConcepts": [
-        {
-          "key": "truth",
-          "label": "Truth as Being",
-          "axis": "Truth",
-          "summary": "Output quality is not the same as truth.",
-          "detail": "The research line separates being from its representations. An answer can be useful, fluent, or convincing, but it gains strength only when it remains accountable to what it claims to represent."
-        },
-        {
-          "key": "representation",
-          "label": "Fidelity",
-          "axis": "Representation",
-          "summary": "Not every representation carries the same weight.",
-          "detail": "Fidelity is not measured by beauty, authority, or immediate utility, but by the effective relation between representation, experience, and contrast with being."
-        },
-        {
-          "key": "meaning",
-          "label": "Meaning",
-          "axis": "Reconstruction",
-          "summary": "Meaning does not live inside the sign.",
-          "detail": "A representation means something when a system can reconstruct what the representation does not contain by itself. This separates language processing from understanding."
-        },
-        {
-          "key": "purpose",
-          "label": "Own Purpose",
-          "axis": "Agency",
-          "summary": "Goal-directed behavior is not enough for owned direction.",
-          "detail": "The central question for agents and AI is not only what they do, but where their direction comes from: prompt, reward, external mission, or internal appropriation."
-        }
-      ],
-      "flowTitle": "INQUIRY FLOW",
-      "flow": [
-        { "label": "BEING", "description": "Separate reality, manifestation, and narrative." },
-        { "label": "REPRESENT", "description": "Measure fidelity, trace, and mediation." },
-        { "label": "MEAN", "description": "Explain reconstruction and experiential injection." },
-        { "label": "DIRECT", "description": "Evaluate borrowed purpose, agency, and simulation." }
-      ],
       "ctaPrimary": { "label": "VIEW SYSTEM" },
       "ctaSecondary": { "label": "CONCEPTS" },
       "detail": {
@@ -410,19 +315,6 @@
       "title": "Contact",
       "eyebrow": "Reach Out",
       "summary": "Professional links and contact channels for collaboration and opportunities.",
-      "features": [
-        { "glyph": "spark", "label": "Public Name", "description": "Use the searchable full name for record." },
-        { "glyph": "rocket", "label": "GitHub", "description": "Open-source work and this prototype." },
-        { "glyph": "eye", "label": "LinkedIn", "description": "Professional context and history." },
-        { "glyph": "shield", "label": "Email", "description": "Direct, low-noise channel for opportunities." }
-      ],
-      "flowTitle": "CHANNELS",
-      "flow": [
-        { "label": "OPEN", "description": "Inbox is open for serious collaboration." },
-        { "label": "BRIEF", "description": "Send context: role, scope, constraints." },
-        { "label": "MEET", "description": "Short call to align on fit and scope." },
-        { "label": "COMMIT", "description": "Move only when both sides see the value." }
-      ],
       "ctaPrimary": { "label": "VIEW CHANNELS" },
       "ctaSecondary": { "label": "OPEN GITHUB", "href": "https://github.com/your-handle" },
       "detail": {

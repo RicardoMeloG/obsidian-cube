@@ -1,14 +1,18 @@
-/* Stage template `channels` (spec 011, AD-01): placement on the stage's
-   12-column grid and the blocks particular to it. */
+/* Stage template `channels` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
 @reference "../../../index.css";
 
 @layer components {
   .ch-left {
-    grid-column: 1 / span 5;
-    align-self: center;
     display: grid;
     align-content: start;
     gap: 1.1em;
+
+    @variant desktop {
+      grid-column: 1 / span 5;
+      align-self: center;
+    }
   }
 
   .ch-availability {

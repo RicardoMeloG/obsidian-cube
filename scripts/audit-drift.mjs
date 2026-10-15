@@ -64,14 +64,31 @@ ${code}`
 mkdirSync('audit-runs', { recursive: true })
 for (const model of models) {
   const started = Date.now()
+  // Streamed, so a long reasoning never trips fetch's five-minute wait for headers.
   const response = await fetch('http://127.0.0.1:11434/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     // qwen reasons before answering; gemma answers directly.
-    body: JSON.stringify({ model, prompt, stream: false, think: model.startsWith('qwen'), options: { num_ctx: 49152, temperature: 0.2 } }),
+    body: JSON.stringify({ model, prompt, stream: true, think: model.startsWith('qwen'), options: { num_ctx: 49152, temperature: 0.2 } }),
   })
-  const result = await response.json()
-  const match = /\{[\s\S]*\}/.exec(result.response ?? '')
+  const result = { response: '', prompt_eval_count: undefined, error: undefined, doneReason: undefined }
+  let buffer = ''
+  for await (const chunk of response.body.pipeThrough(new TextDecoderStream())) {
+    buffer += chunk
+    const lines = buffer.split('\n')
+    buffer = lines.pop()
+    for (const line of lines.filter(Boolean)) {
+      const part = JSON.parse(line)
+      result.response += part.response ?? ''
+      if (part.error) result.error = part.error
+      if (part.done) {
+        result.prompt_eval_count = part.prompt_eval_count
+        // 'length' means the context ran out before the answer: split the files.
+        result.doneReason = part.done_reason
+      }
+    }
+  }
+  const match = /\{[\s\S]*\}/.exec(result.response)
   let findings = null
   try {
     findings = JSON.parse(match?.[0] ?? '').findings
@@ -80,6 +97,8 @@ for (const model of models) {
   }
   const seconds = Math.round((Date.now() - started) / 1000)
   const file = `audit-runs/${label}-${model.replace(/[:/]/g, '_')}.json`
-  writeFileSync(file, JSON.stringify({ model, label, seconds, tokensIn: result.prompt_eval_count, findings, raw: findings ? undefined : result.response }, null, 1))
-  console.log(`${model} ${label}: ${findings ? `${findings.length} findings` : 'unparsable answer'} in ${seconds}s → ${file}`)
+  const { error, doneReason } = result
+  writeFileSync(file, JSON.stringify({ model, label, seconds, tokensIn: result.prompt_eval_count, doneReason, error, findings, raw: findings ? undefined : result.response }, null, 1))
+  const outcome = findings ? `${findings.length} findings` : `no answer (${error ?? `ended: ${doneReason}`})`
+  console.log(`${model} ${label}: ${outcome} in ${seconds}s, ${result.prompt_eval_count ?? '?'} tokens in → ${file}`)
 }

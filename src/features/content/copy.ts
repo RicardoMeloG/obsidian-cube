@@ -8,9 +8,6 @@ export type InterfaceCopy = {
   experienceLabel: string
   languageLabel: string
   faceStripLabel: string
-  researchConceptsLabel: string
-  // Shown under a research concept in its dialog.
-  conceptSource: string
   close: string
   hintPointer: string
   hintTouch: string
@@ -29,8 +26,6 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     experienceLabel: 'Portfolio',
     languageLabel: 'Language',
     faceStripLabel: 'Cube faces',
-    researchConceptsLabel: 'Research concepts',
-    conceptSource: 'A concept from the private philosophical archive.',
     close: 'Close',
     hintPointer: 'Drag to rotate',
     hintTouch: 'Swipe to rotate',
@@ -45,8 +40,6 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     experienceLabel: 'Portafolio',
     languageLabel: 'Idioma',
     faceStripLabel: 'Caras del cubo',
-    researchConceptsLabel: 'Conceptos de investigación',
-    conceptSource: 'Concepto curado desde el sistema filosófico privado.',
     close: 'Cerrar',
     hintPointer: 'Arrastra para girar',
     hintTouch: 'Desliza para girar',

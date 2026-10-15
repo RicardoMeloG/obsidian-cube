@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import type { FaceId } from '@/kernel/faces'
 import { FACE_ORDER } from '@/kernel/faces'
@@ -6,6 +6,7 @@ import type { SiteContent, SiteLocale } from '@/kernel/siteContent'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import type { InterfaceCopy } from '@/features/content/copy'
 import type { PanelTransition } from '@/features/experience/experienceStore'
+import { useLayoutMode } from '@/styles/layoutModes'
 // The shared stage styles load before the templates', which refine them.
 import './stage.css'
 import { ordinal } from './motion'
@@ -50,6 +51,17 @@ export function StageView({
 }: StageViewProps) {
   const accentStyle = { '--section-accent': displayedSection.accent } as CSSProperties
   const counter = `${ordinal(FACE_ORDER.indexOf(displayedSection.id))} / ${ordinal(FACE_ORDER.length - 1)}`
+  const { stacked } = useLayoutMode()
+  const contentRef = useRef<HTMLElement | null>(null)
+
+  // Hero (stacked): a face chosen from the dock while reading further down
+  // opens at its beginning, not halfway through it.
+  useEffect(() => {
+    const content = contentRef.current
+    if (!stacked || !content || content.getBoundingClientRect().top >= 0) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    content.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' })
+  }, [displayedSection.id, stacked])
 
   useEffect(() => {
     if (!explore) return
@@ -80,7 +92,7 @@ export function StageView({
         onContact={() => onRequestFace('contact')}
       />
 
-      <section className="stage-content" key={displayedSection.id} aria-label={displayedSection.label}>
+      <section className="stage-content" key={displayedSection.id} ref={contentRef} aria-label={displayedSection.label}>
         <StageComposition face={displayedSection} counter={counter} onOpenDetail={onOpenDetail} />
       </section>
 

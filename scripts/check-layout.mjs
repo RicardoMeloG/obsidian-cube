@@ -171,26 +171,39 @@ async function identityContrast(page) {
   return failures
 }
 
-// Runs in the page: every geometric assertion for the face on screen.
-function measureFace({ queries }) {
+// Runs in the page: the stage (spec 011) for the face on screen. Every block
+// of the composition fits its area without scrolling, nothing it paints
+// overlaps another block, the chrome or itself, and the name comes first.
+// Desktop: the centre stays clear for the cube (E-3) and the calls to action
+// are in view. Stacked (the hero): the composition starts below the cube, the
+// page never scrolls sideways, and every call to action can be scrolled clear
+// of the fixed dock.
+function measureStage({ queries }) {
   const failures = []
   const vw = window.innerWidth
   const vh = window.innerHeight
   const stacked = window.matchMedia(queries.stacked).matches
   const mode = stacked ? 'stacked' : window.matchMedia(queries.short).matches ? 'desktop-short' : 'desktop'
-  const strip = document.querySelector('.face-strip')?.getBoundingClientRect()
+  const visible = (element) => {
+    const style = getComputedStyle(element)
+    const box = element.getBoundingClientRect()
+    return style.visibility !== 'hidden' && Number(style.opacity) > 0 && box.width > 0 && box.height > 0
+  }
+  const overlaps = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+  const leafElements = (root) => [...root.querySelectorAll('*')].filter((element) => element.children.length === 0 && visible(element))
+  const leaves = (selector) => [...document.querySelectorAll(selector)].flatMap((root) => leafElements(root).map((element) => element.getBoundingClientRect()))
+  const collide = (a, b) => a.some((boxA) => b.some((boxB) => overlaps(boxA, boxB)))
 
   // Name first: the page's single h1, in the top-left quarter, not covered.
   const headings = document.querySelectorAll('h1')
   const name = headings[0]
-  if (headings.length !== 1 || !name || !name.textContent?.trim()) {
-    failures.push('name-h1')
-  } else {
+  if (headings.length !== 1 || !name?.textContent?.trim()) failures.push('name-h1')
+  else {
     const box = name.getBoundingClientRect()
     if (box.left > vw / 2 || box.top > vh / 2) failures.push('name-position')
     // Hit-test with pointer events forced on, so layers that ignore the pointer
-    // (the chrome, the scrims) still count as covering. Through the CSSOM, not
-    // an injected <style>: the content security policy blocks inline styles.
+    // (the stage, the veils) still count as covering. Through the CSSOM, not an
+    // injected <style>: the content security policy blocks inline styles.
     const elements = [...document.querySelectorAll('*')]
     const saved = elements.map((element) => [element.style.getPropertyValue('pointer-events'), element.style.getPropertyPriority('pointer-events')])
     for (const element of elements) element.style.setProperty('pointer-events', 'auto', 'important')
@@ -203,115 +216,20 @@ function measureFace({ queries }) {
     if (!hit || !name.contains(hit)) failures.push('name-covered')
   }
 
-  // Fixed chrome never overlaps (audit-2 B-23): the identity block, the
-  // language toggle and the strip, against each other and against every
-  // visible leaf of the rails.
-  const visible = (element) => {
-    const style = getComputedStyle(element)
-    const box = element.getBoundingClientRect()
-    return style.visibility !== 'hidden' && Number(style.opacity) > 0 && box.width > 0 && box.height > 0
-  }
-  const overlaps = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
-  // Containers may span the screen; what paints is their visible leaves.
-  const leaves = (selector) =>
-    [...document.querySelectorAll(`${selector} *`)].filter((element) => element.children.length === 0 && visible(element)).map((element) => element.getBoundingClientRect())
-  const collide = (a, b) => a.some((boxA) => b.some((boxB) => overlaps(boxA, boxB)))
-  const chrome = [
-    ['identity', leaves('.identity-chrome')],
-    ['language', leaves('.language-toggle')],
-    ['strip', leaves('.face-strip')],
-  ]
-  for (const [index, [nameA, a]] of chrome.entries()) {
-    for (const [nameB, b] of chrome.slice(index + 1)) if (collide(a, b)) failures.push(`chrome-${nameA}-over-${nameB}`)
-  }
-  // Stacked pages scroll under the fixed strip by design; their CTAs are
-  // checked against it after scrolling (below).
-  const rails = leaves('.face-rails__rail')
-  for (const [name, boxes] of chrome) {
-    if (mode === 'stacked' && name === 'strip') continue
-    if (collide(boxes, rails)) failures.push(`chrome-${name}-over-rail`)
-  }
-
-  const ctas = [...document.querySelectorAll('.face-rails__cta')]
-
-  if (mode === 'stacked') {
-    for (const [index, cta] of ctas.entries()) {
-      cta.scrollIntoView({ block: 'center' })
-      const box = cta.getBoundingClientRect()
-      const stripNow = document.querySelector('.face-strip')?.getBoundingClientRect()
-      if (stripNow && box.bottom > stripNow.top + 1) failures.push(`cta-${index}-under-strip`)
-    }
-    return { mode, failures }
-  }
-
-  const warnings = []
-  for (const [index, rail] of document.querySelectorAll('.face-rails__rail').entries()) {
-    const side = index === 0 ? 'left' : 'right'
-    const clips = getComputedStyle(rail).overflowY !== 'visible'
-    // A clipping rail (the safety net) shows only its own box; otherwise any
-    // descendant may paint past it.
-    let bottom = rail.getBoundingClientRect().bottom - (clips ? parseFloat(getComputedStyle(rail).paddingBottom) : 0)
-    if (!clips) {
-      for (const element of rail.querySelectorAll('*')) {
-        const box = element.getBoundingClientRect()
-        if (box.width > 0 && box.height > 0) bottom = Math.max(bottom, box.bottom)
-      }
-    }
-    if (strip && bottom > strip.top + 1) failures.push(`rail-${side}-over-strip`)
-    if (rail.scrollHeight > rail.clientHeight + 1) warnings.push(`rail-${side}-scrolls`)
-  }
-
-  for (const [index, cta] of ctas.entries()) {
-    const box = cta.getBoundingClientRect()
-    if (box.top < 0 || box.left < 0 || box.bottom > vh || box.right > vw) failures.push(`cta-${index}-outside`)
-    // Inside the viewport but scrolled out of its rail still means unseen.
-    const rail = cta.closest('.face-rails__rail')
-    const railBox = rail?.getBoundingClientRect()
-    if (railBox && (box.bottom > railBox.bottom + 1 || box.top < railBox.top - 1)) failures.push(`cta-${index}-hidden-in-rail`)
-  }
-
-  return { mode, failures, warnings }
-}
-
-// Runs in the page: the stage (spec 011, desktop). Every block of the face's
-// composition fits its area without scrolling, nothing it paints overlaps
-// another block or the chrome, the centre stays clear for the cube (E-3), the
-// calls to action are in view, and the name comes first.
-function measureStage({ queries }) {
-  const failures = []
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  const mode = window.matchMedia(queries.short).matches ? 'desktop-short' : 'desktop'
-  const visible = (element) => {
-    const style = getComputedStyle(element)
-    const box = element.getBoundingClientRect()
-    return style.visibility !== 'hidden' && Number(style.opacity) > 0 && box.width > 0 && box.height > 0
-  }
-  const overlaps = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
-  const leafElements = (root) => [...root.querySelectorAll('*')].filter((element) => element.children.length === 0 && visible(element))
-  const leaves = (selector) => [...document.querySelectorAll(selector)].flatMap((root) => leafElements(root).map((element) => element.getBoundingClientRect()))
-  const collide = (a, b) => a.some((boxA) => b.some((boxB) => overlaps(boxA, boxB)))
-
-  // Name first: the page's single h1, in the top-left quarter.
-  const headings = document.querySelectorAll('h1')
-  const name = headings[0]
-  if (headings.length !== 1 || !name?.textContent?.trim()) failures.push('name-h1')
-  else {
-    const box = name.getBoundingClientRect()
-    if (box.left > vw / 2 || box.top > vh / 2) failures.push('name-position')
-  }
-
   const content = leaves('.stage-content')
   const top = leaves('.stage-top')
   const dock = leaves('.stage-dock')
   if (collide(top, dock)) failures.push('chrome-top-over-dock')
   if (collide(top, content)) failures.push('chrome-top-over-content')
-  if (collide(dock, content)) failures.push('chrome-dock-over-content')
+  // Stacked pages scroll under the fixed dock by design; checked below.
+  if (!stacked && collide(dock, content)) failures.push('chrome-dock-over-content')
+  if (document.documentElement.scrollWidth > vw + 1) failures.push('page-scrolls-sideways')
 
   const blocks = [...document.querySelectorAll('.stage-content > *')].filter(visible)
   for (const [index, block] of blocks.entries()) {
     const box = block.getBoundingClientRect()
-    if (box.top < 0 || box.left < 0 || box.bottom > vh || box.right > vw) failures.push(`block-${index}-outside`)
+    const outside = stacked ? box.left < 0 || box.right > vw : box.top < 0 || box.left < 0 || box.bottom > vh || box.right > vw
+    if (outside) failures.push(`block-${index}-outside`)
     // A block holds its content: no scroll inside, no descendant painting past it.
     if (block.scrollHeight > block.clientHeight + 1) failures.push(`block-${index}-overflows`)
     else {
@@ -341,11 +259,31 @@ function measureStage({ queries }) {
     }
   }
 
+  const ctas = [...document.querySelectorAll('.stage-content .st-button')]
+  if (stacked) {
+    // The cube is the hero: the composition begins below its box.
+    const hero = document.querySelector('.cube-canvas')?.getBoundingClientRect()
+    if (hero && content.some((box) => box.top < hero.bottom - 1)) failures.push('cube-covered')
+    for (const [index, cta] of ctas.entries()) {
+      cta.scrollIntoView({ block: 'center' })
+      const box = cta.getBoundingClientRect()
+      const dockNow = document.querySelector('.stage-dock')?.getBoundingClientRect()
+      if (dockNow && box.bottom > dockNow.top + 1) failures.push(`cta-${index}-under-dock`)
+    }
+    // The end of the page can be scrolled clear of the dock.
+    window.scrollTo(0, document.documentElement.scrollHeight)
+    const last = Math.max(...leaves('.stage-content').map((box) => box.bottom))
+    const dockNow = document.querySelector('.stage-dock')?.getBoundingClientRect()
+    if (dockNow && last > dockNow.top + 1) failures.push('content-end-under-dock')
+    window.scrollTo(0, 0)
+    return { mode, failures }
+  }
+
   // The cube waits at the centre of the screen (E-3: it never disappears).
   const centre = { left: vw * 0.44, right: vw * 0.56, top: vh * 0.36, bottom: vh * 0.6 }
   if (content.some((box) => overlaps(box, centre))) failures.push('cube-covered')
 
-  for (const [index, cta] of document.querySelectorAll('.stage-content .st-button').entries()) {
+  for (const [index, cta] of ctas.entries()) {
     const box = cta.getBoundingClientRect()
     if (box.top < 0 || box.left < 0 || box.bottom > vh || box.right > vw) failures.push(`cta-${index}-outside`)
     const holder = cta.closest('.stage-content > *')?.getBoundingClientRect()
@@ -388,9 +326,7 @@ async function checkPage(browser, viewport, locale) {
 async function measurePage(page, viewport, locale) {
   const results = { layout: [], axe: [] }
   await page.goto(`${BASE}/?intro=0&lang=${locale}`)
-  await page.waitForSelector('.face-rails[data-transition="idle"], .stage[data-transition="idle"]', { timeout: 60000 })
-  // Desktop shows the stage (spec 011), stacked screens the rails.
-  const stage = (await page.$('.stage')) !== null
+  await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
   await page.evaluate(() => document.fonts.ready)
   // The layout is measured with the served font (ADR 006, AD-10).
   if (!(await page.evaluate(() => document.fonts.check('16px "Inter Variable"')))) {
@@ -405,18 +341,13 @@ async function measurePage(page, viewport, locale) {
 
   let mode = ''
   for (const face of FACES) {
-    if (stage) {
-      if ((await page.getAttribute('.stage', 'data-face')) !== face) {
-        await page.click(`.stage-dock a[data-section-id="${face}"]`)
-        await page.waitForSelector(`.stage[data-transition="idle"][data-face="${face}"]`, { timeout: 15000 })
-      }
-      // The blocks rise in order; measure them where they rest.
-      await page.evaluate(() => Promise.race([Promise.all(document.getAnimations().map((animation) => animation.finished)), new Promise((resolve) => setTimeout(resolve, 3000))]))
-    } else if ((await page.getAttribute('.face-rails', 'data-section')) !== face) {
-      await page.click(`.face-strip a[data-section-id="${face}"]`)
-      await page.waitForSelector(`.face-rails[data-transition="idle"][data-section="${face}"]`, { timeout: 15000 })
+    if ((await page.getAttribute('.stage', 'data-face')) !== face) {
+      await page.click(`.stage-dock a[data-section-id="${face}"]`)
+      await page.waitForSelector(`.stage[data-transition="idle"][data-face="${face}"]`, { timeout: 15000 })
     }
-    const measured = await page.evaluate(stage ? measureStage : measureFace, { queries: MODE_QUERIES })
+    // The blocks rise in order; measure them where they rest.
+    await page.evaluate(() => Promise.race([Promise.all(document.getAnimations().map((animation) => animation.finished)), new Promise((resolve) => setTimeout(resolve, 3000))]))
+    const measured = await page.evaluate(measureStage, { queries: MODE_QUERIES })
     mode = measured.mode
     for (const failure of measured.failures) results.layout.push(`${viewport} ${locale} ${face} ${failure}`)
     for (const warning of measured.warnings ?? []) console.log(`  warning: ${viewport} ${locale} ${face} ${warning}`)

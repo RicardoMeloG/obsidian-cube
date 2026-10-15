@@ -13,8 +13,6 @@ import type { IntroPlan } from '@/features/experience/introPlan'
 import { useFaceTransition } from '@/features/experience/useFaceTransition'
 import { useIntroLifecycle } from '@/features/experience/useIntroLifecycle'
 import { DetailDialog } from '@/features/faces/DetailDialog'
-import { FaceRails } from '@/features/faces/FaceRails'
-import { FaceStrip } from '@/features/navigation/FaceStrip'
 import { RotateHint } from '@/features/navigation/RotateHint'
 import { SceneLayer } from '@/features/scene/SceneLayer'
 import { StageView } from '@/features/stage/StageView'
@@ -22,18 +20,13 @@ import { hasWebGL } from '@/lib/hasWebGL'
 import { useViewportSize } from '@/lib/useViewportSize'
 import { LAYOUT_QUERIES, useLayoutMode } from '@/styles/layoutModes'
 import { cx } from '@/ui/cx'
-import { SegmentedControl } from '@/ui/SegmentedControl'
-import { IdentityChrome } from './IdentityChrome'
 import './intro.css'
 import './shell.css'
 
 // The cursor follows what the pointer can do with the cube.
 const CURSOR = { default: 'cursor-default', grab: 'cursor-grab', grabbing: 'cursor-grabbing' } as const
 
-// The stage is the desktop layout (spec 011, E-1); stacked screens keep the
-// rails until spec 011 S4. `?layout=rails` shows the rails on desktop, for
-// review during the transition only (AD-05).
-const RAILS_REQUESTED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layout') === 'rails'
+// Desktop shows the stage, stacked screens the hero (spec 011, E-1).
 const startsStacked = () => typeof window !== 'undefined' && window.matchMedia(LAYOUT_QUERIES.stacked).matches
 
 const LOCALE_OPTIONS = [
@@ -41,20 +34,21 @@ const LOCALE_OPTIONS = [
   { value: 'es', label: 'ES' },
 ] as const
 
-// The home page: the cube with the face's content around it. Creates the experience
+// The home page: the cube with the face's composition around it. Creates the experience
 // store once; the scene and the interface meet only through it (ADR 006).
 export function Experience() {
   const [plan] = useState(readIntroPlan)
   const [webglAvailable] = useState(hasWebGL)
   const [store] = useState(() => {
-    const stage = !RAILS_REQUESTED && !startsStacked()
+    const hero = startsStacked()
     return createExperienceStore(
       // Without WebGL there is no scene to land, so the interface shows at once.
+      // The rotate hint belongs to the hero, where the cube is dragged directly.
       initialExperience({
         face: readInitialFace(),
         introPlays: plan.play && webglAvailable,
-        hintVisible: plan.showHint && !stage,
-        layout: stage ? 'stage' : 'rails',
+        hintVisible: plan.showHint && hero,
+        layout: hero ? 'hero' : 'stage',
       }),
     )
   })
@@ -75,7 +69,6 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const hintVisible = useExperience((state) => state.hintVisible)
   const detail = useExperience((state) => state.detail)
   const cursor = useExperience((state) => state.cursor)
-  const layout = useExperience((state) => state.layout)
   const explore = useExperience((state) => state.explore)
   const { content, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
@@ -86,11 +79,9 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const restoreFocusRef = useRef<HTMLElement | null>(null)
   const [isTouch] = useState(() => typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches ?? false))
 
-  // Stacked screens keep the rails until the stage's stacked templates exist (spec 011, S4).
   useEffect(() => {
-    if (!RAILS_REQUESTED) store.dispatch({ type: 'layoutChanged', layout: stacked ? 'rails' : 'stage' })
+    store.dispatch({ type: 'layoutChanged', layout: stacked ? 'hero' : 'stage' })
   }, [stacked, store])
-  const stage = layout === 'stage'
 
   useFaceTransition()
   useIntroLifecycle(plan)
@@ -100,10 +91,8 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const activeSection = resolvedSections.find((section) => section.id === activeFace) ?? null
   const displayedSection = resolvedSections.find((section) => section.id === displayedFace) ?? activeSection
 
-  // The dialog shows what opened it (a research concept), otherwise the face's
-  // `detail`, otherwise its long-form fields.
+  // The dialog shows the face's `detail`, otherwise its long-form fields.
   const dialogDetail = useMemo<FaceDetail | null>(() => {
-    if (detail.focused) return detail.focused
     if (!activeSection) return null
     if (activeSection.detail) return activeSection.detail
     return {
@@ -112,12 +101,12 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
       points: [...(activeSection.highlights ?? []), ...(activeSection.proofPoints ?? [])],
       links: activeSection.links,
     }
-  }, [activeSection, detail.focused])
+  }, [activeSection])
 
   const openDetail = useCallback(
-    (focused?: FaceDetail, trigger?: HTMLElement) => {
+    (trigger?: HTMLElement) => {
       restoreFocusRef.current = trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
-      store.dispatch({ type: 'detailOpened', detail: focused ?? null })
+      store.dispatch({ type: 'detailOpened' })
     },
     [store],
   )
@@ -148,7 +137,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
         {plan.showHint && webglAvailable && <RotateHint visible={hintVisible} label={isTouch ? copy.hintTouch : copy.hintPointer} />}
       </div>
 
-      {stage && displayedSection && (
+      {displayedSection && (
         <StageView
           identity={content.identity}
           copy={copy}
@@ -162,34 +151,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
           explore={explore}
           onRequestFace={requestFace}
           onExplore={(next) => store.dispatch({ type: next ? 'exploreStarted' : 'exploreEnded' })}
-          onOpenDetail={(trigger) => openDetail(undefined, trigger)}
-        />
-      )}
-
-      {!stage && <IdentityChrome identity={content.identity} />}
-
-      {!stage && (
-        <SegmentedControl
-          className="language-toggle absolute top-corner right-corner z-10"
-          label={copy.languageLabel}
-          options={LOCALE_OPTIONS}
-          value={locale}
-          onChange={setLocale}
-        />
-      )}
-
-      {!stage && displayedSection && (
-        <FaceRails activeSection={displayedSection} copy={copy} onOpenDetail={openDetail} transitionState={transition} />
-      )}
-
-      {!stage && displayedSection && (
-        <FaceStrip
-          activeSectionId={activeFace}
-          fullName={content.identity.fullName}
-          label={copy.faceStripLabel}
-          locale={locale}
-          onSelectSection={requestFace}
-          sections={sections}
+          onOpenDetail={openDetail}
         />
       )}
 

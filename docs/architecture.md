@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). The compositions stage (spec 011, ADR 008) is under way: since S2 (2026-10-15) desktop shows the stage, one template per face read from the content; stacked screens keep the rails until S4. Then content, security and the release.
+**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). The compositions stage (spec 011, ADR 008) is under way: since S4 (2026-10-15) every screen shows the stage, one template per face read from the content (the hero on stacked screens), and the rails are gone. Then content, security and the release.
 
 ## System
 
@@ -45,8 +45,8 @@ src/
                      CubeScene, PremiumCube, environment, intro timeline, vector worlds
     stage/           the desktop layout (spec 011): StageView (top bar, content, dock), StageComposition
                      and one component per template in templates/, each with its stylesheet
-    faces/           FaceRails (the two rails, stacked screens until spec 011 S4), FeatureGlyph, DetailDialog
-    navigation/      FaceStrip, RotateHint
+    faces/           DetailDialog (a face's long form, opened from its calls to action)
+    navigation/      RotateHint (the invitation to drag the cube in the hero)
     content/         loaders, locale, sanitizer, RichText, interface copy dictionary
     audio/           the gesture-driven cube sounds (no autoplay), used by the scene
     dev/             world showcase and its shortcut (development only)
@@ -56,11 +56,11 @@ src/
   kernel/            the content contract (ADR 005)
 ```
 
-Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's gradients and grid, the canvas box), `src/app/intro.css` (the intro choreography, deliberately unlayered), `FaceRails.css`, `FaceStrip.css`, `DetailDialog.css` (layered gradients, decorations, choreography), `src/ui/ornaments.css`, and the stage's `stage.css` with one stylesheet per template (the stage is sized in em from a font size that follows the viewport, which utilities express poorly). `stage.css` loads before the templates' sheets, which refine it. The dev showcase's stylesheet travels only with its development chunk. There is no global stylesheet besides `src/index.css` (Tailwind, tokens, base layer).
+Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's gradients and grid, the canvas box), `src/app/intro.css` (the intro choreography, deliberately unlayered), `DetailDialog.css` (layered gradients, decorations, choreography), `src/ui/ornaments.css`, and the stage's `stage.css` with one stylesheet per template (the stage is sized in em from a font size that follows the viewport, which utilities express poorly). `stage.css` loads before the templates' sheets, which refine it. The dev showcase's stylesheet travels only with its development chunk. There is no global stylesheet besides `src/index.css` (Tailwind, tokens, base layer).
 
-**Layout modes.** Three modes decide the composition: `desktop` (the stage: the face's composition around the cube, the dock at the bottom), `desktop-short` (the same on a short screen) and `stacked` (cube on top, the page scrolls). Six width refinements adjust inside them: `stacked-wide` (tablet landscape), `tight` (≤ 1100px, narrower rails), `narrow` (≤ 720px, phone-sized stacked page), `phone` (≤ 680px, the strip takes two rows), `phone-small` (≤ 389px, one-column research map) and `tiny` (≤ 340px, the tightest strip). They are the breakpoints of the CSS before the migration, kept so the migration changed no pixel; merging `narrow` and `phone` is a design change for a visual review, not a normalization. All nine queries live in `src/styles/layoutModes.ts`; Tailwind's own breakpoints are removed, so there is no other way to write one.
+**Layout modes.** Three modes decide the composition: `desktop` (the stage: the face's composition around the cube, the dock at the bottom), `desktop-short` (the same on a short screen) and `stacked` (the hero: the cube on top, the composition in one column below it, the page scrolls). Six width refinements adjust inside them: `stacked-wide` (tablet landscape), `tight` (≤ 1100px), `narrow` (≤ 720px), `phone` (≤ 680px: the dock takes two rows, the top bar shows icons), `phone-small` (≤ 389px) and `tiny` (≤ 340px). The stage uses `stacked`, `desktop`, `desktop-short` and `phone`; the others are kept from the migration and are candidates for removal when nothing uses them. All nine queries live in `src/styles/layoutModes.ts`; Tailwind's own breakpoints are removed, so there is no other way to write one.
 
-**How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the strip dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the rails follow `displayedFace` through the transition; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
+**How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the dock dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the composition follows `displayedFace` through the transition; the store's `layout` is `stage` on desktop (the cube recedes while the visitor reads) and `hero` on stacked screens; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
 
 **Dependency rules** (in force, `eslint.config.js`, tested by `scripts/checks/boundaries.test.ts`):
 
@@ -100,8 +100,7 @@ Imports across top-level modules use `@/`; a relative path that climbs into anot
 | Kernel pure, server imports only the kernel | In force | `tsconfig.kernel.json` in `tsc -b`, lint rules in `eslint.config.js` (H-15, H-04b); the rules themselves are tested by `scripts/checks/boundaries.test.ts` |
 | Owner content wins; a missing field falls back to the example in the same language | In force | `src/kernel/siteContent.test.ts` |
 | Every public asset has a recorded source and licence | In force, two pending | `docs/assets.md`, `scripts/checks/assets.test.ts` |
-| Layout: no rail over the strip, CTAs in view, name first and not covered, fixed chrome never overlaps; name and role at AA contrast over the real background | In force, no known failures | `npm run check:layout` (H-06) |
-| Stage: every block of a composition fits its area without scrolling, nothing painted over another block, the chrome or the content inside a block, the centre clear for the cube, CTAs in view | In force, no known failures | `npm run check:layout` on desktop viewports (spec 011, AD-06) |
+| Layout: name first; every block of a composition fits its area without scrolling; nothing painted over another block, the chrome or the content inside a block; desktop: the centre clear for the cube and every CTA in view; stacked: the composition below the cube, no sideways scroll, every CTA and the end of the page clear of the dock; name and role at AA contrast over the real background | In force, no known failures | `npm run check:layout` (H-06; spec 011, AD-06) |
 | Every text slot of a template reaches the page | In force | `src/features/stage/StageComposition.test.tsx` |
 | The admin's generated form round-trips every example document unchanged; lists, template switch, text, image upload and field errors write what they show | In force | `npm run check:admin` (spec 011, AD-04), against a stand-in API: the check never bypasses the owner's login |
 | Uploaded images are WebP within their size, stored by content hash; no path from the request reaches the disk | In force | `server/media/mediaStore.test.ts` |

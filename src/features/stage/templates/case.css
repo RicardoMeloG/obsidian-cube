@@ -1,18 +1,24 @@
-/* Stage template `case` (spec 011, AD-01): placement on the stage's
-   12-column grid and the blocks particular to it. */
+/* Stage template `case` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
 @reference "../../../index.css";
 
 @layer components {
   .stage[data-template='case'] .stage-content {
-    grid-template-rows: minmax(0, 1fr) auto;
+    @variant desktop {
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
   }
 
   .cs-head {
-    grid-column: 1 / span 5;
-    grid-row: 1;
     display: grid;
     align-content: start;
     gap: 0.8em;
+
+    @variant desktop {
+      grid-column: 1 / span 5;
+      grid-row: 1;
+    }
   }
 
   .cs-case {
@@ -86,9 +92,11 @@
   }
 
   .cs-map {
-    grid-column: 9 / span 4;
-    grid-row: 1;
-    align-self: start;
+    @variant desktop {
+      grid-column: 9 / span 4;
+      grid-row: 1;
+      align-self: start;
+    }
   }
 
   .cs-cells {
@@ -139,12 +147,20 @@
   }
 
   .cs-band {
-    grid-column: 1 / -1;
-    grid-row: 2;
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: 2em;
     padding: 1.1em 1.5em;
+
+    @variant stacked {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.2em;
+    }
+
+    @variant desktop {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
   }
 
   .cs-steps {
@@ -152,9 +168,21 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1.6em;
+
+    @variant stacked {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @variant phone {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .cs-steps::before {
+    @variant stacked {
+      display: none;
+    }
+
     position: absolute;
     top: 1.2em;
     right: 2em;

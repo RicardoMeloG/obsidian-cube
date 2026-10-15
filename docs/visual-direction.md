@@ -80,9 +80,9 @@ Desktop composition (≈1440-1920px):
 - **Center**: the cube, occupying roughly 40-50% of the horizontal frame, vertically centered.
 - **Top-left**: identity block — display name and role (e.g. "Ricardo Melo / Ingeniero de Productos Agénticos"). This block is the top of the visual hierarchy: the most legible text on screen, AA contrast, never muted. The cube's own label must not outrank the owner's name.
 - **Top-right**: language toggle (EN / ES).
-- **Left rail**: the selected face's primary narrative — eyebrow (e.g. "Ingeniería de"), large two-line headline, a short paragraph, then a vertical list of 3-5 named features with a small glyph and one-sentence description each. End with a single primary action (e.g. "EXPLORAR ENFOQUE").
-- **Right rail**: the supporting structure for that face — a numbered flow or metric stack (e.g. "FLUJO AGÉNTICO 04" with steps `01 ESPECIFICAR`, `02 PROTOTIPAR`, `03 VALIDAR`, `04 PUBLICAR`), each with a brief one-line description. End with a secondary action (e.g. "VER METODOLOGÍA →").
-- **Bottom strip**: section breadcrumb (e.g. `DISEÑO INTELIGENTE • SISTEMAS AUTÓNOMOS • IMPACTO REAL`) on the left and the full searchable name on the right.
+- **Top bar**: the name first (the page's h1), the role and keywords under it; in the middle the button that brings the cube forward to explore it; on the right the ways to reach the owner (CONTACT, GitHub, LinkedIn) and the language.
+- **The composition** (spec 011): the selected face's template, chosen in the admin, placed on a 12-column grid around the cube, which keeps the centre (columns 6 and 7) clear. Every template opens with the face's heading (eyebrow, two-line title, summary) and ends with its calls to action; between them, its own blocks: cards with chips, numbered proofs, a list with screenshots, a before/after with a status map, a console of controls, a reading column.
+- **Dock**: the six faces, each with its icon and a one-line tagline, in its own accent.
 
 Hard constraints:
 
@@ -93,7 +93,7 @@ Hard constraints:
 Responsive collapse (≤900px):
 
 - Cube remains the visual anchor, scaled down.
-- Left and right rails stack below the cube as accordions or a vertical scroll list.
+- The cube is the hero on top; the composition follows below in its reading order, one column; the dock is fixed at the bottom (two rows of three on phones).
 - Bottom breadcrumb may collapse to a horizontal scroller.
 - Maintain the no-scroll-on-desktop rule only for desktop; mobile may scroll, but the first fold must include the cube and the face's headline.
 
@@ -107,7 +107,7 @@ Surface rules (for side-panel cards and pills):
 
 ## Deep-dive Pages (Secondary)
 
-None exist yet: today a face's long form opens in its detail dialog. If long-form content (the methodology behind a face, the project archive, the full research index) gets pages of its own (decision D-8, release stage, spec 010), they are reached from the rail CTAs and follow these rules.
+None exist yet: today a face's long form opens in its detail dialog. If long-form content (the methodology behind a face, the project archive, the full research index) gets pages of its own (decision D-8, release stage, spec 010), they are reached from the face's calls to action and follow these rules.
 
 - These pages may use the existing static obsidian page styling.
 - They are not part of the single-screen experience and may scroll.
@@ -124,7 +124,7 @@ The palette lives in `src/styles/tokens.css`, the single source: page and abyss,
 - Avoid oversized marketing headlines except on true section entrances.
 - Use tight, readable editorial blocks.
 - Letter spacing should be restrained.
-- Contrast: body text and any label that carries meaning (identity block, eyebrows, face strip, CTAs) must meet WCAG AA, 4.5:1 against the obsidian field. Muted tones are allowed only for secondary, non-essential text at 14px or larger with at least 3:1.
+- Contrast: body text and any label that carries meaning (name and role, eyebrows, dock, CTAs) must meet WCAG AA, 4.5:1 against the obsidian field. Muted tones are allowed only for secondary, non-essential text at 14px or larger with at least 3:1.
 - On high-density desktops, prefer editorial density over spectacle. A 5K display at 250% scaling behaves like a roughly 2048px CSS viewport; the page must not look zoomed-in at that size.
 - Desktop content should use wide containers before oversized typography. Keep section H1s below roughly 94px on large CSS viewports unless a specific visual review approves a larger scale.
 
@@ -162,7 +162,7 @@ The palette lives in `src/styles/tokens.css`, the single source: page and abyss,
 
 ## Tailwind Implementation
 
-Tailwind is the implementation layer for the whole interface: the home rails and chrome, static pages and the admin UI (ADR 006, which supersedes the earlier "static pages and future admin UI" scope; the home migrates by phases, see `docs/architecture.md`). It must follow the Obsidian Interface System above.
+Tailwind is the implementation layer for the whole interface: the home page's chrome, static pages and the admin UI (ADR 006, which supersedes the earlier "static pages and future admin UI" scope; the home migrates by phases, see `docs/architecture.md`). It must follow the Obsidian Interface System above.
 
 Setup:
 

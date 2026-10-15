@@ -50,9 +50,9 @@ The site is a **single-screen experience** built around a persistent obsidian cu
 
 - The cube stays visible at the center of the screen at all times on desktop. It is **not** a one-shot portal.
 - Selecting a face does **not** navigate to a separate page or full-screen overlay. Instead, the surrounding side panels update in place to reveal that face's minimal content.
-- Desktop layout: cube center, the face's composition around it (one template per face, chosen and filled from the admin; spec 011, E-1), face navigation on the bottom dock. The two rails remain only until spec 011 replaces them.
+- Desktop layout: cube center, the face's composition around it (one template per face, chosen and filled from the admin; spec 011, E-1), face navigation on the bottom dock.
 - Content per face is intentionally minimal: it must fit a single viewport without scroll on a standard 1440-1920px desktop. **No long-form essays inside the cube experience.**
-- Responsive: on narrow viewports the side panels collapse below/above the cube while the cube remains the visual anchor.
+- Responsive: on stacked screens the cube is the hero on top, the face's composition follows in reading order in one column, and the dock stays fixed at the bottom.
 - Long-form deep-dive pages (methodology, project archive, research index) live on separate routes reached from side-panel CTAs and may scroll. They are not part of the single-screen experience.
 
 For materials, color, motion, layout details, and tokens, see `docs/visual-direction.md` — the only other always-loaded document.
@@ -104,7 +104,7 @@ Design:
 - Each face's primary content must fit a single viewport on desktop without scroll, and collapse responsively on narrow viewports.
 - All six cube faces share the same frame; accent color and inner glyph vary per face, nothing else.
 - The owner's name and role are the first text read on every face (top-left, `h1`, not covered by any layer) and must meet AA contrast; the face title may be larger.
-- Fixed chrome (face strip, identity block, language toggle) never overlaps scrolling content on narrow viewports.
+- Fixed chrome (the top bar with the name and the language, the dock) never overlaps content the visitor cannot scroll clear of.
 - Do **not** use `Bloom` in production — it caused visible flicker.
 - Do **not** add auto-playing audio. Audio is gesture-driven and subtle.
 - Avoid design drift: no generic SaaS gradients, no decorative cards, no landing-page templates, no bokeh backgrounds.
@@ -152,7 +152,7 @@ The overview, the module map and the status of every rule (in force, or the phas
 - **Layout modes** come from one source, `src/styles/layoutModes.ts`: three modes, `stacked`, `desktop`, `desktop-short` (height ≤ 900px, compact rhythm), and six width refinements inside them (`stacked-wide`, `tight`, `narrow`, `phone`, `phone-small`, `tiny`; see `docs/architecture.md`). No numeric breakpoints or loose width variants in components; Tailwind's own breakpoints are removed, and a test keeps CSS and JavaScript equal.
 - **Content budgets** (`src/kernel/layoutBudgets.json`, visible characters and item counts) and link rules are publish rules: the admin refuses content that would not fit or links nowhere; the site renders with the tolerant schema. Change a budget only with a layout check run that proves the stress content still fits.
 - **Security headers** come from `infra/security-headers.json`: CloudFront serves them (the content security policy as report-only until it has run clean in production) and `vite preview` enforces them, so the layout check fails on any violation. No inline script or style in `index.html` (a test): the policy has no hashes.
-- **No blank page.** Without WebGL the scene is replaced by a still image (`hasWebGL`); a scene or world error is contained by `src/lib/ErrorBoundary`. The name, rails and strip are DOM and always stay.
+- **No blank page.** Without WebGL the scene is replaced by a still image (`hasWebGL`); a scene or world error is contained by `src/lib/ErrorBoundary`. The name, the composition and the dock are DOM and always stay.
 - **Interface copy** (labels, hints, `aria-label`s) comes from `src/features/content/copy.ts`; interface code never compares locales.
 - **Size.** DOM-layer files have at most 250 lines (a test); a component that grows past it is doing more than one thing.
 - **Unchecked rules** (review only) say so where they are written.
@@ -177,15 +177,14 @@ Loading order: the private document if present and valid, otherwise the example,
 
 Face content shape (primary scene, must stay minimal):
 
-- `title` (2-4 strong words), `summary` (one thesis line)
-- `features`: 3-4 named signals for the left rail
-- `flowTitle` + `flow`: 4 short procedural steps for the right rail
-- `ctaPrimary` + `ctaSecondary` — at least one of them, or one `detail.links` entry, must carry a real `href` to an artifact
-- `label` (the face name on the cube and the bottom strip): 13 characters at most — "INVESTIGACIÓN" is the ceiling that fits the 320px strip without clipping
-- `researchConcepts` (RESEARCH face only): 4 at most, the number the side panel shows (a publish rule)
+- `title` (2-4 strong words), `eyebrow`, `summary` (one thesis line), `tagline` (the line under the face name in the dock)
+- `composition`: one of the templates of `src/kernel/compositions.ts` (spec 011) with its slots filled; every slot has a measured budget in `layoutBudgets.json`, enforced when publishing
+- `ctaPrimary` + `ctaSecondary` — at least one of them, a link inside the composition, or one `detail.links` entry, must carry a real `href` to an artifact
+- `label` (the face name on the cube and the dock): 13 characters at most — "INVESTIGACIÓN" is the ceiling
+- Images are uploaded through the admin (WebP, stored by hash); example images are refused in owner content
 - Copy must name concrete things (a tool, a system, a result). Generic consultancy phrasing ("real impact", "practical vision") is a defect, not content.
 
-Extended content (`detail.title`, `detail.summary`, `detail.points`, `detail.links`) is for the modal — not the rails. Full essays and project archives belong on future deep-dive routes.
+Extended content (`detail.title`, `detail.summary`, `detail.points`, `detail.links`) is for the dialog a call to action opens. Full essays and project archives belong on future deep-dive routes.
 
 Privacy:
 
@@ -220,7 +219,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 
 - [x] The cube is the persistent focal element of the home experience.
 - [x] Each face reveals minimal content on the surrounding side panels in a single viewport (no overlay routing, no scroll on desktop).
-- [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, stacked rails, fixed face strip at the viewport bottom with the content padded above it.
+- [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, the composition in one column, the dock fixed at the viewport bottom with the content padded above it (spec 011, S4).
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).

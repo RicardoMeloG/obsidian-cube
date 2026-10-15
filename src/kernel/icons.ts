@@ -1,7 +1,6 @@
 // Icon catalog of the content kernel: the line icons a composition or the dock
 // may name. Data only; the stage maps each id to an SVG component, and the
-// admin offers the ids as a list (spec 011, AD-02). The pattern of
-// FEATURE_GLYPHS in faces.ts.
+// admin offers the ids as a list (spec 011, AD-02).
 export const ICON_IDS = [
   'sparkles',
   'box',

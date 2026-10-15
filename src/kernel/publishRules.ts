@@ -9,13 +9,11 @@ import { normalizeSections, SiteContentSchema } from './siteContent'
 import type { SiteContent } from './siteContent'
 import budgets from './layoutBudgets.json'
 
-// Longest text, in characters, each rail field may hold, and how many items a
-// rail shows (layoutBudgets.json, also read by the layout check's stress
-// content). Set from the layout check: every field at its limit, in both
-// locales, fits the shortest supported desktop (1280x720) without covering the
-// face strip. `label` is the face name on the cube and the strip.
+// Longest text, in characters, each field of a face's heading may hold
+// (layoutBudgets.json, also read by the layout check's stress content). Set
+// from the layout check: every field at its limit, in both locales, fits every
+// supported screen. `label` is the face name on the cube and the dock.
 export const LAYOUT_BUDGETS = budgets.chars
-export const LAYOUT_COUNTS = budgets.counts
 
 // Budgets of each composition template (spec 011, AD-06), by slot path:
 // `a.b` is a field, `a[]` every item of a list, `a.*` every value of an object.
@@ -75,7 +73,7 @@ export function publishIssues(content: SiteContent): Issue[] {
     const length = value === undefined ? 0 : visibleLength(value)
     if (length > max) issues.push({ path, message: `Máximo ${max} caracteres (tiene ${length}).` })
   }
-  const count = (path: Issue['path'], items: unknown[] | undefined, limits: { min?: number; max: number }) => {
+  const count = (path: Issue['path'], items: unknown[] | undefined, limits: Limits) => {
     const length = items?.length ?? 0
     if (limits.min !== undefined && length < limits.min) issues.push({ path, message: `Mínimo ${limits.min} elementos.` })
     if (length > limits.max) issues.push({ path, message: `Máximo ${limits.max} elementos; la columna no muestra más.` })
@@ -87,28 +85,10 @@ export function publishIssues(content: SiteContent): Issue[] {
     tooLong(at('eyebrow'), section.eyebrow, LAYOUT_BUDGETS.eyebrow)
     tooLong(at('title'), section.title, LAYOUT_BUDGETS.title)
     tooLong(at('summary'), section.summary, LAYOUT_BUDGETS.summary)
-    tooLong(at('flowTitle'), section.flowTitle, LAYOUT_BUDGETS.flowTitle)
     tooLong(at('ctaPrimary', 'label'), section.ctaPrimary?.label, LAYOUT_BUDGETS.ctaLabel)
     tooLong(at('ctaSecondary', 'label'), section.ctaSecondary?.label, LAYOUT_BUDGETS.ctaLabel)
-    count(at('features'), section.features, LAYOUT_COUNTS.features)
-    count(at('flow'), section.flow, LAYOUT_COUNTS.flow)
-    count(at('researchConcepts'), section.researchConcepts, LAYOUT_COUNTS.researchConcepts)
     tooLong(at('tagline'), section.tagline, LAYOUT_BUDGETS.tagline)
     if (section.composition) checkComposition(section.composition, (...path) => at('composition', ...path))
-    section.features?.forEach((feature, item) => {
-      tooLong(at('features', item, 'label'), feature.label, LAYOUT_BUDGETS.featureLabel)
-      tooLong(at('features', item, 'description'), feature.description, LAYOUT_BUDGETS.featureDescription)
-    })
-    section.flow?.forEach((step, item) => {
-      tooLong(at('flow', item, 'label'), step.label, LAYOUT_BUDGETS.flowLabel)
-      tooLong(at('flow', item, 'description'), step.description, LAYOUT_BUDGETS.flowDescription)
-    })
-    section.researchConcepts?.forEach((concept, item) => {
-      tooLong(at('researchConcepts', item, 'axis'), concept.axis, LAYOUT_BUDGETS.conceptAxis)
-      tooLong(at('researchConcepts', item, 'label'), concept.label, LAYOUT_BUDGETS.conceptLabel)
-      tooLong(at('researchConcepts', item, 'summary'), concept.summary, LAYOUT_BUDGETS.conceptSummary)
-    })
-
     // Every face links to at least one inspectable artifact (AGENTS.md,
     // "Evidence before spectacle"), and every link goes somewhere allowed.
     const links = [

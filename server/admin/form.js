@@ -4,68 +4,12 @@
 // rich text as a text area that names its allowed tags, images as an upload
 // with a library, and `title` as the Spanish label. A field added to the
 // kernel appears here with no change to this file. Plain script, no build
-// step, like the page that loads it; it exposes window.SchemaForm.
+// step, like the page that loads it; it exposes window.SchemaForm. Helpers in
+// form-kit.js, the image field in form-media.js (loaded before it).
 ;(function () {
   'use strict'
 
-  function el(tag, attrs, children) {
-    const node = document.createElement(tag)
-    for (const [key, value] of Object.entries(attrs || {})) {
-      if (value === undefined || value === null || value === false) continue
-      if (key === 'text') node.textContent = value
-      else if (key.startsWith('on')) node.addEventListener(key.slice(2), value)
-      else node.setAttribute(key, value === true ? '' : value)
-    }
-    for (const child of [].concat(children || [])) if (child) node.append(child)
-    return node
-  }
-
-  const clone = (value) => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)))
-  const humanize = (key) => String(key).replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())
-  const isNullable = (schema) => Array.isArray(schema.anyOf) && schema.anyOf.some((option) => option.type === 'null')
-  const nonNull = (schema) => schema.anyOf.find((option) => option.type !== 'null')
-  const isRecord = (schema) => schema.type === 'object' && !schema.properties && typeof schema.additionalProperties === 'object'
-
-  // The discriminator of a union: the property every option fixes with a const.
-  function discriminator(schema) {
-    const first = schema.oneOf[0].properties || {}
-    return Object.keys(first).find((key) => schema.oneOf.every((option) => option.properties && option.properties[key] && option.properties[key].const !== undefined))
-  }
-
-  // What a folded list item is about: its first naming field, without markup.
-  function preview(item) {
-    if (!item || typeof item !== 'object') return ''
-    const name = ['label', 'name', 'title', 'term', 'kind', 'id', 'text'].map((key) => item[key]).find((value) => typeof value === 'string' && value)
-    const plain = (name || '').replace(/<[^>]*>/g, '')
-    return plain.length > 70 ? `${plain.slice(0, 69)}…` : plain
-  }
-
-  // An empty value that has every required field of the schema.
-  function skeleton(schema) {
-    if (schema.const !== undefined) return schema.const
-    if (schema.oneOf) return skeleton(schema.oneOf[0])
-    if (schema.anyOf) return isNullable(schema) ? null : skeleton(schema.anyOf[0])
-    if (schema.enum) return schema.enum[0]
-    if (schema.widget === 'media') return { src: '', alt: '', width: 0, height: 0 }
-    switch (schema.type) {
-      case 'object': {
-        const value = {}
-        for (const key of schema.required || []) value[key] = skeleton(schema.properties[key])
-        return value
-      }
-      case 'array':
-        return []
-      case 'string':
-        return ''
-      case 'number':
-      case 'integer':
-        return 0
-      case 'boolean':
-        return false
-      default:
-        return null
-    }
-  }
+  const { el, clone, humanize, isNullable, nonNull, isRecord, discriminator, preview, skeleton } = window.SchemaFormKit
 
   function create(root, schema, initial, options) {
     const media = (options && options.media) || null
@@ -106,7 +50,7 @@
       if (fieldSchema.widget === 'fixed') return wrap(path, label, true, el('output', { class: 'sf-fixed', text: String(value) }))
       if (fieldSchema.oneOf) return union(fieldSchema, path, { required, label })
       if (isNullable(fieldSchema)) return nullable(fieldSchema, path, label)
-      if (fieldSchema.widget === 'media') return image(fieldSchema, path, { required, label })
+      if (fieldSchema.widget === 'media') return window.SchemaFormMedia.field({ get, set, remove, render, wrap, media }, fieldSchema, path, { required, label })
       if (fieldSchema.type === 'object') return group(fieldSchema, path, { required, label })
       if (fieldSchema.type === 'array') return list(fieldSchema, path, { required, label })
       if (fieldSchema.type === 'boolean') {
@@ -266,58 +210,6 @@
       ])
     }
 
-    // An image: preview, alternative text, upload and the library.
-    function image(fieldSchema, path, { required, label }) {
-      const value = get(path)
-      const status = el('small', { class: 'sf-hint' })
-      const preview = value && value.src ? el('img', { class: 'sf-preview', src: value.thumb || value.src, alt: '' }) : el('div', { class: 'sf-preview sf-empty', text: 'Sin imagen' })
-      const apply = (stored) => {
-        const current = get(path) || {}
-        const next = { src: stored.src, alt: current.alt || '', width: stored.width, height: stored.height }
-        if (stored.thumb) next.thumb = stored.thumb
-        set(path, next)
-        render()
-      }
-      const file = el('input', {
-        type: 'file',
-        accept: 'image/*',
-        class: 'sf-file',
-        onchange: async (event) => {
-          const chosen = event.target.files && event.target.files[0]
-          if (!chosen || !media) return
-          status.textContent = 'Preparando y subiendo…'
-          try {
-            apply(await media.upload(chosen))
-          } catch (error) {
-            status.textContent = error.message
-          }
-        },
-      })
-      const library = el('div', { class: 'sf-library', hidden: true })
-      const browse = el('button', {
-        type: 'button',
-        onclick: async () => {
-          if (!library.hidden) return void (library.hidden = true)
-          library.replaceChildren(el('small', { class: 'sf-hint', text: 'Cargando…' }))
-          library.hidden = false
-          const entries = media ? await media.list() : []
-          library.replaceChildren(
-            ...(entries.length
-              ? entries.map((entry) => el('button', { type: 'button', class: 'sf-pick', title: `${entry.width}×${entry.height}`, onclick: () => apply(entry) }, [el('img', { src: entry.thumb || entry.src, alt: '' })]))
-              : [el('small', { class: 'sf-hint', text: 'Aún no hay imágenes subidas.' })]),
-          )
-        },
-        text: 'Elegir de la biblioteca',
-      })
-      const alt = el('input', { type: 'text', value: (value && value.alt) || '', placeholder: 'Qué muestra la imagen', oninput: (event) => (get(path).alt = event.target.value) })
-      return el('fieldset', { class: 'sf-group sf-media', 'data-path': path.join('.') }, [
-        el('legend', {}, [label || 'Imagen', required ? null : el('button', { type: 'button', class: 'sf-remove', onclick: () => (remove(path), render()), text: 'Quitar' })]),
-        el('div', { class: 'sf-media-row' }, [preview, el('div', { class: 'sf-media-actions' }, [el('label', { class: 'sf-upload' }, ['Subir imagen…', file]), browse, status])]),
-        library,
-        wrap(path.concat('alt'), 'Texto alternativo', true, alt),
-      ])
-    }
-
     render()
     return {
       value: () => clone(state.value),
@@ -332,19 +224,5 @@
     }
   }
 
-  // Resizes an image in the browser and encodes it as WebP (spec 011, AD-03),
-  // so neither the local server nor the Lambda needs an image library.
-  async function toWebp(file, limit) {
-    const bitmap = await createImageBitmap(file)
-    const scale = Math.min(1, limit.width / bitmap.width, limit.height / bitmap.height)
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.round(bitmap.width * scale)
-    canvas.height = Math.round(bitmap.height * scale)
-    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.86))
-    if (!blob || blob.type !== 'image/webp') throw new Error('Este navegador no genera WebP: usa Chrome o Edge.')
-    return blob
-  }
-
-  window.SchemaForm = { create, skeleton, toWebp }
+  window.SchemaForm = { create }
 })()

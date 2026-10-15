@@ -1,14 +1,18 @@
-/* Stage template `reading` (spec 011, AD-01): placement on the stage's
-   12-column grid and the blocks particular to it. */
+/* Stage template `reading` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
 @reference "../../../index.css";
 
 @layer components {
   .rd-margin {
-    grid-column: 1 / span 4;
-    align-self: center;
     display: grid;
     align-content: start;
     gap: 1em;
+
+    @variant desktop {
+      grid-column: 1 / span 4;
+      align-self: center;
+    }
   }
 
   .rd-distinctions {
@@ -37,11 +41,14 @@
   /* The question and the document keep to the right columns: the centre is
      the cube's (E-3). */
   .rd-right {
-    grid-column: 8 / span 5;
-    align-self: center;
     display: grid;
     gap: 0.9em;
     min-height: 0;
+
+    @variant desktop {
+      grid-column: 8 / span 5;
+      align-self: center;
+    }
   }
 
   .rd-column {

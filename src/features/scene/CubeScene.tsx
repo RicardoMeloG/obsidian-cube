@@ -211,7 +211,7 @@ export function CubeScene({
   recede = false,
 }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
-  // 0 = camera at the front (rails layout, intro, face change), 1 = pulled back.
+  // 0 = camera at the front (hero layout, intro, face change), 1 = pulled back.
   const depthRef = useRef(recede ? 1 : 0)
   const worldId = sections.find((section) => section.id === activeSectionId)?.worldId ?? null
   const platformGlowTexture = useMemo(

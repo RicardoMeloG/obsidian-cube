@@ -4,29 +4,8 @@
     "eyebrow": 24,
     "title": 28,
     "summary": 112,
-    "featureLabel": 24,
-    "featureDescription": 72,
-    "flowTitle": 20,
-    "flowLabel": 12,
-    "flowDescription": 68,
     "ctaLabel": 20,
-    "conceptAxis": 16,
-    "conceptLabel": 18,
-    "conceptSummary": 60,
     "tagline": 28
-  },
-  "counts": {
-    "features": {
-      "min": 3,
-      "max": 4
-    },
-    "flow": {
-      "min": 3,
-      "max": 4
-    },
-    "researchConcepts": {
-      "max": 4
-    }
   },
   "templates": {
     "_note": "Measured 2026-10-15 (spec 011 S2): the stress content at these limits passes the layout check on the full matrix, both languages.",

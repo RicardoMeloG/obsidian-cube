@@ -1,12 +1,16 @@
-/* Stage template `catalog` (spec 011, AD-01): placement on the stage's
-   12-column grid and the blocks particular to it. */
+/* Stage template `catalog` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
 @reference "../../../index.css";
 
 @layer components {
   .ca-list {
-    grid-column: 1 / span 5;
-    align-self: center;
     gap: 0.85em;
+
+    @variant desktop {
+      grid-column: 1 / span 5;
+      align-self: center;
+    }
   }
 
   .ca-items {
@@ -69,10 +73,13 @@
 
   /* The sheet keeps to the right columns: the centre is the cube's (E-3). */
   .ca-detail {
-    grid-column: 8 / span 5;
-    align-self: center;
     gap: 0.8em;
     animation-name: stage-rise;
+
+    @variant desktop {
+      grid-column: 8 / span 5;
+      align-self: center;
+    }
   }
 
   .ca-detail__head {
@@ -144,6 +151,10 @@
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
     align-items: start;
     gap: 1em;
+
+    @variant phone {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .ca-facts {

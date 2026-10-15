@@ -4,7 +4,7 @@
 // shows what a visitor sees, scene included (WebGL in software).
 //
 //   npm run build && node scripts/walkthrough.mjs
-//   node scripts/walkthrough.mjs --layout=stage --viewport=1440x900
+//   node scripts/walkthrough.mjs --viewport=1440x900 --lang=es
 //   node scripts/walkthrough.mjs --admin     also the admin page (server on 5182)
 //   node scripts/walkthrough.mjs --content=stress   every slot at its budget
 //
@@ -21,9 +21,6 @@ const OUT = 'walkthrough'
 const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contact']
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.split('=')[1]?.split(',') ?? fallback
 const viewports = option('viewport', ['1440x900', '1366x768', '390x844'])
-// stage: the desktop default; rails: `?layout=rails`, for review while the
-// rails retire (spec 011, AD-05). Stacked screens show the rails either way.
-const layouts = option('layout', ['stage', 'rails'])
 const locales = option('lang', ['es', 'en'])
 const stress = option('content', [])[0] === 'stress'
 const readJson = (path) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8'))
@@ -47,8 +44,9 @@ try {
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   for (const viewport of viewports) {
     const [width, height] = viewport.split('x').map(Number)
-    for (const layout of layouts) {
-      if (layout === 'rails' && width <= 900) continue
+    {
+      // Desktop shows the stage, stacked screens the hero (spec 011).
+      const layout = 'stage'
       for (const locale of locales) {
         const page = await browser.newPage({ viewport: { width, height } })
         if (stress) {
@@ -62,8 +60,7 @@ try {
           if (message.type() === 'error') errors.push(`${layout} ${viewport} ${locale}: ${message.text().slice(0, 160)}`)
         })
         for (const face of FACES) {
-          const rails = layout === 'rails' ? '&layout=rails' : ''
-          await page.goto(`${BASE}/?intro=0&lang=${locale}&section=${face}${rails}`)
+          await page.goto(`${BASE}/?intro=0&lang=${locale}&section=${face}`)
           await page.waitForTimeout(2500)
           await page.screenshot({ path: `${OUT}/${layout}-${viewport}-${locale}-${face}.png`, fullPage: width < 720 })
         }

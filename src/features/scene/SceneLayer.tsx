@@ -24,7 +24,7 @@ const READY_TIMEOUT_MS = 3000
 // The 3D scene, wired to the experience: it reports where the cube lands and
 // what the visitor does with it, and turns the cube when a face is requested.
 // Without WebGL, or if the scene fails, a still of the cube takes its place;
-// the name, rails and strip are DOM and stay (ADR 006).
+// the name, the composition and the dock are DOM and stay (ADR 006).
 export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) {
   const store = useExperienceStore()
   const activeFace = useExperience((state) => state.activeFace)

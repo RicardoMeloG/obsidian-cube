@@ -14,7 +14,7 @@ type DetailDialogProps = {
   restoreFocusRef: RefObject<HTMLElement | null>
 }
 
-// The long form of a face (or a research concept) over the page, as a native
+// The long form of a face over the page, as a native
 // modal <dialog>: the browser puts it in the top layer and makes the rest of
 // the page inert. On top of that, focus lands on the title, Tab cycles inside
 // the panel, Escape and a click on the backdrop close it, the page scroll is

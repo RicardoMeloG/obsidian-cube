@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useExperience, useExperienceStore } from './experienceStore'
 
-// The rails' face change: they fade out, swap to the new face half way, then
+// The content's face change: they fade out, swap to the new face half way, then
 // rise in (the motion itself is CSS, src/features/faces/FaceRails.css).
 const SWAP_MS = 150
 const SETTLE_MS = 430

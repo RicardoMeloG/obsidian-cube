@@ -5,36 +5,16 @@ import { z } from 'zod'
 import exampleEn from '../../public/content/site.example.en.json'
 import exampleEs from '../../public/content/site.example.es.json'
 import { CompositionSchema } from './compositions'
-import { FACE_ORDER, FEATURE_GLYPHS } from './faces'
+import { FACE_ORDER } from './faces'
 import { CtaSchema, LinkSchema, RichTextSchema } from './fields'
-import type { FaceId, FeatureGlyphId } from './faces'
+import type { FaceId } from './faces'
 
 export type SiteLocale = 'en' | 'es'
 
 export const FaceIdSchema = z.enum(FACE_ORDER as [FaceId, ...FaceId[]])
-const FeatureGlyphSchema = z.enum(FEATURE_GLYPHS as unknown as [FeatureGlyphId, ...FeatureGlyphId[]])
 
 // `meta({ title })` is the field's label in the admin's generated form
 // (spec 011, AD-04); the admin speaks Spanish.
-const FeatureSchema = z.object({
-  glyph: FeatureGlyphSchema.meta({ title: 'Glifo' }),
-  label: z.string().min(1).meta({ title: 'Rótulo' }),
-  description: RichTextSchema.meta({ title: 'Descripción' }),
-})
-
-const FlowStepSchema = z.object({
-  label: z.string().min(1).meta({ title: 'Rótulo' }),
-  description: RichTextSchema.meta({ title: 'Descripción' }),
-})
-
-const ResearchConceptSchema = z.object({
-  key: z.string().min(1).meta({ title: 'Clave' }),
-  label: z.string().min(1).meta({ title: 'Rótulo' }),
-  axis: z.string().min(1).meta({ title: 'Eje' }),
-  summary: RichTextSchema.meta({ title: 'Resumen' }),
-  detail: RichTextSchema.meta({ title: 'Detalle' }),
-})
-
 const SiteSectionSchema = z.object({
   id: FaceIdSchema.meta({ title: 'Cara', widget: 'fixed' }),
   label: z.string().min(1).meta({ title: 'Nombre en el cubo y el dock' }),
@@ -52,9 +32,6 @@ const SiteSectionSchema = z.object({
   proofPoints: z.array(RichTextSchema).optional().meta({ title: 'Pruebas (diálogo)' }),
   links: z.array(LinkSchema).optional().meta({ title: 'Enlaces (diálogo)' }),
   cta: CtaSchema.optional().meta({ title: 'Llamado antiguo' }),
-  features: z.array(FeatureSchema).optional().meta({ title: 'Señales (rieles)' }),
-  flowTitle: z.string().min(1).optional().meta({ title: 'Título del flujo (rieles)' }),
-  flow: z.array(FlowStepSchema).optional().meta({ title: 'Flujo (rieles)' }),
   detail: z
     .object({
       title: z.string().min(1).meta({ title: 'Título' }),
@@ -64,7 +41,6 @@ const SiteSectionSchema = z.object({
     })
     .optional()
     .meta({ title: 'Detalle (diálogo)' }),
-  researchConcepts: z.array(ResearchConceptSchema).optional().meta({ title: 'Conceptos de investigación (rieles)' }),
 })
 
 export const SiteContentSchema = z.object({
@@ -118,7 +94,6 @@ export type FaceContent = Omit<SiteSection, 'eyebrow' | 'tagline' | 'composition
   composition: NonNullable<SiteSection['composition']>
 }
 export type FaceDetail = NonNullable<SiteSection['detail']>
-export type FaceResearchConcept = NonNullable<SiteSection['researchConcepts']>[number]
 export type FaceCta = NonNullable<SiteSection['ctaPrimary']>
 
 // The committed example is the one set of defaults: it renders before the
@@ -151,13 +126,9 @@ export function normalizeSections(sections: SiteSection[], locale: SiteLocale): 
       proofPoints: section?.proofPoints,
       links: section?.links,
       cta: section?.cta,
-      features: section?.features ?? fallback.features,
-      flowTitle: section?.flowTitle ?? fallback.flowTitle,
-      flow: section?.flow ?? fallback.flow,
       ctaPrimary: section?.ctaPrimary ?? fallback.ctaPrimary,
       ctaSecondary: section?.ctaSecondary ?? fallback.ctaSecondary,
       detail: section?.detail ?? fallback.detail,
-      researchConcepts: section?.researchConcepts ?? fallback.researchConcepts,
       tagline: section?.tagline ?? fallback.tagline ?? '',
       composition: section?.composition ?? fallback.composition!,
     }

@@ -1,4 +1,4 @@
-import { Controller, Get, Header } from '@nestjs/common'
+import { Controller, Get, Header, Req } from '@nestjs/common'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 
@@ -12,9 +12,10 @@ export class AdminController {
     return fs.readFile(path.join(__dirname, 'index.html'), 'utf8')
   }
 
-  @Get('form.js')
+  // The scripts of the generated form, by exact name: no path reaches the disk.
+  @Get(['form.js', 'form-kit.js', 'form-media.js'])
   @Header('Content-Type', 'text/javascript; charset=utf-8')
-  form(): Promise<string> {
-    return fs.readFile(path.join(__dirname, 'form.js'), 'utf8')
+  form(@Req() request: { path: string }): Promise<string> {
+    return fs.readFile(path.join(__dirname, path.basename(request.path)), 'utf8')
   }
 }

@@ -7,7 +7,6 @@ const start = (overrides: Partial<ExperienceState> = {}) => ({
   ...overrides,
 })
 const run = (state: ExperienceState, ...events: ExperienceEvent[]) => events.reduce(experienceReducer, state)
-const detail = { title: 'T', summary: 'S' }
 
 describe('face changes', () => {
   it('turn the cube when a scene is mounted, and change the face when it lands', () => {
@@ -24,19 +23,19 @@ describe('face changes', () => {
     expect(state).toMatchObject({ activeFace: 'systems', transition: 'exiting' })
   })
 
-  it('swap the rails half way and settle', () => {
+  it('swap the content half way and settle', () => {
     const state = run(start(), { type: 'faceEntered', face: 'systems' }, { type: 'panelsSwapped' })
     expect(state).toMatchObject({ displayedFace: 'systems', transition: 'entering' })
     expect(run(state, { type: 'transitionFinished' }).transition).toBe('idle')
   })
 
-  it('cancel the transition when the visitor returns to the face the rails still show', () => {
+  it('cancel the transition when the visitor returns to the face the content still shows', () => {
     const state = run(start(), { type: 'faceEntered', face: 'systems' }, { type: 'faceEntered', face: 'agentic' })
     expect(state).toMatchObject({ activeFace: 'agentic', displayedFace: 'agentic', transition: 'idle' })
   })
 
   it('close the detail dialog', () => {
-    const open = run(start(), { type: 'detailOpened', detail })
+    const open = run(start(), { type: 'detailOpened' })
     expect(run(open, { type: 'faceRequested', face: 'contact' }).detail.open).toBe(false)
   })
 

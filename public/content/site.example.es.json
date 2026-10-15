@@ -27,19 +27,6 @@
       "title": "Productos Agénticos",
       "eyebrow": "INGENIERÍA AGÉNTICA",
       "summary": "Diseño y construcción de <strong>sistemas autónomos</strong> que perciben, deciden y ejecutan acciones para generar <em>impacto real</em>.",
-      "features": [
-        { "glyph": "eye", "label": "Visión Práctica", "description": "Agentes que convierten la intención en resultados, no en improvisación." },
-        { "glyph": "shield", "label": "Sistemas Verificables", "description": "Diseño con restricciones reales, observabilidad y decisiones auditables." },
-        { "glyph": "rocket", "label": "Del Diseño a Producción", "description": "De prototipos rápidos a soluciones confiables y escalables." },
-        { "glyph": "chart", "label": "Impacto Real", "description": "Soluciones que generan valor medible en el negocio y en las personas." }
-      ],
-      "flowTitle": "FLUJO AGÉNTICO",
-      "flow": [
-        { "label": "ESPECIFICAR", "description": "Definir objetivo, contexto y restricciones verificables." },
-        { "label": "PROTOTIPAR", "description": "Construir rápido, iterar con datos reales y validar supuestos." },
-        { "label": "VALIDAR", "description": "Medir, testear y asegurar que el agente cumple su propósito." },
-        { "label": "PUBLICAR", "description": "Desplegar con monitoreo, trazabilidad y control continuo." }
-      ],
       "ctaPrimary": { "label": "EXPLORAR ENFOQUE" },
       "ctaSecondary": { "label": "VER METODOLOGÍA" },
       "detail": {
@@ -102,19 +89,6 @@
       "title": "Productos Públicos",
       "eyebrow": "PRODUCTO ABIERTO",
       "summary": "Herramientas open source y experimentos de producto que demuestran ejecución, seguridad y usabilidad.",
-      "features": [
-        { "glyph": "rocket", "label": "Repositorio Principal", "description": "El proyecto que mejor muestra la dirección actual." },
-        { "glyph": "spark", "label": "Este Prototipo", "description": "El sitio mismo como evidencia del flujo de trabajo." },
-        { "glyph": "eye", "label": "Criterio de Diseño", "description": "Decisiones bajo restricciones reales, no sobre una pizarra." },
-        { "glyph": "chart", "label": "Mantenibilidad", "description": "Código que sobrevive más allá del demo." }
-      ],
-      "flowTitle": "FLUJO DE RELEASE",
-      "flow": [
-        { "label": "ACOTAR", "description": "Elegir qué vale la pena publicar y qué no." },
-        { "label": "CONSTRUIR", "description": "Software que funciona antes que promesas pulidas." },
-        { "label": "ENDURECER", "description": "Tests, docs, errores y observabilidad." },
-        { "label": "PUBLICAR", "description": "Abrir el artefacto y hacerse cargo de su evolución." }
-      ],
       "ctaPrimary": { "label": "ABRIR REPOSITORIO", "href": "https://github.com/your-handle/your-project" },
       "ctaSecondary": { "label": "VER PROYECTOS" },
       "detail": {
@@ -210,19 +184,6 @@
       "title": "Sistemas Productivos",
       "eyebrow": "ARQUITECTURA",
       "summary": "Modernización legacy, bases de datos, arquitectura, dirección hacia cloud y restricciones operativas reales.",
-      "features": [
-        { "glyph": "shield", "label": "Modernización Legacy", "description": "Avanzar sin romper lo que ya funciona." },
-        { "glyph": "spark", "label": "Datos e Integraciones", "description": "Esquemas, contratos y fronteras confiables." },
-        { "glyph": "rocket", "label": "Dirección Cloud", "description": "Camino pragmático a serverless y servicios gestionados." },
-        { "glyph": "chart", "label": "Continuidad Operacional", "description": "Uptime, runbooks y on-call humano." }
-      ],
-      "flowTitle": "FLUJO DE ENTREGA",
-      "flow": [
-        { "label": "OBSERVAR", "description": "Ver el sistema real antes de cambiarlo." },
-        { "label": "CONTENER", "description": "Estabilizar primero las uniones de mayor riesgo." },
-        { "label": "EVOLUCIONAR", "description": "Reescrituras incrementales detrás de feature flags." },
-        { "label": "OPERAR", "description": "Logs, métricas, trazas y responsabilidad clara." }
-      ],
       "ctaPrimary": { "label": "VER ARQUITECTURA" },
       "ctaSecondary": { "label": "CASOS DE ESTUDIO" },
       "detail": {
@@ -278,19 +239,6 @@
       "title": "Criterio de Seguridad",
       "eyebrow": "CONTROL DE RIESGO",
       "summary": "Defaults seguros, MFA, rate limiting, validación y conciencia de riesgo productivo.",
-      "features": [
-        { "glyph": "lock", "label": "Defaults Seguros", "description": "Mínimo privilegio, sin secretos en el repo, releases firmados." },
-        { "glyph": "shield", "label": "Autenticación Fuerte", "description": "MFA, tokens de vida corta, auditoría." },
-        { "glyph": "eye", "label": "Validación de Entrada", "description": "Entradas con esquema, rate limits, controles de abuso." },
-        { "glyph": "chart", "label": "Riesgo Proporcional", "description": "Controles a la altura del impacto real." }
-      ],
-      "flowTitle": "FLUJO DE CONTROLES",
-      "flow": [
-        { "label": "INVENTARIAR", "description": "Saber qué proteges y por qué." },
-        { "label": "ENDURECER", "description": "MFA, secretos, higiene de dependencias y WAF cuando paga." },
-        { "label": "MONITOREAR", "description": "Detectar abuso, loguear con cuidado, evitar datos sensibles en logs." },
-        { "label": "RESPONDER", "description": "Rotar, contener y escribir un postmortem limpio." }
-      ],
       "ctaPrimary": { "label": "VER CONTROLES" },
       "ctaSecondary": { "label": "MODELO DE AMENAZAS" },
       "detail": {
@@ -332,49 +280,6 @@
       "title": "Investigación Independiente",
       "eyebrow": "INVESTIGACIÓN",
       "summary": "Filosofía aplicada a IA: distinguir salida de verdad, representación de realidad y conducta de agencia.",
-      "features": [
-        { "glyph": "eye", "label": "Verdad", "description": "Criterios para que una representación responda ante lo real." },
-        { "glyph": "spark", "label": "Significado", "description": "Comprender como reconstrucción e inyección de experiencia." },
-        { "glyph": "shield", "label": "Propósito", "description": "Distinguir dirección propia de propósito prestado." },
-        { "glyph": "chart", "label": "IA", "description": "Taxonomías para no confundir simulación con sujeto." }
-      ],
-      "researchConcepts": [
-        {
-          "key": "truth",
-          "label": "Verdad como ser",
-          "axis": "Verdad",
-          "summary": "La calidad de una salida no equivale a verdad.",
-          "detail": "La línea distingue entre el ser y sus representaciones. Una respuesta puede ser útil, fluida o convincente, pero solo gana fuerza cuando permanece responsable ante aquello que pretende representar."
-        },
-        {
-          "key": "representation",
-          "label": "Fidelidad",
-          "axis": "Representación",
-          "summary": "No toda representación tiene el mismo peso.",
-          "detail": "La fidelidad no se mide por belleza, autoridad o utilidad inmediata, sino por la relación efectiva entre representación, experiencia y contraste con el ser."
-        },
-        {
-          "key": "meaning",
-          "label": "Significado",
-          "axis": "Reconstrucción",
-          "summary": "El significado no vive dentro del signo.",
-          "detail": "Una representación significa algo cuando un sistema puede reconstruir lo que ella no contiene por sí misma. Este punto separa procesamiento lingüístico de comprensión."
-        },
-        {
-          "key": "purpose",
-          "label": "Propósito propio",
-          "axis": "Agencia",
-          "summary": "Actuar con objetivo no basta para tener dirección propia.",
-          "detail": "La pregunta central para agentes e IA no es solo qué hacen, sino de dónde proviene la dirección que siguen: prompt, recompensa, misión externa o apropiación interna."
-        }
-      ],
-      "flowTitle": "FLUJO DE INDAGACIÓN",
-      "flow": [
-        { "label": "SER", "description": "Separar realidad, manifestación y relato." },
-        { "label": "REPRESENTAR", "description": "Medir fidelidad, huella y mediación." },
-        { "label": "SIGNIFICAR", "description": "Explicar reconstrucción e inyección de experiencia." },
-        { "label": "DIRIGIR", "description": "Evaluar propósito prestado, agencia y simulación." }
-      ],
       "ctaPrimary": { "label": "VER SISTEMA" },
       "ctaSecondary": { "label": "CONCEPTOS" },
       "detail": {
@@ -410,19 +315,6 @@
       "title": "Contacto",
       "eyebrow": "CONTACTO",
       "summary": "Links profesionales y canales de contacto para colaboración y oportunidades.",
-      "features": [
-        { "glyph": "spark", "label": "Nombre Público", "description": "Usar el nombre completo buscable como referencia." },
-        { "glyph": "rocket", "label": "GitHub", "description": "Trabajo open source y este prototipo." },
-        { "glyph": "eye", "label": "LinkedIn", "description": "Contexto e historia profesional." },
-        { "glyph": "shield", "label": "Email", "description": "Canal directo y de bajo ruido para oportunidades." }
-      ],
-      "flowTitle": "CANALES",
-      "flow": [
-        { "label": "ABRIR", "description": "Bandeja abierta para colaboración seria." },
-        { "label": "INFORMAR", "description": "Enviar contexto: rol, alcance, restricciones." },
-        { "label": "REUNIR", "description": "Llamada corta para alinear ajuste y alcance." },
-        { "label": "COMPROMETER", "description": "Avanzar solo cuando ambos lados ven el valor." }
-      ],
       "ctaPrimary": { "label": "VER CANALES" },
       "ctaSecondary": { "label": "ABRIR GITHUB", "href": "https://github.com/your-handle" },
       "detail": {

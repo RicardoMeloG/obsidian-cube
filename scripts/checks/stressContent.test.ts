@@ -24,9 +24,7 @@ describe('stress content', () => {
         expect(section.label).toHaveLength(LAYOUT_BUDGETS.label)
         expect(section.title).toHaveLength(LAYOUT_BUDGETS.title)
         expect(section.summary).toHaveLength(LAYOUT_BUDGETS.summary)
-        expect(section.features).toHaveLength(budgets.counts.features.max)
-        for (const feature of section.features ?? []) expect(feature.description).toHaveLength(LAYOUT_BUDGETS.featureDescription)
-        for (const step of section.flow ?? []) expect(step.description).toHaveLength(LAYOUT_BUDGETS.flowDescription)
+        expect(section.tagline).toHaveLength(LAYOUT_BUDGETS.tagline)
       }
     })
 

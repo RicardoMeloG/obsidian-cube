@@ -49,7 +49,7 @@ await page.route(`${ORIGIN}/**`, async (route) => {
   const { pathname } = new URL(request.url())
   const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
   if (pathname === '/') return route.fulfill({ contentType: 'text/html', body: read('server/admin/index.html') })
-  if (pathname === '/form.js') return route.fulfill({ contentType: 'text/javascript', body: read('server/admin/form.js') })
+  if (/^\/form(-kit|-media)?\.js$/.test(pathname)) return route.fulfill({ contentType: 'text/javascript', body: read(`server/admin${pathname}`) })
   if (pathname === '/auth/me') return json({ authenticated: true, username: 'check' })
   if (/^\/(content\/media|examples)\//.test(pathname)) return route.fulfill({ contentType: 'image/webp', body: IMAGE })
   if (pathname === '/api/media' && request.method() === 'GET') return json([])

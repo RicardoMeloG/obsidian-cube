@@ -1,6 +1,6 @@
 # 011: Stage Layout and Editable Face Compositions — Proposal
 
-**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 to S2 done, the drift audit after S2 resolved (audit-1.md); S3 built, its end-to-end exit pending the owner's login; next: S4.
+**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 to S2 done, the drift audit after S2 resolved (audit-1.md); S3 built, its end-to-end exit pending the owner's login; S4 done, the drift audit after S4 resolved (audit-2.md); S6 met by S4; next: S5.
 **Builds on:** the stage concept (`?layout=escenario`, commit `ae0b93d`), ADR 004 (admin on AWS), ADR 005 (content kernel), ADR 006 (frontend architecture).
 
 ## 1. Problem
@@ -13,7 +13,7 @@ The concept answered the design question: a different composition per face, with
 | E-02 | Part of it is filler written to judge the design (stacks, results, a `check:security` command that does not exist, the research thesis, "24–48 h"), and the four product screenshots in `public/concept/` were generated, not captured. | `docs/assets.md`, rows `concept/*` |
 | E-03 | The admin edits three documents (`site.en`, `site.es`, `visual`) as raw JSON in a textarea, one face slice at a time, validated by the kernel. It has no media handling and no forms. | `server/admin/index.html`, `server/content/docs.ts` |
 | E-04 | `src/features/stage` is outside the gates of the other DOM layers: `StageFaces.tsx` has 485 lines (the limit is 250, H-16), no boundary rule names the module, the layout check never opens `?layout=escenario`, and the menu's `aria-label` is a Spanish literal. | `scripts/checks/fileSize.test.ts`; `eslint.config.js`; `StageView.tsx:104` |
-| E-05 | The first view is 10.9 KB over its budget (Lucide icons and the stage code). | `npm run check:budget` on the branch |
+| E-05 | The first view is 10.9 KB over its budget (Lucide icons and the stage code). Resolved by S4 (S6). | `npm run check:budget` on the branch |
 | E-06 | The stage contradicts three rules of `AGENTS.md`: the desktop layout is "cube centre, left rail, right rail, bottom strip"; "the cube does not disappear" (PRODUCTS covers it, RESEARCH nearly); and new features and admin functions "wait until the site is live" (ADR 007). | `AGENTS.md`, Experience Architecture and Hard Rules |
 
 ## 2. Outcome
@@ -45,10 +45,10 @@ The existing split holds: text by language in `site.{lang}.json`, language-free 
 - `sections[].tagline` in `site.{lang}.json`: the line under each face name in the dock.
 - `identity.links` in `site.{lang}.json`: GitHub and LinkedIn URLs for the top bar (email is not shown; CONTACT is the channel).
 - `faces[id].icon` in `visual.json`: the dock icon, next to the face's accent and world.
-- Interface copy (`Explorar el cubo`, `Volver al contenido`, the counter, form validation messages) is code, in `features/content/copy.ts` (AD-07 of spec 010).
+- Interface copy (`Explorar el cubo`, `Volver al contenido`, the top bar's link labels) is code, in `features/content/copy.ts` (AD-07 of spec 010). The counter (`01 / 06`) carries no words; its number format lives with the stage (`features/stage/motion.ts`, audit-2 F-2).
 - Icons are a catalog in the kernel (`ICON_IDS`, data only), mapped to SVG components in the stage; the admin offers them as a list. The pattern of `FEATURE_GLYPHS`.
 
-The current rail fields (`features`, `flow`, `detail`, `researchConcepts`) stay while the rails exist (AD-05); shared fields (`label`, `eyebrow`, `title`, `summary`, the CTAs, `detail`) are read by both layouts, so a face is written once.
+The rail fields (`features`, `flowTitle`, `flow`, `researchConcepts`) stayed while the rails existed (AD-05) and left the kernel with them in S4 (2026-10-15); a document that still has them loads, the schema drops them. Shared fields (`label`, `eyebrow`, `title`, `summary`, the CTAs, `detail`) are read by the stage in every mode, so a face is written once.
 
 ### AD-03 Images are owner content
 
@@ -90,9 +90,9 @@ If E-1 is taken: the stage is the desktop experience, the rails retire from desk
 | S1 Kernel | Icon catalog, `MediaRef`, the composition union with the six templates, `tagline`, `identity.links`, `faces[].icon`, template budgets, neutral example content in both languages with example images (`scripts/make-example-media.mjs`) | Schema, publish-rule and JSON Schema tests pass (done 2026-10-15; template budgets provisional until S2 measures them) |
 | S2 Stage from content | `conceptContent.ts` removed (the stage reads it until this slice); one component per template, chrome and dock from content, copy dictionary, the stage under the boundary and size rules; layout check and stress content on the stage | All gates green on desktop and desktop-short (done 2026-10-15: the stage is the desktop default, `?layout=rails` for review; template budgets measured with the stress content on the full matrix; the right-hand blocks start at column 8, clear of the cube; first view still over budget, S6) |
 | S3 Admin | Schema endpoint, generated form, media upload and picker (local disk), the cross-language warning | Round-trip test; an image uploaded, published and shown by the site locally (built 2026-10-15: `npm run check:admin` and the media store tests green; **pending**: the end-to-end with the owner's login, which only the owner can open) |
-| S4 Stacked | Stacked order of each template; the rails retire (if E-1) | Layout check green on the full matrix |
+| S4 Stacked | Stacked order of each template; the rails retire (if E-1) | Layout check green on the full matrix (done 2026-10-15: the hero on stacked screens, the composition in reading order, the dock fixed at the bottom; the rails, the face strip, their CSS, their content fields and the research-concept dialog removed; `?layout=` gone) |
 | S5 CONTACT world | The CONTACT background, today a placeholder (`contact` in `src/kernel/worlds.ts`), composed around the centred cube like the other five worlds (owner, 2026-10-15) | The world renders behind CONTACT in every layout mode; layout check and contrast of name and role green over it |
-| S6 Budget | Measure; replace or subset the icon library if it is the cause | `check:budget` green, or a raise justified here |
+| S6 Budget | Measure; replace or subset the icon library if it is the cause | `check:budget` green, or a raise justified here (met 2026-10-15 by S4: removing the rails brought the first view to 454.8 KB against 455.3 KB; the icon library stays) |
 
 **Closing a slice** (owner, 2026-10-15): every gate of section 4 green, plus the visual walkthrough (`scripts/walkthrough.mjs`, `AGENTS.md` definition of done, item 5) looked at and its findings recorded in the commit. **Drift audits** (item 8): after S2 (the stage reads content; the biggest change to the architecture), after S4 (the rails retire) and before acceptance. Each is recorded as `audit-N.md` here and resolved before the next slice starts.
 
