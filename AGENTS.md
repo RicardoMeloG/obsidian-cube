@@ -9,14 +9,14 @@ The project is an open-source, public, agentic portfolio prototype for Ricardo M
 A review on 2026-10-09 found the engineering well ahead of the product: the site was not yet published and no face linked to a real artifact, so the priority moved from the container to the content. Full reasoning in `docs/decisions/002-evidence-before-spectacle.md`.
 
 - **Evidence before spectacle.** The cube is the invitation, not the proof. What makes the owner stand out is inspectable work: every face must link to at least one concrete artifact (repo, demo, write-up) with one line of result.
-- **Stages, in order; build nothing more until the release.** The path to the first public release is normalization, then content, then release; a stage starts only when the previous one met its exit criteria, and its decisions are taken at its entry (`docs/decisions/007-staged-path-to-publishing.md`). Normalizing the existing code to the declared architecture is not building more: the public repository is evidence too. New features, infrastructure, admin functions or 3D worlds wait until the site is live.
+- **Stages, in order; build nothing more until the release.** The path to the first public release is normalization, then compositions (`docs/decisions/008-compositions-before-content.md`), then content, then security, then release; a stage starts only when the previous one met its exit criteria, and its decisions are taken at its entry (`docs/decisions/007-staged-path-to-publishing.md`). Normalizing the existing code to the declared architecture is not building more: the public repository is evidence too. New features, infrastructure, admin functions or 3D worlds wait until the site is live, except what spec 011 lists (the admin forms and media for the compositions, the CONTACT world).
 - **The site is its own case study.** The methodology deep-dive explains how this site was built with agents: decisions, gates, what went wrong. It is the one page that aligns the cube with the positioning.
 - **Name first, message largest.** The owner's name and role are the first text a visitor reads: top-left, the page's `h1`, never covered, AA contrast. The face title stays the largest text, because two headlines of equal weight compete; the name wins by position and contrast, not size.
 - **Backgrounds must be perceivable.** A world that cannot be seen in a static frame behind the cube is not doing its retention job.
 
 **Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository. In production it reaches the site through the admin, which moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`); how it reaches production for the first release is decision D-6, taken at the entry of the release stage.
 
-Stages (ADR 007): (1) normalization, spec 010 P2b–P4 and the developer-facing docs; (2) content, the face set, one artifact per face and the real copy; (3) release. After the release: methodology page (unless D-8 brings it into the release), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility and composition variety. `docs/roadmap.md` carries the detail.
+Stages (ADR 007, ADR 008): (1) normalization, spec 010 P2b–P4 and the developer-facing docs (closed); (2) compositions, spec 011; (3) content, one artifact per face and the real copy; (4) security, the contact form, the CV request behind a captcha and the security review; (5) release. After the release: methodology page (unless D-8 brings it into the release), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility. `docs/roadmap.md` carries the detail.
 
 ## Identity
 
@@ -50,7 +50,7 @@ The site is a **single-screen experience** built around a persistent obsidian cu
 
 - The cube stays visible at the center of the screen at all times on desktop. It is **not** a one-shot portal.
 - Selecting a face does **not** navigate to a separate page or full-screen overlay. Instead, the surrounding side panels update in place to reveal that face's minimal content.
-- Desktop layout: cube center, primary narrative on the left rail, supporting structure (numbered flow / metrics) on the right rail, breadcrumb/section navigation on the bottom strip.
+- Desktop layout: cube center, the face's composition around it (one template per face, chosen and filled from the admin; spec 011, E-1), face navigation on the bottom dock. The two rails remain only until spec 011 replaces them.
 - Content per face is intentionally minimal: it must fit a single viewport without scroll on a standard 1440-1920px desktop. **No long-form essays inside the cube experience.**
 - Responsive: on narrow viewports the side panels collapse below/above the cube while the cube remains the visual anchor.
 - Long-form deep-dive pages (methodology, project archive, research index) live on separate routes reached from side-panel CTAs and may scroll. They are not part of the single-screen experience.
@@ -86,7 +86,7 @@ The cube has six faces, each with a stable semantic identity:
 
 All six faces share the same frame (double-diamond, inset bevel, corner brackets, label, three dots). Inside the frame each face carries its own accent color and inner glyph, assigned from `public/content/visual.json` (see `docs/decisions/003-per-face-accent-and-glyph.md`).
 
-Every face must point at least one real, inspectable artifact through its CTAs or `detail.links`. Whether CONTACT keeps a face or becomes persistent chrome is an open decision (see `docs/project-memory.md`, 2026-06-11).
+Every face must point at least one real, inspectable artifact through its CTAs or `detail.links`. CONTACT is a permanent face (owner, 2026-10-14; ADR 008): contact must be easy to reach for recruiters, and the CV is requested behind a captcha, never shown.
 
 ## Hard Rules
 

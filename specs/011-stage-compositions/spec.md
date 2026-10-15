@@ -1,0 +1,120 @@
+# 011: Stage Layout and Editable Face Compositions — Proposal
+
+**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. Next: S1.
+**Builds on:** the stage concept (`?layout=escenario`, commit `ae0b93d`), ADR 004 (admin on AWS), ADR 005 (content kernel), ADR 006 (frontend architecture).
+
+## 1. Problem
+
+The concept answered the design question: a different composition per face, with icons, images and cards, breaks the monotony of the two rails (owner, 2026-10-14). It did not answer how that content is owned. Today it cannot be edited, and it breaks the two-layer model:
+
+| Id | Fact | Reproduce |
+|---|---|---|
+| E-01 | All stage content is TypeScript in `src/features/stage/conceptContent.ts` (566 lines): six bespoke types, one per face, with both languages inline. It would ship in the public repository, and the admin cannot see it. | `wc -l src/features/stage/conceptContent.ts` |
+| E-02 | Part of it is filler written to judge the design (stacks, results, a `check:security` command that does not exist, the research thesis, "24–48 h"), and the four product screenshots in `public/concept/` were generated, not captured. | `docs/assets.md`, rows `concept/*` |
+| E-03 | The admin edits three documents (`site.en`, `site.es`, `visual`) as raw JSON in a textarea, one face slice at a time, validated by the kernel. It has no media handling and no forms. | `server/admin/index.html`, `server/content/docs.ts` |
+| E-04 | `src/features/stage` is outside the gates of the other DOM layers: `StageFaces.tsx` has 485 lines (the limit is 250, H-16), no boundary rule names the module, the layout check never opens `?layout=escenario`, and the menu's `aria-label` is a Spanish literal. | `scripts/checks/fileSize.test.ts`; `eslint.config.js`; `StageView.tsx:104` |
+| E-05 | The first view is 10.9 KB over its budget (Lucide icons and the stage code). | `npm run check:budget` on the branch |
+| E-06 | The stage contradicts three rules of `AGENTS.md`: the desktop layout is "cube centre, left rail, right rail, bottom strip"; "the cube does not disappear" (PRODUCTS covers it, RESEARCH nearly); and new features and admin functions "wait until the site is live" (ADR 007). | `AGENTS.md`, Experience Architecture and Hard Rules |
+
+## 2. Outcome
+
+The owner composes every face from the admin: chooses one of a fixed set of compositions, fills it with text in both languages, picks icons from a catalog and uploads images. Nothing about a face's content lives in code. The public repository holds the compositions, the schemas and neutral example content; the owner's text and images stay in the private layer. Every composition, filled to its limits, passes the layout and accessibility checks.
+
+## 3. Architecture decisions
+
+### AD-01 Compositions are templates with typed slots, not a page builder
+
+A face's content is one of a fixed set of templates. A template is code (a component, its grid placement, its stacked order) with named, typed slots; the owner picks the template and fills the slots. Templates are not tied to a face. The first six come from the concept:
+
+| Template | Concept face | Slots, in short |
+|---|---|---|
+| `showcase` | AGENTIC | heading, featured case (icon, label, title, text, chips, link), list of steps with icons, numbered proofs (icon, kind, title, text, chips), two CTAs |
+| `catalog` | PRODUCTS | heading, items (name, meta, status, text, chips, image, thumbnail, facts with icons, links); the visitor selects an item |
+| `case` | SYSTEMS | heading, case label and name, before and after lists, status map (cells: done, active, pending; legend), steps with icons, CTA |
+| `ledger` | SECURITY | heading, callouts (icon, label, title, text), a console of rows (status, id, text), status labels, CTA |
+| `reading` | RESEARCH | heading, question, chain (icon, label, text), distinctions (term, text), a document card, CTA |
+| `channels` | CONTACT | heading, availability line, channels (kind, label, text); the request form arrives with the security stage (E-7) |
+
+Alternatives: one bespoke type per face (the concept: a face cannot change its shape without code); free blocks on a grid (a page builder: no budget can prove a free layout fits, and it invites the drift `AGENTS.md` forbids). **Verified by:** the kernel schema is a discriminated union on `template`; every template has stress content in the layout check (AD-06).
+
+### AD-02 Where each piece lives
+
+The existing split holds: text by language in `site.{lang}.json`, language-free presentation in `visual.json`.
+
+- `sections[].composition` in `site.{lang}.json`: the template id and its slots (text, item data, links, icon ids, image references with their `alt`). Each document validates on its own. A publish warning, not an error, flags a face whose two languages use different templates, so a template can be changed one language at a time.
+- `sections[].tagline` in `site.{lang}.json`: the line under each face name in the dock.
+- `identity.links` in `site.{lang}.json`: GitHub and LinkedIn URLs for the top bar (email is not shown; CONTACT is the channel).
+- `faces[id].icon` in `visual.json`: the dock icon, next to the face's accent and world.
+- Interface copy (`Explorar el cubo`, `Volver al contenido`, the counter, form validation messages) is code, in `features/content/copy.ts` (AD-07 of spec 010).
+- Icons are a catalog in the kernel (`ICON_IDS`, data only), mapped to SVG components in the stage; the admin offers them as a list. The pattern of `FEATURE_GLYPHS`.
+
+The current rail fields (`features`, `flow`, `detail`, `researchConcepts`) stay while the rails exist (AD-05); shared fields (`label`, `eyebrow`, `title`, `summary`, the CTAs, `detail`) are read by both layouts, so a face is written once.
+
+### AD-03 Images are owner content
+
+`MediaRef = { src, alt, width, height }`. The owner uploads through the admin; the admin page resizes in the browser (canvas) to WebP, at most 1600 px wide plus a 320 px thumbnail, so neither the local server nor a future Lambda needs an image library. The server checks the bytes are WebP, the size and the dimensions, and stores the file under its content hash: `content/media/<hash>.webp`, gitignored locally like the rest of `public/content/`, and under `content/` in the site bucket in production (ADR 004: an upload is a presigned PUT to the drafts bucket; publish copies it). Example content uses neutral committed images under `public/examples/`, and the publish rules reject them in owner content, as they reject `Portfolio Owner`.
+
+### AD-04 The admin's forms are generated from the kernel
+
+`z.toJSONSchema()` turns the publishable schema of each document into JSON Schema (checked on 2026-10-15: enums become lists, minimums and required fields carry over). The server serves it (`GET /api/schema/:doc`) and the admin page renders it as a form: objects as groups, arrays as lists with add, remove and reorder, enums as selects, `meta({ widget: 'media' })` as an upload and picker, rich text as a text area that lists the allowed tags, `meta({ title })` as the Spanish label. The JSON view stays, as the advanced view. A field added to the kernel appears in the admin with no admin change, and the same page serves the Cognito admin of ADR 004, which only swaps the API it calls. **Verified by:** a unit test generates the JSON Schema of every document (no unsupported Zod type); a Playwright test loads the example documents into the form and saves them back unchanged.
+
+### AD-05 One layout per mode
+
+If E-1 is taken: the stage is the desktop experience, the rails retire from desktop in the same change, and stacked keeps the rails until the stage's stacked templates exist. `?layout=` remains only for review during the transition. Two desktop layouts are not maintained side by side.
+
+### AD-06 Budgets per template, measured
+
+`layoutBudgets.json` gains a `templates` section (visible characters and item counts per slot). The stress content fills every slot to its limit; the layout check renders every template in every layout mode and both languages, with axe. A budget changes only with a layout check run that proves the stress content still fits (the rule of `AGENTS.md`).
+
+### AD-07 The stage is a DOM layer with the same rules
+
+`features/stage` joins the boundary table (it must not import scene, audio, dev, app, three or R3F; it reads the experience store, content, ui and the kernel), the file-size limit (one file per template) and the copy rule.
+
+## 4. Gates
+
+| Rule | Gate |
+|---|---|
+| Every template renders the stress content within its area at every mode, no axe violation | `npm run check:layout` (H-06, H-13), extended to the stage |
+| No content in code: the stage reads only the kernel's normalized content | Lint: `features/stage` may not export string literals longer than one word outside `copy.ts` (or review, **unchecked**, if the rule proves noisy) |
+| JSON Schema generation covers every document | Unit test |
+| The admin form round-trips the example documents | Playwright test on the admin page |
+| Example media never published as owner content | Publish rules, unit test |
+| DOM files ≤ 250 lines, boundaries, copy dictionary | `fileSize.test.ts`, `eslint.config.js`, `boundaries.test.ts` |
+| First-view budget | `npm run check:budget`; a raise needs this spec to say why |
+
+## 5. Slices
+
+| Slice | Scope | Exit |
+|---|---|---|
+| S0 Decisions | Section 7 answered; ADR 008 accepted; `AGENTS.md`, the roadmap and `docs/architecture.md` amended | Documents merged (done 2026-10-15) |
+| S1 Kernel | Icon catalog, `MediaRef`, the composition union with the six templates, `tagline`, `identity.links`, `faces[].icon`, template budgets, neutral example content in both languages with example images; `conceptContent.ts` removed | Schema, publish-rule and JSON Schema tests pass |
+| S2 Stage from content | One component per template, chrome and dock from content, copy dictionary, the stage under the boundary and size rules; layout check and stress content on the stage | All gates green on desktop and desktop-short |
+| S3 Admin | Schema endpoint, generated form, media upload and picker (local disk), the cross-language warning | Round-trip test; an image uploaded, published and shown by the site locally |
+| S4 Stacked | Stacked order of each template; the rails retire (if E-1) | Layout check green on the full matrix |
+| S5 CONTACT world | The CONTACT background, today a placeholder (`contact` in `src/kernel/worlds.ts`), composed around the centred cube like the other five worlds (owner, 2026-10-15) | The world renders behind CONTACT in every layout mode; layout check and contrast of name and role green over it |
+| S6 Budget | Measure; replace or subset the icon library if it is the cause | `check:budget` green, or a raise justified here |
+
+## 6. Non-goals
+
+A page builder; 3D worlds other than CONTACT's (S5); the contact form and the CV request (captcha and delivery), which belong to the security stage (E-7); the Cognito admin itself (ADR 004 slices); analytics.
+
+## 7. Entry decisions (owner, 2026-10-15)
+
+| Id | Question | Decision |
+|---|---|---|
+| E-1 | Does the stage replace the rails? | **(a)** yes: desktop now, stacked in S4. Two layouts would double every change and every check. |
+| E-2 | Are templates free to use on any face? | **(a)** yes: a face can change shape from the admin without code. |
+| E-3 | Must the cube stay visible on every face? | **(a)** yes: templates keep the centre clear (the `catalog` detail narrows, the `reading` column becomes lighter). The owner's condition for the stage (2026-10-14); "the cube does not disappear" stays. |
+| E-4 | Images uploaded by the owner, private, resized in the browser? | **(a)** yes. |
+| E-5 | Admin forms generated from the schemas? | **(a)** generated, JSON as the advanced view. |
+| E-6 | Order against ADR 007 | **(a)** this spec before the content stage (ADR 008). |
+| E-7 | The contact form | **Neither option.** The contact form, the CV request and its captcha are solved together with the rest of security in a stage of their own, the last before the release (ADR 008). The `channels` template ships without the form. |
+
+Added by the owner at entry: the CONTACT background, a placeholder until now, is built in this spec (slice S5), so every face reaches the content stage with its final shape and world.
+
+## 8. Acceptance
+
+- The owner edits every face of the stage from the admin, in both languages, with no JSON hand-editing, including images and icons.
+- `src/features/stage` contains no content: deleting the private documents shows the neutral example, never the owner's text.
+- All gates green, the layout check covering every template with stress content in every mode and both languages.
+- Visual check with Playwright at 1440 px or wider, 1366×768 and a 390 px phone (`AGENTS.md`, definition of done).
