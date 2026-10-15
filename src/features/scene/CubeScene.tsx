@@ -590,6 +590,12 @@ export function CubeScene({
       <pointLight position={[1.6, 0.6, 2.4]} intensity={1.1} color={new Color('#c9d2ff')} distance={4.2} />
       <pointLight position={[-1.6, 0.6, 2.4]} intensity={1.1} color={new Color('#9387ff')} distance={4.2} />
 
+      {/* Every light lengthens the shader of the cube's glass and of the
+          platform, and the cost is paid at every pixel. Three more spots
+          (right, left, from below) were removed on 2026-10-14: with the intro
+          clock frozen they changed 10 pixels at rest and none turning or
+          falling. The overhead and back spots stay: the back one draws the
+          highlight along the top edge. */}
       <spotLight
         position={[0.4, 7.6, 2.6]}
         target-position={[0, 0.4, 0]}
@@ -600,36 +606,12 @@ export function CubeScene({
         castShadow={effects.shadows}
       />
       <spotLight
-        position={[2.4, 6.2, 1.4]}
-        target-position={[0.4, 0.6, 0.4]}
-        angle={0.2}
-        penumbra={0.45}
-        intensity={9}
-        color={new Color('#e0e4ff')}
-      />
-      <spotLight
-        position={[-2.6, 5.6, 0.8]}
-        target-position={[-0.4, 0.6, 0]}
-        angle={0.24}
-        penumbra={0.5}
-        intensity={6.4}
-        color={new Color('#c4cbff')}
-      />
-      <spotLight
         position={[0, 5.2, -2.6]}
         target-position={[0, 0.4, 0]}
         angle={0.34}
         penumbra={0.7}
         intensity={3.4}
         color={new Color('#9aa0ff')}
-      />
-      <spotLight
-        position={[0, -1.2, 0.05]}
-        target-position={[0, 0.4, 0]}
-        angle={0.62}
-        penumbra={0.85}
-        intensity={7.4}
-        color={new Color('#7c6dff')}
       />
 
       <group
