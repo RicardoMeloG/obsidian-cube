@@ -2,6 +2,8 @@ import { z } from 'zod'
 import visualExample from '../../public/content/visual.example.json'
 import { FACE_ORDER } from './faces'
 import type { FaceId } from './faces'
+import { ICON_IDS } from './icons'
+import type { IconId } from './icons'
 import { FaceIdSchema } from './siteContent'
 import type { FaceContent } from './siteContent'
 import { WORLD_IDS } from './worlds'
@@ -23,10 +25,12 @@ const WorldCatalogEntrySchema = z.object({
   enabled: z.boolean(),
 })
 
-// Per-face presentation: which world backs it (or none) and its accent hue.
+// Per-face presentation: which world backs it (or none), its accent hue and
+// its icon in the stage's dock (spec 011, AD-02).
 const FaceVisualSchema = z.object({
   worldId: WorldIdSchema.nullable(),
   accent: HexColorSchema,
+  icon: z.enum(ICON_IDS as unknown as [IconId, ...IconId[]]).optional(),
 })
 
 export const VisualContentSchema = z.object({
@@ -35,7 +39,7 @@ export const VisualContentSchema = z.object({
 })
 
 export type WorldCatalogEntry = z.infer<typeof WorldCatalogEntrySchema>
-export type FaceVisual = z.infer<typeof FaceVisualSchema>
+export type FaceVisual = z.infer<typeof FaceVisualSchema> & { icon: IconId }
 export type VisualContent = {
   worlds: WorldCatalogEntry[]
   faces: Record<FaceId, FaceVisual>
@@ -45,6 +49,7 @@ export type VisualContent = {
 // `face.accent` and `face.worldId` without touching the visual document.
 export type ResolvedFace = FaceContent & {
   accent: string
+  icon: IconId
   worldId: WorldId | null
 }
 
@@ -59,7 +64,8 @@ export function getDefaultVisualContent(): VisualContent {
 export function normalizeVisual(parsed: z.infer<typeof VisualContentSchema>): VisualContent {
   const faces = {} as Record<FaceId, FaceVisual>
   for (const id of FACE_ORDER) {
-    faces[id] = parsed.faces[id] ?? DEFAULT_VISUAL.faces[id]
+    const face = parsed.faces[id]
+    faces[id] = face ? { ...face, icon: face.icon ?? DEFAULT_VISUAL.faces[id].icon } : DEFAULT_VISUAL.faces[id]
   }
 
   return {
@@ -79,9 +85,8 @@ export function resolveWorldId(visual: VisualContent, faceId: FaceId): WorldId |
 }
 
 export function resolveSections(sections: FaceContent[], visual: VisualContent): ResolvedFace[] {
-  return sections.map((section) => ({
-    ...section,
-    accent: (visual.faces[section.id] ?? DEFAULT_VISUAL.faces[section.id]).accent,
-    worldId: resolveWorldId(visual, section.id),
-  }))
+  return sections.map((section) => {
+    const face = visual.faces[section.id] ?? DEFAULT_VISUAL.faces[section.id]
+    return { ...section, accent: face.accent, icon: face.icon, worldId: resolveWorldId(visual, section.id) }
+  })
 }

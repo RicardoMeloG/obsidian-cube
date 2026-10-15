@@ -5,7 +5,11 @@
     "fullName": "Portfolio Owner",
     "handle": "your-handle",
     "role": "Agentic Product Engineer",
-    "keywords": "AI Engineer · LLM agents · Python · AWS"
+    "keywords": "AI Engineer · LLM agents · Python · AWS",
+    "links": {
+      "github": "https://github.com/your-handle",
+      "linkedin": "https://www.linkedin.com/in/your-handle"
+    }
   },
   "seo": {
     "title": "Agentic Portfolio | Agentic Product Engineer",
@@ -46,6 +50,50 @@
           "The prototype is validated as a real product, not as decoration.",
           "Each iteration leaves traceable decisions for future development."
         ]
+      },
+      "tagline": "Building with agents",
+      "composition": {
+        "template": "showcase",
+        "featured": {
+          "icon": "sparkles",
+          "label": "Featured case",
+          "title": "Your-project — a live example",
+          "text": "A short account of one project built with agents: what it does and how it was checked.",
+          "chips": ["Specs", "Agents", "CI"],
+          "href": "https://github.com/your-handle/your-project"
+        },
+        "stepsTitle": "Operating model",
+        "steps": [
+          { "icon": "file", "label": "Specify", "text": "Goal, context and limits in a testable spec." },
+          { "icon": "send", "label": "Delegate", "text": "Agents with scoped tools and explicit rules." },
+          { "icon": "check", "label": "Review", "text": "Tests, checks and human review before accepting." },
+          { "icon": "package", "label": "Ship", "text": "Validated work reaches production and is kept." }
+        ],
+        "proofsTitle": "Inspectable evidence",
+        "proofsTrail": "Spec → ADR → CI",
+        "proofs": [
+          {
+            "icon": "file",
+            "kind": "Specification",
+            "title": "Project specs",
+            "text": "Goal, scope and constraints, written before the code.",
+            "chips": ["Markdown"]
+          },
+          {
+            "icon": "split",
+            "kind": "Decision record",
+            "title": "Decision log",
+            "text": "Why each decision, with its alternatives and costs.",
+            "chips": ["ADR"]
+          },
+          {
+            "icon": "gauge",
+            "kind": "Quality gate",
+            "title": "Checks on every change",
+            "text": "Tests, layout and weight budgets in continuous integration.",
+            "chips": ["CI"]
+          }
+        ]
       }
     },
     {
@@ -84,6 +132,76 @@
             "href": "https://github.com/your-handle/your-project"
           }
         ]
+      },
+      "tagline": "Tools in use",
+      "composition": {
+        "template": "catalog",
+        "listTitle": "Selected",
+        "items": [
+          {
+            "id": "project-one",
+            "name": "Example project one",
+            "meta": "Desktop",
+            "status": "Open source",
+            "text": "One sentence on the problem this tool solves and who uses it.",
+            "chips": ["Python", "Qt"],
+            "image": {
+              "src": "/examples/project-1.webp",
+              "thumb": "/examples/project-1-thumb.webp",
+              "alt": "Main window of the first example project",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problem", "text": "What was slow, manual or risky before." },
+              { "icon": "lightbulb", "label": "My part", "text": "What you designed and built." },
+              { "icon": "trend", "label": "Result", "text": "What changed for the people who use it." }
+            ],
+            "links": [
+              { "label": "Repository", "href": "https://github.com/your-handle/your-project" }
+            ]
+          },
+          {
+            "id": "project-two",
+            "name": "Example project two",
+            "meta": "Web",
+            "status": "In development",
+            "text": "One sentence on a second tool, in the words of its users.",
+            "chips": ["TypeScript", "AWS"],
+            "image": {
+              "src": "/examples/project-2.webp",
+              "thumb": "/examples/project-2-thumb.webp",
+              "alt": "Dashboard of the second example project",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problem", "text": "The need it answers." },
+              { "icon": "lightbulb", "label": "My part", "text": "Your share of the work." },
+              { "icon": "trend", "label": "Result", "text": "A measurable outcome." }
+            ]
+          },
+          {
+            "id": "project-three",
+            "name": "Example project three",
+            "meta": "Prototype",
+            "status": "Open source",
+            "text": "One sentence on an experiment worth showing.",
+            "chips": ["Agents"],
+            "image": {
+              "src": "/examples/project-3.webp",
+              "thumb": "/examples/project-3-thumb.webp",
+              "alt": "Screen of the third example project",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problem", "text": "The question it explores." },
+              { "icon": "lightbulb", "label": "My part", "text": "How you approached it." },
+              { "icon": "trend", "label": "Result", "text": "What it showed." }
+            ]
+          }
+        ]
       }
     },
     {
@@ -114,6 +232,43 @@
           "Observe the real system before automating it.",
           "Separate boundaries so change can stay incremental.",
           "Design with monitoring and recovery from the beginning."
+        ]
+      },
+      "tagline": "Systems in production",
+      "composition": {
+        "template": "case",
+        "caseLabel": "Anonymized case",
+        "caseName": "Modernizing a system in use",
+        "before": { "title": "Before", "items": ["A monolith without tests", "Manual deployments"] },
+        "after": { "title": "After", "items": ["Modules with tests", "Deployment per module"] },
+        "map": {
+          "title": "Migration map",
+          "note": "Illustrative data",
+          "legend": { "done": "Migrated", "active": "In progress", "pending": "Pending" },
+          "cells": [
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "active",
+            "active",
+            "active",
+            "done",
+            "done",
+            "pending",
+            "pending"
+          ]
+        },
+        "steps": [
+          { "icon": "factory", "label": "Context", "text": "An operation that runs every day on the system." },
+          { "icon": "alert", "label": "Constraint", "text": "It cannot stop: each change lives beside the system in use." },
+          { "icon": "branch", "label": "Decision", "text": "Incremental migration, one module at a time." },
+          { "icon": "trend", "label": "Result", "text": "New modules with tests; the old system retires in parts." }
         ]
       }
     },
@@ -146,6 +301,29 @@
           "Add CAPTCHA or rate limits only when there is an abuse vector.",
           "Secrets and private content should never live in the public repository."
         ]
+      },
+      "tagline": "Security by design",
+      "composition": {
+        "template": "ledger",
+        "callouts": [
+          { "icon": "key", "label": "Trust boundary", "text": "Name the one door to private data." },
+          {
+            "icon": "shield",
+            "label": "Architecture decision",
+            "title": "What you delegate on purpose",
+            "text": "A control you chose not to build yourself, and why."
+          }
+        ],
+        "console": {
+          "title": "Control register",
+          "rows": [
+            { "status": "implemented", "id": "auth.mfa", "text": "Second factor required for the admin" },
+            { "status": "verified", "id": "headers.csp", "text": "Security headers checked on every build" },
+            { "status": "verified", "id": "check.privacy", "text": "No personal data in the code" },
+            { "status": "planned", "id": "example.next", "text": "The next control on your list" }
+          ],
+          "statusLabels": { "implemented": "Implemented", "verified": "Verified", "planned": "Planned" }
+        }
       }
     },
     {
@@ -207,6 +385,23 @@
           "Representation fidelity: not every useful answer represents well what it claims to represent.",
           "Own purpose: the question is not whether behavior is directed, but where direction comes from."
         ]
+      },
+      "tagline": "Open questions",
+      "composition": {
+        "template": "reading",
+        "questionLabel": "Central question",
+        "question": "The one question your research tries to answer, in a sentence.",
+        "chain": [
+          { "icon": "lightbulb", "label": "Thesis", "text": "Your answer, stated so it can be wrong." },
+          { "icon": "scale", "label": "Strongest objection", "text": "The best case against it." },
+          { "icon": "alert", "label": "Limit", "text": "What the argument does not claim." }
+        ],
+        "distinctionsTitle": "Distinctions",
+        "distinctions": [
+          { "term": "First term", "text": "A distinction the argument depends on." },
+          { "term": "Second term", "text": "Another one, in a line." }
+        ],
+        "document": { "label": "Public document", "title": "Research notes", "meta": "10 min read" }
       }
     },
     {
@@ -239,16 +434,18 @@
           "The form can add validation, CAPTCHA, or rate limits when needed."
         ],
         "links": [
-          {
-            "label": "GitHub",
-            "description": "Replace this link with your public profile.",
-            "href": "https://github.com/your-handle"
-          },
-          {
-            "label": "Form",
-            "description": "Future route for structured contact.",
-            "href": "/contact"
-          }
+          { "label": "GitHub", "description": "Replace this link with your public profile.", "href": "https://github.com/your-handle" },
+          { "label": "Form", "description": "Future route for structured contact.", "href": "/contact" }
+        ]
+      },
+      "tagline": "Get in touch",
+      "composition": {
+        "template": "channels",
+        "availability": "Open to roles and collaborations · remote or hybrid",
+        "channels": [
+          { "kind": "email", "label": "Email", "text": "Write directly", "href": "mailto:owner@example.com" },
+          { "kind": "github", "label": "GitHub", "text": "Public code and projects", "href": "https://github.com/your-handle" },
+          { "kind": "linkedin", "label": "LinkedIn", "text": "Career and context", "href": "https://www.linkedin.com/in/your-handle" }
         ]
       }
     }

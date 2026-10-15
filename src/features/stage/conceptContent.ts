@@ -6,26 +6,8 @@ import type { SiteLocale } from '@/kernel/siteContent'
 // has no schema for them yet (a future spec 011). Text marked as example in
 // the concept notes is filler to judge the design, not a claim.
 
-export type IconId =
-  | 'sparkles'
-  | 'box'
-  | 'database'
-  | 'shield'
-  | 'book'
-  | 'mail'
-  | 'file'
-  | 'send'
-  | 'check'
-  | 'package'
-  | 'branch'
-  | 'factory'
-  | 'alert'
-  | 'trend'
-  | 'key'
-  | 'scale'
-  | 'gauge'
-  | 'lightbulb'
-  | 'split'
+export type { IconId } from '@/kernel/icons'
+import type { IconId } from '@/kernel/icons'
 
 export type Chip = string
 

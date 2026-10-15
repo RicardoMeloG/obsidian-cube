@@ -4,29 +4,15 @@
 import { z } from 'zod'
 import exampleEn from '../../public/content/site.example.en.json'
 import exampleEs from '../../public/content/site.example.es.json'
+import { CompositionSchema } from './compositions'
 import { FACE_ORDER, FEATURE_GLYPHS } from './faces'
+import { CtaSchema, LinkSchema, RichTextSchema } from './fields'
 import type { FaceId, FeatureGlyphId } from './faces'
 
 export type SiteLocale = 'en' | 'es'
 
 export const FaceIdSchema = z.enum(FACE_ORDER as [FaceId, ...FaceId[]])
 const FeatureGlyphSchema = z.enum(FEATURE_GLYPHS as unknown as [FeatureGlyphId, ...FeatureGlyphId[]])
-
-// Rich prose fields are rendered through `sanitizeRichText` (inline HTML
-// whitelist) via the <RichText/> component. Still a plain string at the schema
-// level — the sanitization boundary lives at render time, not validation.
-const RichTextSchema = z.string().min(1)
-
-const CtaSchema = z.object({
-  label: z.string().min(1),
-  href: z.string().min(1).optional(),
-})
-
-const LinkSchema = z.object({
-  label: z.string().min(1),
-  description: RichTextSchema.optional(),
-  href: z.string().min(1).optional(),
-})
 
 const FeatureSchema = z.object({
   glyph: FeatureGlyphSchema,
@@ -72,6 +58,10 @@ const SiteSectionSchema = z.object({
     })
     .optional(),
   researchConcepts: z.array(ResearchConceptSchema).optional(),
+  // The line under the face name in the stage's dock (spec 011, AD-02).
+  tagline: z.string().min(1).optional(),
+  // The face's composition in the stage layout (spec 011, AD-01).
+  composition: CompositionSchema.optional(),
 })
 
 export const SiteContentSchema = z.object({
@@ -83,6 +73,14 @@ export const SiteContentSchema = z.object({
     role: z.string().min(1),
     // One line under the role, e.g. "AI Engineer · LLM agents · Python · AWS".
     keywords: z.string().min(1).optional(),
+    // Profiles shown in the stage's top bar; e-mail is not shown there,
+    // CONTACT is the channel (spec 011, AD-02).
+    links: z
+      .object({
+        github: z.string().min(1).optional(),
+        linkedin: z.string().min(1).optional(),
+      })
+      .optional(),
   }),
   seo: z.object({
     title: z.string().min(1),
@@ -104,7 +102,11 @@ export type SiteSection = SiteContent['sections'][number]
 
 // A face as the interface renders it: every field the document left empty is
 // already filled from the example (normalizeSections).
-export type FaceContent = Omit<SiteSection, 'eyebrow'> & { eyebrow: string }
+export type FaceContent = Omit<SiteSection, 'eyebrow' | 'tagline' | 'composition'> & {
+  eyebrow: string
+  tagline: string
+  composition: NonNullable<SiteSection['composition']>
+}
 export type FaceDetail = NonNullable<SiteSection['detail']>
 export type FaceResearchConcept = NonNullable<SiteSection['researchConcepts']>[number]
 export type FaceCta = NonNullable<SiteSection['ctaPrimary']>
@@ -146,6 +148,8 @@ export function normalizeSections(sections: SiteSection[], locale: SiteLocale): 
       ctaSecondary: section?.ctaSecondary ?? fallback.ctaSecondary,
       detail: section?.detail ?? fallback.detail,
       researchConcepts: section?.researchConcepts ?? fallback.researchConcepts,
+      tagline: section?.tagline ?? fallback.tagline ?? '',
+      composition: section?.composition ?? fallback.composition!,
     }
   })
 }

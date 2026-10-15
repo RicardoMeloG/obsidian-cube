@@ -5,7 +5,11 @@
     "fullName": "Portfolio Owner",
     "handle": "your-handle",
     "role": "Ingeniero de Productos Agénticos",
-    "keywords": "AI Engineer · LLM agents · Python · AWS"
+    "keywords": "AI Engineer · LLM agents · Python · AWS",
+    "links": {
+      "github": "https://github.com/your-handle",
+      "linkedin": "https://www.linkedin.com/in/your-handle"
+    }
   },
   "seo": {
     "title": "Portfolio Agéntico | Ingeniero de Productos Agénticos",
@@ -46,6 +50,50 @@
           "El prototipo se valida como producto real, no como maqueta decorativa.",
           "Cada iteración deja decisiones trazables para futuros desarrollos."
         ]
+      },
+      "tagline": "Construyo con agentes",
+      "composition": {
+        "template": "showcase",
+        "featured": {
+          "icon": "sparkles",
+          "label": "Caso destacado",
+          "title": "Your-project — un ejemplo en vivo",
+          "text": "Un relato breve de un proyecto hecho con agentes: qué hace y cómo se verificó.",
+          "chips": ["Specs", "Agentes", "CI"],
+          "href": "https://github.com/your-handle/your-project"
+        },
+        "stepsTitle": "Modelo operativo",
+        "steps": [
+          { "icon": "file", "label": "Especificar", "text": "Objetivo, contexto y límites en una spec verificable." },
+          { "icon": "send", "label": "Delegar", "text": "Agentes con herramientas acotadas y reglas explícitas." },
+          { "icon": "check", "label": "Revisar", "text": "Pruebas, chequeos y revisión humana antes de aceptar." },
+          { "icon": "package", "label": "Entregar", "text": "Lo validado llega a producción y se mantiene." }
+        ],
+        "proofsTitle": "Evidencia inspeccionable",
+        "proofsTrail": "Spec → ADR → CI",
+        "proofs": [
+          {
+            "icon": "file",
+            "kind": "Especificación",
+            "title": "Specs del proyecto",
+            "text": "Objetivo, alcance y restricciones, escritos antes del código.",
+            "chips": ["Markdown"]
+          },
+          {
+            "icon": "split",
+            "kind": "Decisión",
+            "title": "Registro de decisiones",
+            "text": "Por qué cada decisión, con alternativas y costos.",
+            "chips": ["ADR"]
+          },
+          {
+            "icon": "gauge",
+            "kind": "Puerta de calidad",
+            "title": "Chequeos en cada cambio",
+            "text": "Pruebas, layout y presupuesto de peso en integración continua.",
+            "chips": ["CI"]
+          }
+        ]
       }
     },
     {
@@ -84,6 +132,76 @@
             "href": "https://github.com/your-handle/your-project"
           }
         ]
+      },
+      "tagline": "Herramientas en uso",
+      "composition": {
+        "template": "catalog",
+        "listTitle": "Seleccionados",
+        "items": [
+          {
+            "id": "project-one",
+            "name": "Proyecto de ejemplo uno",
+            "meta": "Escritorio",
+            "status": "Código abierto",
+            "text": "Una frase sobre el problema que resuelve y quién la usa.",
+            "chips": ["Python", "Qt"],
+            "image": {
+              "src": "/examples/project-1.webp",
+              "thumb": "/examples/project-1-thumb.webp",
+              "alt": "Ventana principal del primer proyecto de ejemplo",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problema", "text": "Qué era lento, manual o riesgoso antes." },
+              { "icon": "lightbulb", "label": "Mi aporte", "text": "Qué diseñaste y construiste." },
+              { "icon": "trend", "label": "Resultado", "text": "Qué cambió para quienes la usan." }
+            ],
+            "links": [
+              { "label": "Repositorio", "href": "https://github.com/your-handle/your-project" }
+            ]
+          },
+          {
+            "id": "project-two",
+            "name": "Proyecto de ejemplo dos",
+            "meta": "Web",
+            "status": "En desarrollo",
+            "text": "Una frase sobre una segunda herramienta, en palabras de sus usuarios.",
+            "chips": ["TypeScript", "AWS"],
+            "image": {
+              "src": "/examples/project-2.webp",
+              "thumb": "/examples/project-2-thumb.webp",
+              "alt": "Panel del segundo proyecto de ejemplo",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problema", "text": "La necesidad que responde." },
+              { "icon": "lightbulb", "label": "Mi aporte", "text": "Tu parte del trabajo." },
+              { "icon": "trend", "label": "Resultado", "text": "Un resultado medible." }
+            ]
+          },
+          {
+            "id": "project-three",
+            "name": "Proyecto de ejemplo tres",
+            "meta": "Prototipo",
+            "status": "Código abierto",
+            "text": "Una frase sobre un experimento que vale la pena mostrar.",
+            "chips": ["Agentes"],
+            "image": {
+              "src": "/examples/project-3.webp",
+              "thumb": "/examples/project-3-thumb.webp",
+              "alt": "Pantalla del tercer proyecto de ejemplo",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problema", "text": "La pregunta que explora." },
+              { "icon": "lightbulb", "label": "Mi aporte", "text": "Cómo la abordaste." },
+              { "icon": "trend", "label": "Resultado", "text": "Lo que mostró." }
+            ]
+          }
+        ]
       }
     },
     {
@@ -114,6 +232,43 @@
           "Observar el sistema real antes de automatizarlo.",
           "Separar límites para que el cambio sea incremental.",
           "Diseñar con monitoreo y recuperación desde el inicio."
+        ]
+      },
+      "tagline": "Sistemas en producción",
+      "composition": {
+        "template": "case",
+        "caseLabel": "Caso anonimizado",
+        "caseName": "Modernizar un sistema en uso",
+        "before": { "title": "Antes", "items": ["Un monolito sin pruebas", "Despliegues manuales"] },
+        "after": { "title": "Después", "items": ["Módulos con pruebas", "Despliegue por módulo"] },
+        "map": {
+          "title": "Mapa de migración",
+          "note": "Datos ilustrativos",
+          "legend": { "done": "Migrado", "active": "En curso", "pending": "Pendiente" },
+          "cells": [
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "active",
+            "active",
+            "active",
+            "done",
+            "done",
+            "pending",
+            "pending"
+          ]
+        },
+        "steps": [
+          { "icon": "factory", "label": "Contexto", "text": "Una operación que corre cada día sobre el sistema." },
+          { "icon": "alert", "label": "Restricción", "text": "No se puede detener: cada cambio convive con el sistema en uso." },
+          { "icon": "branch", "label": "Decisión", "text": "Migración incremental, un módulo a la vez." },
+          { "icon": "trend", "label": "Resultado", "text": "Módulos nuevos con pruebas; el sistema antiguo se retira por partes." }
         ]
       }
     },
@@ -146,6 +301,29 @@
           "CAPTCHA o rate limit solo cuando exista un vector de abuso.",
           "Secretos y contenido privado nunca deben vivir en el repositorio público."
         ]
+      },
+      "tagline": "Seguridad por diseño",
+      "composition": {
+        "template": "ledger",
+        "callouts": [
+          { "icon": "key", "label": "Límite de confianza", "text": "Nombra la única puerta a los datos privados." },
+          {
+            "icon": "shield",
+            "label": "Decisión de arquitectura",
+            "title": "Lo que delegas a propósito",
+            "text": "Un control que decidiste no construir tú, y por qué."
+          }
+        ],
+        "console": {
+          "title": "Registro de controles",
+          "rows": [
+            { "status": "implemented", "id": "auth.mfa", "text": "Segundo factor exigido en el admin" },
+            { "status": "verified", "id": "headers.csp", "text": "Cabeceras de seguridad revisadas en cada build" },
+            { "status": "verified", "id": "check.privacy", "text": "Sin datos personales en el código" },
+            { "status": "planned", "id": "example.next", "text": "El próximo control de tu lista" }
+          ],
+          "statusLabels": { "implemented": "Implementado", "verified": "Verificado", "planned": "Planificado" }
+        }
       }
     },
     {
@@ -207,6 +385,23 @@
           "Fidelidad de representación: no toda respuesta útil representa bien aquello que dice representar.",
           "Propósito propio: la pregunta no es si hay conducta dirigida, sino de dónde viene la dirección."
         ]
+      },
+      "tagline": "Preguntas abiertas",
+      "composition": {
+        "template": "reading",
+        "questionLabel": "Pregunta central",
+        "question": "La pregunta que tu investigación intenta responder, en una frase.",
+        "chain": [
+          { "icon": "lightbulb", "label": "Tesis", "text": "Tu respuesta, dicha de modo que pueda ser falsa." },
+          { "icon": "scale", "label": "Objeción más fuerte", "text": "El mejor argumento en contra." },
+          { "icon": "alert", "label": "Límite", "text": "Lo que el argumento no afirma." }
+        ],
+        "distinctionsTitle": "Distinciones",
+        "distinctions": [
+          { "term": "Primer término", "text": "Una distinción de la que depende el argumento." },
+          { "term": "Segundo término", "text": "Otra, en una línea." }
+        ],
+        "document": { "label": "Documento público", "title": "Notas de investigación", "meta": "10 min de lectura" }
       }
     },
     {
@@ -239,16 +434,18 @@
           "El formulario puede agregar validación, CAPTCHA o rate limit cuando sea necesario."
         ],
         "links": [
-          {
-            "label": "GitHub",
-            "description": "Reemplaza este enlace con tu perfil público.",
-            "href": "https://github.com/your-handle"
-          },
-          {
-            "label": "Formulario",
-            "description": "Ruta futura para contacto estructurado.",
-            "href": "/contact"
-          }
+          { "label": "GitHub", "description": "Reemplaza este enlace con tu perfil público.", "href": "https://github.com/your-handle" },
+          { "label": "Formulario", "description": "Ruta futura para contacto estructurado.", "href": "/contact" }
+        ]
+      },
+      "tagline": "Hablemos",
+      "composition": {
+        "template": "channels",
+        "availability": "Disponible para roles y colaboraciones · remoto o híbrido",
+        "channels": [
+          { "kind": "email", "label": "Correo", "text": "Escríbeme directo", "href": "mailto:owner@example.com" },
+          { "kind": "github", "label": "GitHub", "text": "Código y proyectos públicos", "href": "https://github.com/your-handle" },
+          { "kind": "linkedin", "label": "LinkedIn", "text": "Trayectoria y contexto", "href": "https://www.linkedin.com/in/your-handle" }
         ]
       }
     }

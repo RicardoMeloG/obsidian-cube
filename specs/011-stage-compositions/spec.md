@@ -1,6 +1,6 @@
 # 011: Stage Layout and Editable Face Compositions — Proposal
 
-**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. Next: S1.
+**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 and S1 done; next: S2.
 **Builds on:** the stage concept (`?layout=escenario`, commit `ae0b93d`), ADR 004 (admin on AWS), ADR 005 (content kernel), ADR 006 (frontend architecture).
 
 ## 1. Problem
@@ -87,8 +87,8 @@ If E-1 is taken: the stage is the desktop experience, the rails retire from desk
 | Slice | Scope | Exit |
 |---|---|---|
 | S0 Decisions | Section 7 answered; ADR 008 accepted; `AGENTS.md`, the roadmap and `docs/architecture.md` amended | Documents merged (done 2026-10-15) |
-| S1 Kernel | Icon catalog, `MediaRef`, the composition union with the six templates, `tagline`, `identity.links`, `faces[].icon`, template budgets, neutral example content in both languages with example images; `conceptContent.ts` removed | Schema, publish-rule and JSON Schema tests pass |
-| S2 Stage from content | One component per template, chrome and dock from content, copy dictionary, the stage under the boundary and size rules; layout check and stress content on the stage | All gates green on desktop and desktop-short |
+| S1 Kernel | Icon catalog, `MediaRef`, the composition union with the six templates, `tagline`, `identity.links`, `faces[].icon`, template budgets, neutral example content in both languages with example images (`scripts/make-example-media.mjs`) | Schema, publish-rule and JSON Schema tests pass (done 2026-10-15; template budgets provisional until S2 measures them) |
+| S2 Stage from content | `conceptContent.ts` removed (the stage reads it until this slice); one component per template, chrome and dock from content, copy dictionary, the stage under the boundary and size rules; layout check and stress content on the stage | All gates green on desktop and desktop-short |
 | S3 Admin | Schema endpoint, generated form, media upload and picker (local disk), the cross-language warning | Round-trip test; an image uploaded, published and shown by the site locally |
 | S4 Stacked | Stacked order of each template; the rails retire (if E-1) | Layout check green on the full matrix |
 | S5 CONTACT world | The CONTACT background, today a placeholder (`contact` in `src/kernel/worlds.ts`), composed around the centred cube like the other five worlds (owner, 2026-10-15) | The world renders behind CONTACT in every layout mode; layout check and contrast of name and role green over it |

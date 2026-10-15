@@ -3,6 +3,8 @@
 // loads with the tolerant render contract, so content published under older
 // rules keeps rendering instead of silently falling back to the example. The
 // admin validates with PublishableSiteContentSchema and refuses to publish.
+import { EXAMPLE_MEDIA_PREFIX } from './compositions'
+import type { Composition, TemplateId } from './compositions'
 import { normalizeSections, SiteContentSchema } from './siteContent'
 import type { SiteContent } from './siteContent'
 import budgets from './layoutBudgets.json'
@@ -14,6 +16,38 @@ import budgets from './layoutBudgets.json'
 // face strip. `label` is the face name on the cube and the strip.
 export const LAYOUT_BUDGETS = budgets.chars
 export const LAYOUT_COUNTS = budgets.counts
+
+// Budgets of each composition template (spec 011, AD-06), by slot path:
+// `a.b` is a field, `a[]` every item of a list, `a.*` every value of an object.
+type Limits = { min?: number; max: number }
+export type TemplateBudget = { chars: Record<string, number>; counts: Record<string, Limits> }
+export const TEMPLATE_BUDGETS = budgets.templates as unknown as Record<TemplateId, TemplateBudget>
+
+// Every value a slot path reaches, with its path inside the composition.
+export function slotValues(root: unknown, slot: string): { path: (string | number)[]; value: unknown }[] {
+  let found: { path: (string | number)[]; value: unknown }[] = [{ path: [], value: root }]
+  for (const segment of slot.split('.')) {
+    const many = segment.endsWith('[]')
+    const key = many ? segment.slice(0, -2) : segment
+    found = found.flatMap(({ path, value }) => {
+      if (value === null || typeof value !== 'object') return []
+      const record = value as Record<string, unknown>
+      const children = key === '*' ? Object.keys(record).map((name) => ({ path: [...path, name], value: record[name] })) : [{ path: [...path, key], value: record[key] }]
+      if (!many) return children.filter((child) => child.value !== undefined)
+      return children.flatMap((child) => (Array.isArray(child.value) ? child.value.map((item, index) => ({ path: [...child.path, index], value: item })) : []))
+    })
+  }
+  return found
+}
+
+// Every link a composition holds, wherever its template puts it.
+function compositionLinks(value: unknown, path: (string | number)[] = []): { path: (string | number)[]; href: string }[] {
+  if (Array.isArray(value)) return value.flatMap((item, index) => compositionLinks(item, [...path, index]))
+  if (value === null || typeof value !== 'object') return []
+  return Object.entries(value).flatMap(([key, child]) =>
+    key === 'href' && typeof child === 'string' ? [{ path: [...path, key], href: child }] : compositionLinks(child, [...path, key]),
+  )
+}
 
 // Placeholders of the example content that must never reach the public site.
 const PLACEHOLDERS = ['your-handle', 'your-project', 'Portfolio Owner']
@@ -59,6 +93,8 @@ export function publishIssues(content: SiteContent): Issue[] {
     count(at('features'), section.features, LAYOUT_COUNTS.features)
     count(at('flow'), section.flow, LAYOUT_COUNTS.flow)
     count(at('researchConcepts'), section.researchConcepts, LAYOUT_COUNTS.researchConcepts)
+    tooLong(at('tagline'), section.tagline, LAYOUT_BUDGETS.tagline)
+    if (section.composition) checkComposition(section.composition, (...path) => at('composition', ...path))
     section.features?.forEach((feature, item) => {
       tooLong(at('features', item, 'label'), feature.label, LAYOUT_BUDGETS.featureLabel)
       tooLong(at('features', item, 'description'), feature.description, LAYOUT_BUDGETS.featureDescription)
@@ -82,6 +118,7 @@ export function publishIssues(content: SiteContent): Issue[] {
       // Older fields, still shown when a face has no detail (audit-2 B-11).
       { path: at('cta', 'href'), href: section.cta?.href },
       ...(section.links ?? []).map((link, item) => ({ path: at('links', item, 'href'), href: link.href })),
+      ...compositionLinks(section.composition).map((link) => ({ path: at('composition', ...link.path), href: link.href })),
     ].filter((link): link is { path: Issue['path']; href: string } => Boolean(link.href))
     for (const link of links) {
       if (!isAllowedHref(link.href)) issues.push({ path: link.path, message: 'Usa un enlace https: o mailto:, o una ruta de este sitio.' })
@@ -91,11 +128,33 @@ export function publishIssues(content: SiteContent): Issue[] {
     }
   })
 
+  for (const [name, href] of Object.entries(content.identity.links ?? {})) {
+    if (href && !isAllowedHref(href)) issues.push({ path: ['identity', 'links', name], message: 'Usa un enlace https:.' })
+  }
+
   const serialized = JSON.stringify(content)
   for (const placeholder of PLACEHOLDERS) {
     if (serialized.includes(placeholder)) issues.push({ path: [], message: `Reemplaza el texto de ejemplo "${placeholder}".` })
   }
+  if (serialized.includes(`"${EXAMPLE_MEDIA_PREFIX}`)) {
+    issues.push({ path: [], message: 'Reemplaza las imágenes de ejemplo por imágenes subidas desde el admin.' })
+  }
   return issues
+
+  function checkComposition(composition: Composition, at: (...path: (string | number)[]) => Issue['path']) {
+    const budget = TEMPLATE_BUDGETS[composition.template]
+    for (const [slot, max] of Object.entries(budget.chars)) {
+      for (const { path, value } of slotValues(composition, slot)) {
+        if (typeof value === 'string') tooLong(at(...path), value, max)
+      }
+    }
+    for (const [slot, limits] of Object.entries(budget.counts)) {
+      // A list slot counts each list it reaches (`items[].facts`: the facts of each item).
+      for (const { path, value } of slotValues(composition, slot)) {
+        if (Array.isArray(value)) count(at(...path), value, limits)
+      }
+    }
+  }
 }
 
 // What a visitor will see: a field a published face leaves empty is filled

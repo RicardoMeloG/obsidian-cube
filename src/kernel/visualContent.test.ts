@@ -42,7 +42,7 @@ describe('resolveWorldId', () => {
   it('returns null when a face has no world assigned', () => {
     const visual: VisualContent = {
       ...base,
-      faces: { ...base.faces, security: { worldId: null, accent: '#89d6c7' } },
+      faces: { ...base.faces, security: { ...base.faces.security, worldId: null } },
     }
     expect(resolveWorldId(visual, 'security')).toBeNull()
   })
@@ -50,7 +50,7 @@ describe('resolveWorldId', () => {
   it('supports reassigning a different world to a face', () => {
     const visual: VisualContent = {
       ...base,
-      faces: { ...base.faces, contact: { worldId: 'agentic', accent: '#f0d2b4' } },
+      faces: { ...base.faces, contact: { ...base.faces.contact, worldId: 'agentic' } },
     }
     expect(resolveWorldId(visual, 'contact')).toBe('agentic')
   })

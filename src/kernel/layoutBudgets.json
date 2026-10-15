@@ -12,7 +12,8 @@
     "ctaLabel": 20,
     "conceptAxis": 16,
     "conceptLabel": 18,
-    "conceptSummary": 60
+    "conceptSummary": 60,
+    "tagline": 28
   },
   "counts": {
     "features": {
@@ -25,6 +26,162 @@
     },
     "researchConcepts": {
       "max": 4
+    }
+  },
+  "templates": {
+    "_note": "Provisional (2026-10-15): taken from the stage concept's copy with a margin. Spec 011 S2 measures them with the stress content in the layout check.",
+    "showcase": {
+      "chars": {
+        "featured.label": 24,
+        "featured.title": 44,
+        "featured.text": 120,
+        "featured.chips[]": 16,
+        "stepsTitle": 28,
+        "steps[].label": 16,
+        "steps[].text": 64,
+        "proofsTitle": 32,
+        "proofsTrail": 24,
+        "proofs[].kind": 24,
+        "proofs[].title": 32,
+        "proofs[].text": 72,
+        "proofs[].chips[]": 16
+      },
+      "counts": {
+        "featured.chips": {
+          "max": 4
+        },
+        "steps": {
+          "min": 3,
+          "max": 4
+        },
+        "proofs": {
+          "min": 2,
+          "max": 3
+        },
+        "proofs[].chips": {
+          "max": 3
+        }
+      }
+    },
+    "catalog": {
+      "chars": {
+        "listTitle": 24,
+        "items[].name": 32,
+        "items[].meta": 16,
+        "items[].status": 20,
+        "items[].text": 96,
+        "items[].chips[]": 16,
+        "items[].image.alt": 140,
+        "items[].facts[].label": 16,
+        "items[].facts[].text": 80,
+        "items[].links[].label": 20
+      },
+      "counts": {
+        "items": {
+          "min": 1,
+          "max": 4
+        },
+        "items[].chips": {
+          "max": 4
+        },
+        "items[].facts": {
+          "max": 3
+        },
+        "items[].links": {
+          "max": 2
+        }
+      }
+    },
+    "case": {
+      "chars": {
+        "caseLabel": 24,
+        "caseName": 44,
+        "before.title": 16,
+        "before.items[]": 40,
+        "after.title": 16,
+        "after.items[]": 40,
+        "map.title": 28,
+        "map.note": 24,
+        "map.legend.*": 16,
+        "steps[].label": 16,
+        "steps[].text": 96
+      },
+      "counts": {
+        "before.items": {
+          "min": 1,
+          "max": 3
+        },
+        "after.items": {
+          "min": 1,
+          "max": 3
+        },
+        "map.cells": {
+          "min": 1,
+          "max": 32
+        },
+        "steps": {
+          "min": 3,
+          "max": 4
+        }
+      }
+    },
+    "ledger": {
+      "chars": {
+        "callouts[].label": 28,
+        "callouts[].title": 44,
+        "callouts[].text": 96,
+        "console.title": 28,
+        "console.command": 32,
+        "console.rows[].id": 20,
+        "console.rows[].text": 56,
+        "console.statusLabels.*": 16
+      },
+      "counts": {
+        "callouts": {
+          "min": 1,
+          "max": 2
+        },
+        "console.rows": {
+          "min": 1,
+          "max": 6
+        }
+      }
+    },
+    "reading": {
+      "chars": {
+        "questionLabel": 24,
+        "question": 120,
+        "chain[].label": 24,
+        "chain[].text": 96,
+        "distinctionsTitle": 24,
+        "distinctions[].term": 24,
+        "distinctions[].text": 64,
+        "document.label": 24,
+        "document.title": 40,
+        "document.meta": 24
+      },
+      "counts": {
+        "chain": {
+          "min": 2,
+          "max": 3
+        },
+        "distinctions": {
+          "max": 3
+        }
+      }
+    },
+    "channels": {
+      "chars": {
+        "availability": 80,
+        "channels[].label": 16,
+        "channels[].text": 40
+      },
+      "counts": {
+        "channels": {
+          "min": 1,
+          "max": 4
+        }
+      }
     }
   }
 }
