@@ -12,6 +12,10 @@ export type PanelTransition = 'idle' | 'exiting' | 'entering'
 // after the landing · done: no intro styling at all.
 export type IntroStage = 'pending' | 'reveal' | 'done'
 export type CursorMode = 'default' | 'grab' | 'grabbing'
+// rails: the cube in the centre with a rail on each side. stage (concept,
+// `?layout=escenario`): the cube waits small behind the content and comes to
+// the front only to change face or to be explored.
+export type ExperienceLayout = 'rails' | 'stage'
 
 export type ExperienceState = {
   // The face the cube shows; `displayedFace` is the one the rails show, which
@@ -28,6 +32,9 @@ export type ExperienceState = {
   hintVisible: boolean
   detail: { open: boolean; focused: FaceDetail | null }
   cursor: CursorMode
+  layout: ExperienceLayout
+  // Stage layout: the visitor took the cube; the content steps aside.
+  explore: boolean
 }
 
 export type ExperienceEvent =
@@ -44,8 +51,16 @@ export type ExperienceEvent =
   | { type: 'detailOpened'; detail: FaceDetail | null }
   | { type: 'detailClosed' }
   | { type: 'cursorChanged'; cursor: CursorMode }
+  | { type: 'layoutChanged'; layout: ExperienceLayout }
+  | { type: 'exploreStarted' }
+  | { type: 'exploreEnded' }
 
-export function initialExperience(options: { face: FaceId; introPlays: boolean; hintVisible: boolean }): ExperienceState {
+export function initialExperience(options: {
+  face: FaceId
+  introPlays: boolean
+  hintVisible: boolean
+  layout?: ExperienceLayout
+}): ExperienceState {
   return {
     activeFace: options.face,
     displayedFace: options.face,
@@ -57,6 +72,8 @@ export function initialExperience(options: { face: FaceId; introPlays: boolean; 
     hintVisible: options.hintVisible,
     detail: { open: false, focused: null },
     cursor: 'default',
+    layout: options.layout ?? 'rails',
+    explore: false,
   }
 }
 
@@ -66,7 +83,7 @@ function enterFace(state: ExperienceState, face: FaceId): ExperienceState {
   // Back on the face the rails already show (a quick change and return):
   // cancel the transition instead of leaving the rails faded out.
   const transition = face === state.displayedFace ? 'idle' : 'exiting'
-  return { ...state, activeFace: face, requestedFace: null, transition, detail: CLOSED_DETAIL }
+  return { ...state, activeFace: face, requestedFace: null, transition, detail: CLOSED_DETAIL, explore: false }
 }
 
 export function experienceReducer(state: ExperienceState, event: ExperienceEvent): ExperienceState {
@@ -104,6 +121,12 @@ export function experienceReducer(state: ExperienceState, event: ExperienceEvent
       return state.detail.open ? { ...state, detail: CLOSED_DETAIL } : state
     case 'cursorChanged':
       return state.cursor === event.cursor ? state : { ...state, cursor: event.cursor }
+    case 'layoutChanged':
+      return state.layout === event.layout ? state : { ...state, layout: event.layout, explore: false }
+    case 'exploreStarted':
+      return state.layout === 'stage' && !state.explore ? { ...state, explore: true, detail: CLOSED_DETAIL } : state
+    case 'exploreEnded':
+      return state.explore ? { ...state, explore: false } : state
   }
 }
 

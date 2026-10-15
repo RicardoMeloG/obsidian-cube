@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FaceId } from '@/kernel/faces'
 import type { FaceDetail } from '@/kernel/siteContent'
 import { resolveSections } from '@/kernel/visualContent'
@@ -17,6 +17,7 @@ import { FaceRails } from '@/features/faces/FaceRails'
 import { FaceStrip } from '@/features/navigation/FaceStrip'
 import { RotateHint } from '@/features/navigation/RotateHint'
 import { SceneLayer } from '@/features/scene/SceneLayer'
+import { StageView } from '@/features/stage/StageView'
 import { hasWebGL } from '@/lib/hasWebGL'
 import { useViewportSize } from '@/lib/useViewportSize'
 import { useLayoutMode } from '@/styles/layoutModes'
@@ -28,6 +29,9 @@ import './shell.css'
 
 // The cursor follows what the pointer can do with the cube.
 const CURSOR = { default: 'cursor-default', grab: 'cursor-grab', grabbing: 'cursor-grabbing' } as const
+
+// Concept: `?layout=escenario` turns on the stage layout on desktop.
+const STAGE_REQUESTED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layout') === 'escenario'
 
 const LOCALE_OPTIONS = [
   { value: 'en', label: 'EN' },
@@ -42,7 +46,12 @@ export function Experience() {
   const [store] = useState(() =>
     createExperienceStore(
       // Without WebGL there is no scene to land, so the interface shows at once.
-      initialExperience({ face: readInitialFace(), introPlays: plan.play && webglAvailable, hintVisible: plan.showHint }),
+      initialExperience({
+        face: readInitialFace(),
+        introPlays: plan.play && webglAvailable,
+        hintVisible: plan.showHint && !STAGE_REQUESTED,
+        layout: STAGE_REQUESTED ? 'stage' : 'rails',
+      }),
     ),
   )
 
@@ -62,6 +71,8 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const hintVisible = useExperience((state) => state.hintVisible)
   const detail = useExperience((state) => state.detail)
   const cursor = useExperience((state) => state.cursor)
+  const layout = useExperience((state) => state.layout)
+  const explore = useExperience((state) => state.explore)
   const { content, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
   const copy = interfaceCopy(locale)
@@ -70,6 +81,12 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   // The control that opened the detail dialog; focus returns to it on close.
   const restoreFocusRef = useRef<HTMLElement | null>(null)
   const [isTouch] = useState(() => typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches ?? false))
+
+  // The stage concept is designed for desktop only; stacked screens keep the rails.
+  useEffect(() => {
+    if (STAGE_REQUESTED) store.dispatch({ type: 'layoutChanged', layout: stacked ? 'rails' : 'stage' })
+  }, [stacked, store])
+  const stage = layout === 'stage'
 
   useFaceTransition()
   useIntroLifecycle(plan)
@@ -127,19 +144,41 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
         {plan.showHint && webglAvailable && <RotateHint visible={hintVisible} label={isTouch ? copy.hintTouch : copy.hintPointer} />}
       </div>
 
-      <IdentityChrome identity={content.identity} />
+      {stage && displayedSection && (
+        <StageView
+          identity={content.identity}
+          locale={locale}
+          localeOptions={LOCALE_OPTIONS}
+          languageLabel={copy.languageLabel}
+          onLocaleChange={setLocale}
+          sections={resolvedSections}
+          activeFace={activeFace}
+          displayedSection={displayedSection}
+          transition={transition}
+          explore={explore}
+          onRequestFace={requestFace}
+          onExplore={(next) => store.dispatch({ type: next ? 'exploreStarted' : 'exploreEnded' })}
+          onOpenDetail={(trigger) => openDetail(undefined, trigger)}
+        />
+      )}
 
-      <SegmentedControl
-        className="language-toggle absolute top-corner right-corner z-10"
-        label={copy.languageLabel}
-        options={LOCALE_OPTIONS}
-        value={locale}
-        onChange={setLocale}
-      />
+      {!stage && <IdentityChrome identity={content.identity} />}
 
-      {displayedSection && <FaceRails activeSection={displayedSection} copy={copy} onOpenDetail={openDetail} transitionState={transition} />}
+      {!stage && (
+        <SegmentedControl
+          className="language-toggle absolute top-corner right-corner z-10"
+          label={copy.languageLabel}
+          options={LOCALE_OPTIONS}
+          value={locale}
+          onChange={setLocale}
+        />
+      )}
 
-      {displayedSection && (
+      {!stage && displayedSection && (
+        <FaceRails activeSection={displayedSection} copy={copy} onOpenDetail={openDetail} transitionState={transition} />
+      )}
+
+      {!stage && displayedSection && (
         <FaceStrip
           activeSectionId={activeFace}
           fullName={content.identity.fullName}
