@@ -2,7 +2,7 @@ import { PerspectiveCamera, Stars } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
-import type { Group, MeshBasicMaterial } from 'three'
+import type { Group, MeshBasicMaterial, Texture } from 'three'
 import { AdditiveBlending, CanvasTexture, Color, Euler, LinearFilter, Quaternion, SRGBColorSpace, Vector3 } from 'three'
 import {
   playCubeDragTickSound,
@@ -15,7 +15,7 @@ import type { FaceId } from '@/kernel/faces'
 import { useLayoutMode } from '@/styles/layoutModes'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import type { DiagnosticFx } from './diagnosticFx'
-import { ReflectionEnvironment } from './ReflectionEnvironment'
+import { loadReflection } from './reflection'
 import { PremiumCube } from './PremiumCube'
 import { VectorWorldStage } from './vector-worlds/VectorWorldStage'
 import { IntroSparks } from './intro/IntroSparks'
@@ -57,6 +57,8 @@ type CubeSceneProps = {
   intro: CubeIntroConfig
   onIntroPhase?: (phase: IntroPhase) => void
   onEngaged?: () => void
+  // Called once every shader of the first view is compiled (see below).
+  onReady?: () => void
 }
 
 type PointerEventLike = {
@@ -198,8 +200,10 @@ export function CubeScene({
   intro,
   onIntroPhase,
   onEngaged,
+  onReady,
 }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
+  const worldId = sections.find((section) => section.id === activeSectionId)?.worldId ?? null
   const platformGlowTexture = useMemo(
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
     [],
@@ -242,6 +246,50 @@ export function CubeScene({
     [intro.play, intro.returnTurn],
   )
   const { camera, gl } = useThree()
+  const getThree = useThree((state) => state.get)
+
+  // Ready to draw: the canvas does not render until then (SceneLayer), so the
+  // shaders compile off the main thread (compileAsync) instead of freezing the
+  // first frames, which on a first visit swallowed the cube's fall. The scene
+  // compiles here, with its reflection already set; the face's world compiles
+  // in VectorWorldStage and settles the second half.
+  const readyRef = useRef({ scene: false, world: worldId === null, reported: false })
+  const reportReady = useCallback(() => {
+    const ready = readyRef.current
+    if (ready.reported || !ready.scene || !ready.world) return
+    ready.reported = true
+    onReady?.()
+  }, [onReady])
+  const handleWorldSettled = useCallback(() => {
+    readyRef.current.world = true
+    reportReady()
+  }, [reportReady])
+  // A face without a world (or a change to one before the first frame) has
+  // nothing to wait for.
+  useEffect(() => {
+    if (worldId === null) handleWorldSettled()
+  }, [worldId, handleWorldSettled])
+
+  useEffect(() => {
+    let cancelled = false
+    const settle = () => {
+      if (cancelled) return
+      readyRef.current.scene = true
+      reportReady()
+    }
+    const { gl: renderer, scene, camera: view } = getThree()
+    let environment: Texture | null = null
+    void loadReflection().then((texture) => {
+      if (cancelled) return
+      environment = texture
+      scene.environment = texture
+      renderer.compileAsync(scene, view).then(settle, settle)
+    })
+    return () => {
+      cancelled = true
+      if (environment && scene.environment === environment) scene.environment = null
+    }
+  }, [getThree, reportReady])
   const { narrow: isNarrow, stacked: isStackedFrame } = useLayoutMode()
   const cubeScale = isNarrow ? 0.96 : isStackedFrame ? 0.9 : 0.92
   const cubeBaseY = isNarrow ? 0.28 : isStackedFrame ? 0.42 : 0.34
@@ -534,7 +582,6 @@ export function CubeScene({
         fov={isNarrow ? 40 : isStackedFrame ? 39 : 37}
         onUpdate={(camera) => camera.lookAt(0, cameraTargetY, 0)}
       />
-      <ReflectionEnvironment />
 
       <ambientLight intensity={0.08} />
 
@@ -543,6 +590,12 @@ export function CubeScene({
       <pointLight position={[1.6, 0.6, 2.4]} intensity={1.1} color={new Color('#c9d2ff')} distance={4.2} />
       <pointLight position={[-1.6, 0.6, 2.4]} intensity={1.1} color={new Color('#9387ff')} distance={4.2} />
 
+      {/* Every light lengthens the shader of the cube's glass and of the
+          platform, and the cost is paid at every pixel. Three more spots
+          (right, left, from below) were removed on 2026-10-14: with the intro
+          clock frozen they changed 10 pixels at rest and none turning or
+          falling. The overhead and back spots stay: the back one draws the
+          highlight along the top edge. */}
       <spotLight
         position={[0.4, 7.6, 2.6]}
         target-position={[0, 0.4, 0]}
@@ -553,36 +606,12 @@ export function CubeScene({
         castShadow={effects.shadows}
       />
       <spotLight
-        position={[2.4, 6.2, 1.4]}
-        target-position={[0.4, 0.6, 0.4]}
-        angle={0.2}
-        penumbra={0.45}
-        intensity={9}
-        color={new Color('#e0e4ff')}
-      />
-      <spotLight
-        position={[-2.6, 5.6, 0.8]}
-        target-position={[-0.4, 0.6, 0]}
-        angle={0.24}
-        penumbra={0.5}
-        intensity={6.4}
-        color={new Color('#c4cbff')}
-      />
-      <spotLight
         position={[0, 5.2, -2.6]}
         target-position={[0, 0.4, 0]}
         angle={0.34}
         penumbra={0.7}
         intensity={3.4}
         color={new Color('#9aa0ff')}
-      />
-      <spotLight
-        position={[0, -1.2, 0.05]}
-        target-position={[0, 0.4, 0]}
-        angle={0.62}
-        penumbra={0.85}
-        intensity={7.4}
-        color={new Color('#7c6dff')}
       />
 
       <group
@@ -668,7 +697,7 @@ export function CubeScene({
         />
       )}
 
-      <VectorWorldStage worldId={sections.find((section) => section.id === activeSectionId)?.worldId ?? null} />
+      <VectorWorldStage worldId={worldId} onSettled={handleWorldSettled} />
 
       <mesh position={[0, 4.6, -0.4]}>
         <planeGeometry args={[0.9, 5]} />
