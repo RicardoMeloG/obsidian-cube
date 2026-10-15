@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import type { HTMLAttributes } from 'react'
 import { sanitizeRichText } from './sanitizeRichText'
 
-type RichTextTag = 'p' | 'span' | 'small' | 'div' | 'li'
+type RichTextTag = 'p' | 'span' | 'small' | 'div' | 'li' | 'dd' | 'blockquote'
 
 type RichTextProps = Omit<HTMLAttributes<HTMLElement>, 'dangerouslySetInnerHTML' | 'children'> & {
   html: string

@@ -20,7 +20,7 @@ import { SceneLayer } from '@/features/scene/SceneLayer'
 import { StageView } from '@/features/stage/StageView'
 import { hasWebGL } from '@/lib/hasWebGL'
 import { useViewportSize } from '@/lib/useViewportSize'
-import { useLayoutMode } from '@/styles/layoutModes'
+import { LAYOUT_QUERIES, useLayoutMode } from '@/styles/layoutModes'
 import { cx } from '@/ui/cx'
 import { SegmentedControl } from '@/ui/SegmentedControl'
 import { IdentityChrome } from './IdentityChrome'
@@ -30,30 +30,34 @@ import './shell.css'
 // The cursor follows what the pointer can do with the cube.
 const CURSOR = { default: 'cursor-default', grab: 'cursor-grab', grabbing: 'cursor-grabbing' } as const
 
-// Concept: `?layout=escenario` turns on the stage layout on desktop.
-const STAGE_REQUESTED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layout') === 'escenario'
+// The stage is the desktop layout (spec 011, E-1); stacked screens keep the
+// rails until spec 011 S4. `?layout=rails` shows the rails on desktop, for
+// review during the transition only (AD-05).
+const RAILS_REQUESTED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layout') === 'rails'
+const startsStacked = () => typeof window !== 'undefined' && window.matchMedia(LAYOUT_QUERIES.stacked).matches
 
 const LOCALE_OPTIONS = [
   { value: 'en', label: 'EN' },
   { value: 'es', label: 'ES' },
 ] as const
 
-// The home page: the cube with the rails around it. Creates the experience
+// The home page: the cube with the face's content around it. Creates the experience
 // store once; the scene and the interface meet only through it (ADR 006).
 export function Experience() {
   const [plan] = useState(readIntroPlan)
   const [webglAvailable] = useState(hasWebGL)
-  const [store] = useState(() =>
-    createExperienceStore(
+  const [store] = useState(() => {
+    const stage = !RAILS_REQUESTED && !startsStacked()
+    return createExperienceStore(
       // Without WebGL there is no scene to land, so the interface shows at once.
       initialExperience({
         face: readInitialFace(),
         introPlays: plan.play && webglAvailable,
-        hintVisible: plan.showHint && !STAGE_REQUESTED,
-        layout: STAGE_REQUESTED ? 'stage' : 'rails',
+        hintVisible: plan.showHint && !stage,
+        layout: stage ? 'stage' : 'rails',
       }),
-    ),
-  )
+    )
+  })
 
   return (
     <ExperienceProvider value={store}>
@@ -82,9 +86,9 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const restoreFocusRef = useRef<HTMLElement | null>(null)
   const [isTouch] = useState(() => typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches ?? false))
 
-  // The stage concept is designed for desktop only; stacked screens keep the rails.
+  // Stacked screens keep the rails until the stage's stacked templates exist (spec 011, S4).
   useEffect(() => {
-    if (STAGE_REQUESTED) store.dispatch({ type: 'layoutChanged', layout: stacked ? 'rails' : 'stage' })
+    if (!RAILS_REQUESTED) store.dispatch({ type: 'layoutChanged', layout: stacked ? 'rails' : 'stage' })
   }, [stacked, store])
   const stage = layout === 'stage'
 
@@ -147,9 +151,9 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
       {stage && displayedSection && (
         <StageView
           identity={content.identity}
+          copy={copy}
           locale={locale}
           localeOptions={LOCALE_OPTIONS}
-          languageLabel={copy.languageLabel}
           onLocaleChange={setLocale}
           sections={resolvedSections}
           activeFace={activeFace}

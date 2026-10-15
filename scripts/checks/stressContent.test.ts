@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest'
 import exampleEn from '../../public/content/site.example.en.json'
 import exampleEs from '../../public/content/site.example.es.json'
 import budgets from '../../src/kernel/layoutBudgets.json'
-import { LAYOUT_BUDGETS, publishIssues, PublishableSiteContentSchema, visibleLength } from '../../src/kernel/publishRules'
+import { LAYOUT_BUDGETS, publishIssues, PublishableSiteContentSchema, slotValues, TEMPLATE_BUDGETS, visibleLength } from '../../src/kernel/publishRules'
 import { SiteContentSchema } from '../../src/kernel/siteContent'
+import type { SiteSection } from '../../src/kernel/siteContent'
 import { buildStressContent, fillTo } from './stressContent.mjs'
 
 describe('stress content', () => {
@@ -26,6 +27,18 @@ describe('stress content', () => {
         expect(section.features).toHaveLength(budgets.counts.features.max)
         for (const feature of section.features ?? []) expect(feature.description).toHaveLength(LAYOUT_BUDGETS.featureDescription)
         for (const step of section.flow ?? []) expect(step.description).toHaveLength(LAYOUT_BUDGETS.flowDescription)
+      }
+    })
+
+    it(`fills every template slot to its budget and every list to its maximum (${locale})`, () => {
+      for (const { composition } of stress.sections as SiteSection[]) {
+        const budget = TEMPLATE_BUDGETS[composition!.template]
+        for (const [slot, max] of Object.entries(budget.chars)) {
+          for (const { value } of slotValues(composition, slot)) expect(value).toHaveLength(max)
+        }
+        for (const [slot, limits] of Object.entries(budget.counts)) {
+          for (const { value } of slotValues(composition, slot)) expect(value).toHaveLength(limits.max)
+        }
       }
     })
   }

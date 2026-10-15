@@ -4,6 +4,7 @@ import budgets from '@/kernel/layoutBudgets.json'
 import type { FaceContent, FaceDetail, FaceResearchConcept } from '@/kernel/siteContent'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import { RichText } from '@/features/content/RichText'
+import { splitTitleIntoTwoLines } from '@/features/content/splitTitle'
 import { cx } from '@/ui/cx'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { GlyphTile } from '@/ui/GlyphTile'
@@ -207,23 +208,4 @@ export function FaceRails({ activeSection, copy, onOpenDetail, transitionState =
       </aside>
     </div>
   )
-}
-
-function splitTitleIntoTwoLines(title: string): [string, string?] {
-  const trimmed = title.trim()
-  const words = trimmed.split(/\s+/)
-  if (words.length === 1) return [trimmed]
-
-  let best = words.length - 1
-  let bestDelta = Number.POSITIVE_INFINITY
-  for (let i = 1; i < words.length; i += 1) {
-    const left = words.slice(0, i).join(' ').length
-    const right = words.slice(i).join(' ').length
-    const delta = Math.abs(left - right)
-    if (delta < bestDelta) {
-      bestDelta = delta
-      best = i
-    }
-  }
-  return [words.slice(0, best).join(' '), words.slice(best).join(' ')]
 }

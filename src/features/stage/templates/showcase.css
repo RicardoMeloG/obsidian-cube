@@ -1,0 +1,178 @@
+/* Stage template `showcase` (spec 011, AD-01): placement on the stage's
+   12-column grid and the blocks particular to it. */
+@reference "../../../index.css";
+
+@layer components {
+  .sh-left {
+    grid-column: 1 / span 5;
+    align-self: center;
+    gap: 0.65em;
+    padding-block: 1em;
+  }
+
+  .sh-right {
+    grid-column: 8 / span 5;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9em;
+  }
+
+  .sh-featured {
+    color: inherit;
+    text-decoration: none;
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1em;
+    padding: 0.7em 1.1em;
+    border: 1px solid var(--hair-accent);
+    border-left: 2px solid var(--accent);
+    border-radius: 0.8em;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+
+  .sh-featured__glyph {
+    display: grid;
+    place-items: center;
+    width: 3.3em;
+    height: 3.3em;
+    border: 1px solid var(--hair-accent);
+    border-radius: 0.9em;
+    color: var(--accent);
+    rotate: 0deg;
+  }
+
+  .sh-featured > div {
+    display: grid;
+    gap: 0.3em;
+  }
+
+  .sh-featured__label {
+    font-size: 0.62em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .sh-featured strong {
+    font-size: 0.98em;
+  }
+
+  .sh-featured p {
+    font-size: 0.8em;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .sh-featured .st-chips {
+    margin-top: 0.25em;
+  }
+
+  .sh-featured__go {
+    position: absolute;
+    top: 0.9em;
+    right: 0.9em;
+    color: var(--ink-3);
+  }
+
+  .sh-steps {
+    display: grid;
+    gap: 0;
+  }
+
+  .sh-steps > li {
+    display: grid;
+    grid-template-columns: auto 7em 1fr;
+    align-items: center;
+    gap: 0.9em;
+    padding: 0.22em 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .sh-steps > li:last-child {
+    border-bottom: 0;
+  }
+
+  .sh-steps .st-tile {
+    width: 2em;
+    height: 2em;
+  }
+
+  .sh-steps strong {
+    font-size: 0.9em;
+  }
+
+  .sh-steps p {
+    font-size: 0.78em;
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+
+  .sh-proofs {
+    display: grid;
+    gap: 0.7em;
+  }
+
+  .sh-proof {
+    color: inherit;
+    text-decoration: none;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.9em;
+    padding: 0.85em 0.95em;
+    border: 1px solid var(--hair);
+    border-radius: 0.8em;
+    background: color-mix(in srgb, var(--color-ink-50) 2%, transparent);
+    transition: border-color 180ms;
+  }
+
+  a.sh-proof:hover {
+    border-color: var(--hair-accent);
+  }
+
+  .sh-proofs__number {
+    display: grid;
+    place-items: center;
+    width: 2.3em;
+    height: 2.3em;
+    border: 1px solid var(--hair-accent);
+    border-radius: 999px;
+    font-size: 0.86em;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .sh-proof > div {
+    min-width: 0;
+    display: grid;
+    gap: 0.25em;
+  }
+
+  .sh-proofs small {
+    font-size: 0.6em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .sh-proofs strong {
+    font-size: 0.95em;
+  }
+
+  .sh-proofs p {
+    font-size: 0.78em;
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+
+  .sh-proofs .st-chips {
+    margin-top: 0.3em;
+  }
+
+  .sh-proofs__icon {
+    color: var(--ink-3);
+  }
+}

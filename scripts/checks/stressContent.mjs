@@ -29,6 +29,53 @@ function publishable(value) {
   return JSON.parse(text)
 }
 
+// The places a slot path reaches (`a.b`, `a[]` every item, `a.*` every
+// value), as the kernel's slotValues reads them, but as parent and key so the
+// value can be replaced.
+// With `optional`, a missing last field counts too, so optional text is filled.
+function slotRefs(root, slot, optional = false) {
+  let refs = [{ parent: { root }, key: 'root' }]
+  const segments = slot.split('.')
+  for (const [position, segment] of segments.entries()) {
+    const many = segment.endsWith('[]')
+    const name = many ? segment.slice(0, -2) : segment
+    refs = refs.flatMap(({ parent, key }) => {
+      const value = parent[key]
+      if (value === null || typeof value !== 'object') return []
+      const children = name === '*' ? Object.keys(value).map((child) => ({ parent: value, key: child })) : [{ parent: value, key: name }]
+      const last = position === segments.length - 1
+      if (!many) return children.filter((child) => child.parent[child.key] !== undefined || (optional && last))
+      return children.flatMap((child) => (Array.isArray(child.parent[child.key]) ? child.parent[child.key].map((_, index) => ({ parent: child.parent[child.key], key: index })) : []))
+    })
+  }
+  return refs
+}
+
+// A template filled to its budgets (spec 011, AD-06): lists to their maximum
+// (shallow lists first, so the items they add are filled too), then every
+// text slot to its length, optional ones included.
+export function fillComposition(composition, budget) {
+  const filled = structuredClone(composition)
+  const depth = (slot) => slot.split('.').length
+  for (const [slot, limits] of Object.entries(budget.counts).sort(([a], [b]) => depth(a) - depth(b))) {
+    for (const { parent, key } of slotRefs(filled, slot)) {
+      const items = parent[key]
+      if (!Array.isArray(items) || items.length === 0) continue
+      parent[key] = fillList(items, limits.max, (item, index) => {
+        const copy = structuredClone(item)
+        if (copy && typeof copy === 'object' && typeof copy.id === 'string') copy.id = `${item.id.replace(/-\d+$/, '')}-${index}`
+        return copy
+      })
+    }
+  }
+  for (const [slot, max] of Object.entries(budget.chars)) {
+    for (const { parent, key } of slotRefs(filled, slot, true)) {
+      if (parent[key] === undefined || typeof parent[key] === 'string') parent[key] = fillTo(parent[key] ?? '', max)
+    }
+  }
+  return filled
+}
+
 function fillList(items, size, makeItem) {
   return Array.from({ length: size }, (_, index) => makeItem(items[index % items.length], index))
 }
@@ -55,9 +102,8 @@ export function buildStressContent(example, budgets) {
       summary: fillTo(section.summary, chars.summary),
       flowTitle: fillTo(section.flowTitle ?? '', chars.flowTitle),
       tagline: fillTo(section.tagline ?? '', chars.tagline),
-      // Spec 011 S2 fills each template to its budgets; until then the
-      // example composition, made publishable.
-      composition: section.composition && publishable(section.composition),
+      // Every slot of the face's template at its budget, every list at its maximum.
+      composition: section.composition && fillComposition(publishable(section.composition), budgets.templates[section.composition.template]),
       features: fillList(section.features ?? [], counts.features.max, (feature) => ({
         ...feature,
         label: fillTo(feature.label, chars.featureLabel),

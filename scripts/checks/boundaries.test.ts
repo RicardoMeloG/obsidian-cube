@@ -53,6 +53,29 @@ describe('admin server boundary', () => {
   })
 })
 
+describe('stage boundary (spec 011, AD-07)', () => {
+  it('keeps the scene, audio and app out of the stage', async () => {
+    const code = "import { CubeScene } from '@/features/scene/CubeScene'\nimport { Experience } from '@/app/Experience'\nimport * as THREE from 'three'\nexport { CubeScene, Experience, THREE }\n"
+    expect(await restrictedImports('src/features/stage/probe.tsx', code)).toHaveLength(3)
+  })
+
+  it('allows the experience store, content, ui and the kernel', async () => {
+    const code =
+      "import { useExperience } from '@/features/experience/experienceStore'\nimport { RichText } from '@/features/content/RichText'\nimport { cx } from '@/ui/cx'\nimport { ICON_IDS } from '@/kernel/icons'\nexport { useExperience, RichText, cx, ICON_IDS }\n"
+    expect(await restrictedImports('src/features/stage/probe.tsx', code)).toEqual([])
+  })
+
+  it('rejects words written in the markup and locale comparisons', async () => {
+    const code = 'export const A = ({ locale }: { locale: string }) => <p aria-label="Caras del cubo">{locale === \'es\' ? 1 : 2} Hola mundo</p>\n'
+    expect(await restrictedSyntax('src/features/stage/probe.tsx', code)).toHaveLength(3)
+  })
+
+  it('allows single tokens such as the GitHub label and class names', async () => {
+    const code = 'export const A = () => <span className="st-button focus-ring">GitHub</span>\n'
+    expect(await restrictedSyntax('src/features/stage/probe.tsx', code)).toEqual([])
+  })
+})
+
 describe('site module boundaries (ADR 006)', () => {
   const imports = (from: string, specifier: string) => restrictedImports(from, `import { x } from '${specifier}'\nexport { x }\n`)
 

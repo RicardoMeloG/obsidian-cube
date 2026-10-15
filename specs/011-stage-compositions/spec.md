@@ -1,6 +1,6 @@
 # 011: Stage Layout and Editable Face Compositions — Proposal
 
-**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 and S1 done; next: S2.
+**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0, S1 and S2 done, the drift audit after S2 resolved (audit-1.md); next: S3.
 **Builds on:** the stage concept (`?layout=escenario`, commit `ae0b93d`), ADR 004 (admin on AWS), ADR 005 (content kernel), ADR 006 (frontend architecture).
 
 ## 1. Problem
@@ -75,7 +75,7 @@ If E-1 is taken: the stage is the desktop experience, the rails retire from desk
 | Rule | Gate |
 |---|---|
 | Every template renders the stress content within its area at every mode, no axe violation | `npm run check:layout` (H-06, H-13), extended to the stage |
-| No content in code: the stage reads only the kernel's normalized content | Lint: `features/stage` may not export string literals longer than one word outside `copy.ts` (or review, **unchecked**, if the rule proves noisy) |
+| No content in code: the stage reads only the kernel's normalized content | Lint (`STAGE_TEXT` in `eslint.config.js`): no text of two words or more in the stage's JSX, no literal in `aria-label`, `title`, `alt` or `placeholder`. Single words written in markup and strings held in constants are left to review, **unchecked** (audit-1, F-2): a rule on every string literal also catches class names |
 | JSON Schema generation covers every document | Unit test |
 | The admin form round-trips the example documents | Playwright test on the admin page |
 | Example media never published as owner content | Publish rules, unit test |
@@ -88,7 +88,7 @@ If E-1 is taken: the stage is the desktop experience, the rails retire from desk
 |---|---|---|
 | S0 Decisions | Section 7 answered; ADR 008 accepted; `AGENTS.md`, the roadmap and `docs/architecture.md` amended | Documents merged (done 2026-10-15) |
 | S1 Kernel | Icon catalog, `MediaRef`, the composition union with the six templates, `tagline`, `identity.links`, `faces[].icon`, template budgets, neutral example content in both languages with example images (`scripts/make-example-media.mjs`) | Schema, publish-rule and JSON Schema tests pass (done 2026-10-15; template budgets provisional until S2 measures them) |
-| S2 Stage from content | `conceptContent.ts` removed (the stage reads it until this slice); one component per template, chrome and dock from content, copy dictionary, the stage under the boundary and size rules; layout check and stress content on the stage | All gates green on desktop and desktop-short |
+| S2 Stage from content | `conceptContent.ts` removed (the stage reads it until this slice); one component per template, chrome and dock from content, copy dictionary, the stage under the boundary and size rules; layout check and stress content on the stage | All gates green on desktop and desktop-short (done 2026-10-15: the stage is the desktop default, `?layout=rails` for review; template budgets measured with the stress content on the full matrix; the right-hand blocks start at column 8, clear of the cube; first view still over budget, S6) |
 | S3 Admin | Schema endpoint, generated form, media upload and picker (local disk), the cross-language warning | Round-trip test; an image uploaded, published and shown by the site locally |
 | S4 Stacked | Stacked order of each template; the rails retire (if E-1) | Layout check green on the full matrix |
 | S5 CONTACT world | The CONTACT background, today a placeholder (`contact` in `src/kernel/worlds.ts`), composed around the centred cube like the other five worlds (owner, 2026-10-15) | The world renders behind CONTACT in every layout mode; layout check and contrast of name and role green over it |

@@ -12,9 +12,10 @@ export type PanelTransition = 'idle' | 'exiting' | 'entering'
 // after the landing · done: no intro styling at all.
 export type IntroStage = 'pending' | 'reveal' | 'done'
 export type CursorMode = 'default' | 'grab' | 'grabbing'
-// rails: the cube in the centre with a rail on each side. stage (concept,
-// `?layout=escenario`): the cube waits small behind the content and comes to
-// the front only to change face or to be explored.
+// rails: the cube in the centre with a rail on each side (stacked screens,
+// until spec 011 S4). stage (desktop, spec 011): the cube waits small behind
+// the face's composition and comes to the front only to change face or to be
+// explored.
 export type ExperienceLayout = 'rails' | 'stage'
 
 export type ExperienceState = {

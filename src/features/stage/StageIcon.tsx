@@ -20,7 +20,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { IconId } from './conceptContent'
+import type { IconId } from '@/kernel/icons'
 
 const ICONS: Record<IconId, LucideIcon> = {
   sparkles: Sparkles,
@@ -44,7 +44,7 @@ const ICONS: Record<IconId, LucideIcon> = {
   split: Split,
 }
 
-// Line icons of the stage concept, drawn in the current colour.
+// Line icons of the stage (the kernel catalog, ICON_IDS), drawn in the current colour.
 export function StageIcon({ id, size = 18 }: { id: IconId; size?: number }) {
   const Icon = ICONS[id]
   return <Icon aria-hidden size={size} strokeWidth={1.6} />

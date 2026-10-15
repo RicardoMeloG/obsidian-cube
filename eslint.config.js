@@ -13,7 +13,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 const THREE = ['^three($|/)', '^@react-three/']
 const CROSS_MODULE = [
   { regex: '^(\\.\\./)+(app|features|ui|lib|styles|kernel)(/|$)', message: 'Import another top-level module through @/ (ADR 006).' },
-  { regex: '^(\\.\\./)+(scene|faces|navigation|content|experience|audio|dev)(/|$)', message: 'Import another feature through @/features/… (ADR 006).' },
+  { regex: '^(\\.\\./)+(scene|faces|navigation|stage|content|experience|audio|dev)(/|$)', message: 'Import another feature through @/features/… (ADR 006).' },
 ]
 
 function boundary(files, forbidden, message) {
@@ -32,6 +32,15 @@ const LOCALE_LITERAL = {
   selector: "BinaryExpression[operator=/^[!=]==?$/] > Literal[value=/^(en|es)$/]",
   message: 'Read interface strings from src/features/content/copy.ts instead of comparing locales (ADR 006, AD-07).',
 }
+// The stage shows content only (spec 011, AD-07): no words written in its
+// markup. Interface strings come from copy.ts, owner text from the content.
+const STAGE_TEXT = [
+  { selector: 'JSXText[value=/[A-Za-zÀ-ÿ]{2,}[ ]+[A-Za-zÀ-ÿ]{2,}/]', message: 'Stage text comes from the content or copy.ts, never from the markup (spec 011, AD-07).' },
+  {
+    selector: "JSXAttribute[name.name=/^(aria-label|title|alt|placeholder)$/] > Literal[value=/[A-Za-zÀ-ÿ]{2,}/]",
+    message: 'Stage labels come from the content or copy.ts (spec 011, AD-07).',
+  },
+]
 const DYNAMIC_IMPORT = {
   selector: 'ImportExpression',
   message: 'Only the scene (worlds) and the app (dev showcase) load code lazily (ADR 006).',
@@ -67,7 +76,7 @@ export default defineConfig([
     'The scene and the DOM meet only in the experience store (ADR 006).',
   ),
   boundary(
-    ['src/features/{faces,navigation}/**/*.{ts,tsx}'],
+    ['src/features/{faces,navigation,stage}/**/*.{ts,tsx}'],
     ['^@/features/(scene|audio|dev)/', '^@/app/', ...THREE],
     'DOM features do not reach into the scene; they meet it in the experience store (ADR 006).',
   ),
@@ -79,6 +88,11 @@ export default defineConfig([
     files: ['src/{ui,lib,styles}/**/*.{ts,tsx}', 'src/features/{experience,faces,navigation,audio,dev}/**/*.{ts,tsx}'],
     ignores: ['**/*.test.ts'],
     rules: { 'no-restricted-syntax': ['error', LOCALE_LITERAL, DYNAMIC_IMPORT] },
+  },
+  {
+    files: ['src/features/stage/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: { 'no-restricted-syntax': ['error', LOCALE_LITERAL, DYNAMIC_IMPORT, ...STAGE_TEXT] },
   },
   {
     // content/ resolves the locale, so it may compare it; it loads nothing lazily.

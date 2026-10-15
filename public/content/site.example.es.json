@@ -64,9 +64,9 @@
         },
         "stepsTitle": "Modelo operativo",
         "steps": [
-          { "icon": "file", "label": "Especificar", "text": "Objetivo, contexto y límites en una spec verificable." },
-          { "icon": "send", "label": "Delegar", "text": "Agentes con herramientas acotadas y reglas explícitas." },
-          { "icon": "check", "label": "Revisar", "text": "Pruebas, chequeos y revisión humana antes de aceptar." },
+          { "icon": "file", "label": "Especificar", "text": "Objetivo, contexto y límites en una spec." },
+          { "icon": "send", "label": "Delegar", "text": "Agentes con herramientas y reglas explícitas." },
+          { "icon": "check", "label": "Revisar", "text": "Pruebas y revisión humana antes de aceptar." },
           { "icon": "package", "label": "Entregar", "text": "Lo validado llega a producción y se mantiene." }
         ],
         "proofsTitle": "Evidencia inspeccionable",

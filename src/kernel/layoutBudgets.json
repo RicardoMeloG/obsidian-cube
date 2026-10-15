@@ -29,26 +29,26 @@
     }
   },
   "templates": {
-    "_note": "Provisional (2026-10-15): taken from the stage concept's copy with a margin. Spec 011 S2 measures them with the stress content in the layout check.",
+    "_note": "Measured 2026-10-15 (spec 011 S2): the stress content at these limits passes the layout check on the full matrix, both languages.",
     "showcase": {
       "chars": {
         "featured.label": 24,
         "featured.title": 44,
-        "featured.text": 120,
-        "featured.chips[]": 16,
+        "featured.text": 90,
+        "featured.chips[]": 14,
         "stepsTitle": 28,
-        "steps[].label": 16,
-        "steps[].text": 64,
+        "steps[].label": 12,
+        "steps[].text": 48,
         "proofsTitle": 32,
         "proofsTrail": 24,
         "proofs[].kind": 24,
         "proofs[].title": 32,
-        "proofs[].text": 72,
-        "proofs[].chips[]": 16
+        "proofs[].text": 64,
+        "proofs[].chips[]": 14
       },
       "counts": {
         "featured.chips": {
-          "max": 4
+          "max": 3
         },
         "steps": {
           "min": 3,
@@ -59,21 +59,21 @@
           "max": 3
         },
         "proofs[].chips": {
-          "max": 3
+          "max": 2
         }
       }
     },
     "catalog": {
       "chars": {
         "listTitle": 24,
-        "items[].name": 32,
+        "items[].name": 28,
         "items[].meta": 16,
         "items[].status": 20,
-        "items[].text": 96,
-        "items[].chips[]": 16,
+        "items[].text": 80,
+        "items[].chips[]": 14,
         "items[].image.alt": 140,
         "items[].facts[].label": 16,
-        "items[].facts[].text": 80,
+        "items[].facts[].text": 64,
         "items[].links[].label": 20
       },
       "counts": {
@@ -82,7 +82,7 @@
           "max": 4
         },
         "items[].chips": {
-          "max": 4
+          "max": 3
         },
         "items[].facts": {
           "max": 3
@@ -95,29 +95,29 @@
     "case": {
       "chars": {
         "caseLabel": 24,
-        "caseName": 44,
+        "caseName": 36,
         "before.title": 16,
-        "before.items[]": 40,
+        "before.items[]": 28,
         "after.title": 16,
-        "after.items[]": 40,
+        "after.items[]": 28,
         "map.title": 28,
         "map.note": 24,
         "map.legend.*": 16,
         "steps[].label": 16,
-        "steps[].text": 96
+        "steps[].text": 64
       },
       "counts": {
         "before.items": {
           "min": 1,
-          "max": 3
+          "max": 2
         },
         "after.items": {
           "min": 1,
-          "max": 3
+          "max": 2
         },
         "map.cells": {
           "min": 1,
-          "max": 32
+          "max": 24
         },
         "steps": {
           "min": 3,

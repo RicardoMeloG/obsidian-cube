@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). Next: the compositions stage (spec 011, ADR 008), which replaces the desktop rails with per-face templates; then content, security and the release.
+**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). The compositions stage (spec 011, ADR 008) is under way: since S2 (2026-10-15) desktop shows the stage, one template per face read from the content; stacked screens keep the rails until S4. Then content, security and the release.
 
 ## System
 
@@ -27,7 +27,7 @@ Two layers: the repository holds code and example content; the owner's content i
 | Path | What | Notes |
 |---|---|---|
 | `src/` | Public site: React 19, TypeScript, Vite, React Three Fiber, Tailwind v4 | One package with the admin server; `@/` is `src/` |
-| `src/kernel/` | Content kernel: render schemas, publish rules and layout budgets (`publishRules.ts`, `layoutBudgets.json`), face and world catalogs, defaults (the bundled example), SEO renderer | ADR 005 |
+| `src/kernel/` | Content kernel: render schemas, the composition templates and the icon catalog (`compositions.ts`, `icons.ts`), publish rules and layout budgets (`publishRules.ts`, `layoutBudgets.json`, per template since spec 011), face and world catalogs, defaults (the bundled example), SEO renderer | ADR 005 |
 | `server/` | Local NestJS admin, `127.0.0.1:5182` | Retired by ADR 004 slice 6; imports only `src/kernel`; linted and type-checked |
 | `infra/` | AWS CDK | Own `package.json`, lockfile and TypeScript version |
 | `scripts/` | Gate scripts (`check-*.mjs`) and their data in `scripts/checks/` | Known layout failures, budget ratchet, deploy test |
@@ -43,7 +43,9 @@ src/
                      face transition, intro lifecycle, face in the URL, intro planning
     scene/           R3F: SceneLayer (canvas, still-image fallback, wiring to the store),
                      CubeScene, PremiumCube, environment, intro timeline, vector worlds
-    faces/           FaceRails (the two rails), FeatureGlyph, DetailDialog
+    stage/           the desktop layout (spec 011): StageView (top bar, content, dock), StageComposition
+                     and one component per template in templates/, each with its stylesheet
+    faces/           FaceRails (the two rails, stacked screens until spec 011 S4), FeatureGlyph, DetailDialog
     navigation/      FaceStrip, RotateHint
     content/         loaders, locale, sanitizer, RichText, interface copy dictionary
     audio/           the gesture-driven cube sounds (no autoplay), used by the scene
@@ -54,9 +56,9 @@ src/
   kernel/            the content contract (ADR 005)
 ```
 
-Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's gradients and grid, the canvas box), `src/app/intro.css` (the intro choreography, deliberately unlayered), `FaceRails.css`, `FaceStrip.css`, `DetailDialog.css` (layered gradients, decorations, choreography) and `src/ui/ornaments.css`. The dev showcase's stylesheet travels only with its development chunk. There is no global stylesheet besides `src/index.css` (Tailwind, tokens, base layer).
+Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's gradients and grid, the canvas box), `src/app/intro.css` (the intro choreography, deliberately unlayered), `FaceRails.css`, `FaceStrip.css`, `DetailDialog.css` (layered gradients, decorations, choreography), `src/ui/ornaments.css`, and the stage's `stage.css` with one stylesheet per template (the stage is sized in em from a font size that follows the viewport, which utilities express poorly). `stage.css` loads before the templates' sheets, which refine it. The dev showcase's stylesheet travels only with its development chunk. There is no global stylesheet besides `src/index.css` (Tailwind, tokens, base layer).
 
-**Layout modes.** Three modes decide the composition: `desktop` (cube in the centre, rails left and right), `desktop-short` (the same on a short screen, compact rhythm) and `stacked` (cube on top, the page scrolls). Six width refinements adjust inside them: `stacked-wide` (tablet landscape), `tight` (≤ 1100px, narrower rails), `narrow` (≤ 720px, phone-sized stacked page), `phone` (≤ 680px, the strip takes two rows), `phone-small` (≤ 389px, one-column research map) and `tiny` (≤ 340px, the tightest strip). They are the breakpoints of the CSS before the migration, kept so the migration changed no pixel; merging `narrow` and `phone` is a design change for a visual review, not a normalization. All nine queries live in `src/styles/layoutModes.ts`; Tailwind's own breakpoints are removed, so there is no other way to write one.
+**Layout modes.** Three modes decide the composition: `desktop` (the stage: the face's composition around the cube, the dock at the bottom), `desktop-short` (the same on a short screen) and `stacked` (cube on top, the page scrolls). Six width refinements adjust inside them: `stacked-wide` (tablet landscape), `tight` (≤ 1100px, narrower rails), `narrow` (≤ 720px, phone-sized stacked page), `phone` (≤ 680px, the strip takes two rows), `phone-small` (≤ 389px, one-column research map) and `tiny` (≤ 340px, the tightest strip). They are the breakpoints of the CSS before the migration, kept so the migration changed no pixel; merging `narrow` and `phone` is a design change for a visual review, not a normalization. All nine queries live in `src/styles/layoutModes.ts`; Tailwind's own breakpoints are removed, so there is no other way to write one.
 
 **How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the strip dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the rails follow `displayedFace` through the transition; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
 
@@ -69,7 +71,7 @@ Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's 
 | `ui` | features, app, three, R3F |
 | `features/experience` | other features, ui, app, three, R3F |
 | `features/scene` | faces, navigation, content, dev, ui, app |
-| `features/faces`, `features/navigation` | scene, audio, dev, app, three, R3F |
+| `features/faces`, `features/navigation`, `features/stage` | scene, audio, dev, app, three, R3F; the stage also writes no text in its markup (spec 011, AD-07) |
 | `features/content` | other features, ui, app, three; no lazy loading |
 | `features/audio` | anything under `@/` |
 | `features/dev` | app; no lazy loading |
@@ -97,7 +99,9 @@ Imports across top-level modules use `@/`; a relative path that climbs into anot
 | Owner content wins; a missing field falls back to the example in the same language | In force | `src/kernel/siteContent.test.ts` |
 | Every public asset has a recorded source and licence | In force, two pending | `docs/assets.md`, `scripts/checks/assets.test.ts` |
 | Layout: no rail over the strip, CTAs in view, name first and not covered, fixed chrome never overlaps; name and role at AA contrast over the real background | In force, no known failures | `npm run check:layout` (H-06) |
-| Content within its layout budget fits every supported screen | In force | `npm run check:layout -- --content=stress` (H-06b); publish rules in `src/kernel/publishRules.ts`, tested by `scripts/checks/stressContent.test.ts` |
+| Stage: every block of a composition fits its area without scrolling, nothing painted over another block, the chrome or the content inside a block, the centre clear for the cube, CTAs in view | In force, no known failures | `npm run check:layout` on desktop viewports (spec 011, AD-06) |
+| Every text slot of a template reaches the page | In force | `src/features/stage/StageComposition.test.tsx` |
+| Content within its layout budget fits every supported screen | In force, every template included (budgets measured 2026-10-15) | `npm run check:layout -- --content=stress` (H-06b); publish rules in `src/kernel/publishRules.ts`, tested by `scripts/checks/stressContent.test.ts` |
 | One source for layout modes; no numeric breakpoints or loose width variants in components | In force | `src/styles/layoutModes.test.ts` (H-17) |
 | No blank page without WebGL or when a world fails | In force | Degradation checks in `npm run check:layout` (H-18) |
 | Accessibility: no axe violations | In force, no known failures | `npm run check:layout` (H-13) |

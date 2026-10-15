@@ -57,7 +57,7 @@ type CubeSceneProps = {
   intro: CubeIntroConfig
   onIntroPhase?: (phase: IntroPhase) => void
   onEngaged?: () => void
-  // Stage layout (concept): the camera pulls back so the cube waits small
+  // Stage layout (spec 011): the camera pulls back so the cube waits small
   // behind the content; it comes forward again to turn or to be explored.
   recede?: boolean
   // Called once every shader of the first view is compiled (see below).

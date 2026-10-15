@@ -4,14 +4,16 @@
 // shows what a visitor sees, scene included (WebGL in software).
 //
 //   npm run build && node scripts/walkthrough.mjs
-//   node scripts/walkthrough.mjs --layout=escenario --viewport=1440x900
+//   node scripts/walkthrough.mjs --layout=stage --viewport=1440x900
 //   node scripts/walkthrough.mjs --admin     also the admin page (server on 5182)
+//   node scripts/walkthrough.mjs --content=stress   every slot at its budget
 //
 // Screenshots go to walkthrough/ (gitignored): they may show private content.
 import { spawn } from 'node:child_process'
-import { mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
+import { buildStressContent } from './checks/stressContent.mjs'
 
 const PORT = 4181
 const BASE = `http://127.0.0.1:${PORT}`
@@ -19,8 +21,13 @@ const OUT = 'walkthrough'
 const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contact']
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.split('=')[1]?.split(',') ?? fallback
 const viewports = option('viewport', ['1440x900', '1366x768', '390x844'])
-const layouts = option('layout', ['rails', 'escenario'])
+// stage: the desktop default; rails: `?layout=rails`, for review while the
+// rails retire (spec 011, AD-05). Stacked screens show the rails either way.
+const layouts = option('layout', ['stage', 'rails'])
 const locales = option('lang', ['es', 'en'])
+const stress = option('content', [])[0] === 'stress'
+const readJson = (path) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8'))
+const budgets = readJson('../src/kernel/layoutBudgets.json')
 
 const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url))
 const server = spawn(process.execPath, [vite, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { stdio: 'ignore' })
@@ -41,15 +48,22 @@ try {
   for (const viewport of viewports) {
     const [width, height] = viewport.split('x').map(Number)
     for (const layout of layouts) {
+      if (layout === 'rails' && width <= 900) continue
       for (const locale of locales) {
         const page = await browser.newPage({ viewport: { width, height } })
+        if (stress) {
+          const example = readJson(`../public/content/site.example.${locale}.json`)
+          const stand = readFileSync(fileURLToPath(new URL('../public/examples/project-1.webp', import.meta.url)))
+          await page.route('**/content/media/*.webp', (route) => route.fulfill({ contentType: 'image/webp', body: stand }))
+          await page.route('**/content/site.*.json', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(buildStressContent(example, budgets)) }))
+        }
         page.on('pageerror', (error) => errors.push(`${layout} ${viewport} ${locale}: ${error.message}`))
         page.on('console', (message) => {
           if (message.type() === 'error') errors.push(`${layout} ${viewport} ${locale}: ${message.text().slice(0, 160)}`)
         })
         for (const face of FACES) {
-          const stage = layout === 'escenario' ? '&layout=escenario' : ''
-          await page.goto(`${BASE}/?intro=0&lang=${locale}&section=${face}${stage}`)
+          const rails = layout === 'rails' ? '&layout=rails' : ''
+          await page.goto(`${BASE}/?intro=0&lang=${locale}&section=${face}${rails}`)
           await page.waitForTimeout(2500)
           await page.screenshot({ path: `${OUT}/${layout}-${viewport}-${locale}-${face}.png`, fullPage: width < 720 })
         }
@@ -59,7 +73,7 @@ try {
   }
   if (process.argv.includes('--admin')) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
-    await page.goto('http://127.0.0.1:5182/admin/').catch((error) => errors.push(`admin: ${error.message}`))
+    await page.goto('http://127.0.0.1:5182/').catch((error) => errors.push(`admin: ${error.message}`))
     await page.screenshot({ path: `${OUT}/admin-1440x900.png` })
   }
   await browser.close()
