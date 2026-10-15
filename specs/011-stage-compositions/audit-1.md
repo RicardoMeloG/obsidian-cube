@@ -12,7 +12,7 @@ Dos auditores locales sin contexto previo, cada uno por separado: `qwen3.6:27b` 
   - `kernel`: las composiciones, los iconos, los campos, el contenido, las reglas de publicación y los presupuestos.
   - `harness`: el contenido de estrés, `eslint.config.js`, el límite de tamaño, la prueba de render y el diff de `check-layout.mjs`.
 
-La consigna fue informar solo desvíos demostrables, citando a la vez la línea de código y el texto exacto de la regla. Cada hallazgo lo verificó después Claude contra el código.
+La consigna fue informar solo desvíos demostrables, citando a la vez la línea de código y el texto exacto de la regla. Cada hallazgo lo verificó después Claude contra el código. El procedimiento quedó después en `scripts/audit-drift.mjs`, para repetirlo en los puntos de control siguientes.
 
 ## Hallazgos
 
