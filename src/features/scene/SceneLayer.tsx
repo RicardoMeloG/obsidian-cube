@@ -16,6 +16,11 @@ type SceneLayerProps = {
   webglAvailable: boolean
 }
 
+// The canvas draws once the scene reports its shaders compiled. If that never
+// comes (a stalled compile, a lost context), it draws anyway after this long,
+// compiling on the first frames as it did before.
+const READY_TIMEOUT_MS = 3000
+
 // The 3D scene, wired to the experience: it reports where the cube lands and
 // what the visitor does with it, and turns the cube when a face is requested.
 // Without WebGL, or if the scene fails, a still of the cube takes its place;
@@ -69,6 +74,13 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
     rememberInSession(CUBE_ENGAGED_KEY)
   }, [store])
 
+  const [ready, setReady] = useState(false)
+  const handleReady = useCallback(() => setReady(true), [])
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setReady(true), READY_TIMEOUT_MS)
+    return () => window.clearTimeout(timeout)
+  }, [])
+
   const poster = <img className="cube-canvas__poster block size-full object-cover" src="/og-image.jpg" alt="" />
   if (!webglAvailable) return poster
 
@@ -77,6 +89,7 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
       <Canvas
         camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
         dpr={[1.5, 2]}
+        frameloop={ready ? 'always' : 'never'}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', stencil: true }}
         shadows={effects.shadows}
         onCreated={() => store.dispatch({ type: 'sceneMounted' })}
@@ -103,6 +116,7 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
             onIntroPhase={handleIntroPhase}
             onEngaged={handleEngaged}
             recede={recede}
+            onReady={handleReady}
           />
         </Suspense>
       </Canvas>

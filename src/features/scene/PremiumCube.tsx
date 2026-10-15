@@ -385,6 +385,9 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
   return (
     <group>
       <RoundedBox args={[2.18, 2.18, 2.18]} radius={0.1} smoothness={10} castShadow={shadows} receiveShadow={shadows}>
+        {/* No transmission: at this metalness it changed no pixel, and any
+            value above 0 makes three.js render the scene a second time every
+            frame (2026-10-14: the integrated GPU went from 35 to 74 fps). */}
         <meshPhysicalMaterial
           color={new Color('#010208')}
           metalness={0.92}
@@ -395,8 +398,6 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
           emissiveIntensity={0.1}
           envMapIntensity={0.95}
           reflectivity={1}
-          transmission={0.02}
-          thickness={0.32}
           ior={1.6}
         />
       </RoundedBox>
