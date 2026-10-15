@@ -94,6 +94,10 @@ If E-1 is taken: the stage is the desktop experience, the rails retire from desk
 | S5 CONTACT world | The CONTACT background, today a placeholder (`contact` in `src/kernel/worlds.ts`), composed around the centred cube like the other five worlds (owner, 2026-10-15) | The world renders behind CONTACT in every layout mode; layout check and contrast of name and role green over it |
 | S6 Budget | Measure; replace or subset the icon library if it is the cause | `check:budget` green, or a raise justified here |
 
+**Closing a slice** (owner, 2026-10-15): every gate of section 4 green, plus the visual walkthrough (`scripts/walkthrough.mjs`, `AGENTS.md` definition of done, item 5) looked at and its findings recorded in the commit. **Drift audits** (item 8): after S2 (the stage reads content; the biggest change to the architecture), after S4 (the rails retire) and before acceptance. Each is recorded as `audit-N.md` here and resolved before the next slice starts.
+
+S1 closed on 2026-10-15 before this rule; its walkthrough ran the same day: the rails unchanged at the three viewports in both languages, the stage unchanged, no page errors.
+
 ## 6. Non-goals
 
 A page builder; 3D worlds other than CONTACT's (S5); the contact form and the CV request (captcha and delivery), which belong to the security stage (E-7); the Cognito admin itself (ADR 004 slices); analytics.

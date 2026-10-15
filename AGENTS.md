@@ -129,9 +129,10 @@ Before reporting a change complete (definition of done; items marked with a phas
 2. `npm run check:budget`, `npm run check:privacy`, `npm run check:docs` and `npm run check:tokens` pass.
 3. `npm run check:layout` passes: no layout or accessibility failure beyond the known ones in `scripts/checks/layout-known.json`. A fix removes its entry; a new entry needs a reason in the commit.
 4. The pre-push hook is enabled (`git config core.hooksPath .githooks`).
-5. Visual changes are verified with Playwright: desktop at 1440px or wider, a short desktop (1366×768) and a 390px phone.
+5. Every slice, visual or not, closes with a visual walkthrough a person looks at (owner, 2026-10-15): `node scripts/walkthrough.mjs` photographs every face in every layout, both languages, at 1440×900, 1366×768 and 390×844 (screenshots in `walkthrough/`, gitignored); add `--admin` when the admin changed. Green gates do not prove the experience still holds; the walkthrough's findings are reported.
 6. `docs/architecture.md` is updated in the same change when a boundary, flow or rule status changes.
 7. Changes stay scoped to one product hito per commit.
+8. A spec in progress is audited for drift at the checkpoints its slice table names, by agents without prior context (local models, two in parallel), against `AGENTS.md`, its ADRs and the spec; the result is recorded next to the spec (`audit-N.md`) and resolved before the next slice.
 
 Admin and backend rules:
 

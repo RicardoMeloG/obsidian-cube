@@ -36,3 +36,6 @@ public/content/visual.json
 
 # Layout check evidence on failure (scripts/check-layout.mjs)
 layout-report/
+
+# Visual walkthrough screenshots (scripts/walkthrough.mjs); may show private content
+walkthrough/
