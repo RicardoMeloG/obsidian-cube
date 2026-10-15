@@ -15,6 +15,11 @@ export class ContentController {
     return this.content.listDocs()
   }
 
+  @Get('schema/:doc')
+  schema(@Param('doc') doc: string) {
+    return this.content.formSchema(this.assertDoc(doc))
+  }
+
   @Get('content/:doc')
   read(@Param('doc') doc: string) {
     return this.content.read(this.assertDoc(doc))

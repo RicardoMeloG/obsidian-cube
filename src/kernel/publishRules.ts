@@ -165,6 +165,26 @@ export function visibleContent(content: SiteContent): SiteContent {
   return { ...content, sections: normalizeSections(content.sections, content.locale) as unknown as SiteContent['sections'] }
 }
 
+// A face whose two languages use different templates (spec 011, AD-02): a
+// warning, not an error, so a template can be changed one language at a time.
+// Compares what a visitor sees: a face without a composition shows the
+// example's.
+export function templateMismatches(content: SiteContent, other: SiteContent): Issue[] {
+  const mine = normalizeSections(content.sections, content.locale)
+  const theirs = normalizeSections(other.sections, other.locale)
+  return mine.flatMap((section) => {
+    const counterpart = theirs.find((candidate) => candidate.id === section.id)
+    if (!counterpart || counterpart.composition.template === section.composition.template) return []
+    const index = content.sections.findIndex((candidate) => candidate.id === section.id)
+    return [
+      {
+        path: index === -1 ? ['sections'] : ['sections', index, 'composition', 'template'],
+        message: `La versión ${other.locale.toUpperCase()} de ${section.label} usa la plantilla «${counterpart.composition.template}»; esta usa «${section.composition.template}».`,
+      },
+    ]
+  })
+}
+
 export const PublishableSiteContentSchema = SiteContentSchema.superRefine((content, context) => {
   const visible = visibleContent(content)
   for (const issue of publishIssues(visible)) {

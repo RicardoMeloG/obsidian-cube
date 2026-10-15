@@ -20,22 +20,25 @@ const HexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'accent must be a 6
 // A world in the catalog: it can be enabled or disabled whether or not a face
 // points at it.
 const WorldCatalogEntrySchema = z.object({
-  id: WorldIdSchema,
-  label: z.string().min(1),
-  enabled: z.boolean(),
+  id: WorldIdSchema.meta({ title: 'Mundo', widget: 'fixed' }),
+  label: z.string().min(1).meta({ title: 'Nombre' }),
+  enabled: z.boolean().meta({ title: 'Activo' }),
 })
 
 // Per-face presentation: which world backs it (or none), its accent hue and
 // its icon in the stage's dock (spec 011, AD-02).
 const FaceVisualSchema = z.object({
-  worldId: WorldIdSchema.nullable(),
-  accent: HexColorSchema,
-  icon: z.enum(ICON_IDS as unknown as [IconId, ...IconId[]]).optional(),
+  worldId: WorldIdSchema.nullable().meta({ title: 'Mundo de fondo' }),
+  accent: HexColorSchema.meta({ title: 'Color de acento', widget: 'color' }),
+  icon: z
+    .enum(ICON_IDS as unknown as [IconId, ...IconId[]])
+    .optional()
+    .meta({ title: 'Icono en el dock' }),
 })
 
 export const VisualContentSchema = z.object({
-  worlds: z.array(WorldCatalogEntrySchema),
-  faces: z.record(FaceIdSchema, FaceVisualSchema),
+  worlds: z.array(WorldCatalogEntrySchema).meta({ title: 'Mundos' }),
+  faces: z.record(FaceIdSchema, FaceVisualSchema).meta({ title: 'Caras' }),
 })
 
 export type WorldCatalogEntry = z.infer<typeof WorldCatalogEntrySchema>

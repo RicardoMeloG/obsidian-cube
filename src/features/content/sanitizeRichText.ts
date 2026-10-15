@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify'
+import { RICH_TEXT_TAGS } from '@/kernel/fields'
 
 // Single security boundary for admin-authored rich content: every rich field
 // renders through this allow-list, in the browser. It needs the DOM, so it
@@ -6,22 +7,8 @@ import DOMPurify from 'dompurify'
 //
 // Inline-only on purpose: the layout treats each face as a single-viewport
 // "poster", so block tags (p, ul, headings) are disallowed to avoid breaking it.
-const ALLOWED_TAGS = [
-  'strong',
-  'em',
-  'b',
-  'i',
-  'u',
-  's',
-  'a',
-  'br',
-  'code',
-  'span',
-  'sup',
-  'sub',
-  'mark',
-  'small',
-]
+// The list lives in the kernel, so the admin shows the same one.
+const ALLOWED_TAGS = RICH_TEXT_TAGS
 
 // Only anchors carry attributes. `javascript:`/`data:` URIs are blocked by
 // DOMPurify's default URI policy; we do not add ALLOW_UNKNOWN_PROTOCOLS.

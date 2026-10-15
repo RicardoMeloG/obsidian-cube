@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import { TEMPLATE_IDS } from './compositions'
 import type { Composition } from './compositions'
-import { publishIssues, slotValues, TEMPLATE_BUDGETS } from './publishRules'
+import { publishIssues, slotValues, TEMPLATE_BUDGETS, templateMismatches } from './publishRules'
 import { getDefaultSiteContent, normalizeSections, SiteContentSchema } from './siteContent'
+import { RICH_TEXT_TAGS } from './fields'
 import type { SiteContent } from './siteContent'
 import { VisualContentSchema } from './visualContent'
 
@@ -95,5 +96,27 @@ describe('publish rules on compositions', () => {
       if (composition.template === 'channels') composition.channels[0].href = 'javascript:alert(1)'
     })
     expect(publishIssues(content).map((issue) => issue.path.join('.'))).toContain('sections.5.composition.channels.0.href')
+  })
+})
+
+describe('cross-language warning (spec 011, AD-02)', () => {
+  it('is silent when both languages use the same template on every face', () => {
+    expect(templateMismatches(getDefaultSiteContent('es'), getDefaultSiteContent('en'))).toEqual([])
+  })
+
+  it('names the face whose template differs, pointing at the template', () => {
+    const spanish = structuredClone(getDefaultSiteContent('es'))
+    const contact = spanish.sections.findIndex((section) => section.id === 'contact')
+    spanish.sections[contact].composition = structuredClone(getDefaultSiteContent('es').sections.find((s) => s.id === 'research')!.composition!)
+    const issues = templateMismatches(spanish, getDefaultSiteContent('en'))
+    expect(issues).toHaveLength(1)
+    expect(issues[0].path).toEqual(['sections', contact, 'composition', 'template'])
+    expect(issues[0].message).toContain('EN')
+  })
+})
+
+describe('rich text in the admin form', () => {
+  it('lists the tags the sanitizer allows', () => {
+    expect(JSON.stringify(z.toJSONSchema(SiteContentSchema))).toContain(JSON.stringify(RICH_TEXT_TAGS))
   })
 })

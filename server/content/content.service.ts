@@ -7,9 +7,11 @@ import {
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import type { ZodError } from 'zod'
+import { templateMismatches } from '../../src/kernel/publishRules'
+import { SiteContentSchema } from '../../src/kernel/siteContent'
 import { ContentRepository } from './content.repository'
 import type { VersionSummary } from './content.repository'
-import { DOCS } from './docs'
+import { DOCS, formSchema, otherLanguage } from './docs'
 import type { DocId } from './docs'
 
 // Files are read from / published to the same static path the public site reads.
@@ -17,6 +19,7 @@ import type { DocId } from './docs'
 const CONTENT_DIR = path.resolve(process.cwd(), 'public', 'content')
 
 type ValidationError = { path: string; message: string }
+type Validation = { ok: boolean; errors?: ValidationError[]; warnings?: ValidationError[] }
 
 @Injectable()
 export class ContentService {
@@ -24,6 +27,10 @@ export class ContentService {
 
   listDocs() {
     return Object.values(DOCS).map(({ id, label }) => ({ id, label }))
+  }
+
+  formSchema(docId: DocId) {
+    return formSchema(docId)
   }
 
   // Prefer the DB draft when available; otherwise fall back to the published /
@@ -51,12 +58,24 @@ export class ContentService {
     throw new NotFoundException(`No content file found for ${docId}`)
   }
 
-  validate(docId: DocId, data: unknown): { ok: boolean; errors?: ValidationError[] } {
+  async validate(docId: DocId, data: unknown): Promise<Validation> {
     const result = DOCS[docId].schema.safeParse(data)
-    if (result.success) {
-      return { ok: true }
+    if (!result.success) {
+      return { ok: false, errors: formatIssues(result.error) }
     }
-    return { ok: false, errors: formatIssues(result.error) }
+    const warnings = await this.languageWarnings(docId, data)
+    return warnings.length > 0 ? { ok: true, warnings } : { ok: true }
+  }
+
+  // Faces whose two languages use different templates (spec 011, AD-02),
+  // against the other language as the editor would open it.
+  private async languageWarnings(docId: DocId, data: unknown): Promise<ValidationError[]> {
+    const other = otherLanguage(docId)
+    if (!other) return []
+    const mine = SiteContentSchema.safeParse(data)
+    const theirs = SiteContentSchema.safeParse((await this.read(other).catch(() => ({ data: null }))).data)
+    if (!mine.success || !theirs.success) return []
+    return templateMismatches(mine.data, theirs.data).map((issue) => ({ path: issue.path.join('.') || '(root)', message: issue.message }))
   }
 
   // Persist a work-in-progress draft (no schema enforcement — drafts may be
@@ -70,8 +89,8 @@ export class ContentService {
   // Publish = validate, write the static JSON the site reads, and (if the DB is
   // up) append an immutable version + sync the draft. Invalid content is never
   // written.
-  async publish(docId: DocId, data: unknown): Promise<{ ok: true; file: string; version: VersionSummary | null }> {
-    const check = this.validate(docId, data)
+  async publish(docId: DocId, data: unknown): Promise<{ ok: true; file: string; version: VersionSummary | null; warnings?: ValidationError[] }> {
+    const check = await this.validate(docId, data)
     if (!check.ok) {
       throw new BadRequestException({ ok: false, errors: check.errors })
     }
@@ -84,7 +103,7 @@ export class ContentService {
       version = await this.repository.insertVersion(docId, data)
       await this.repository.upsertDraft(docId, data)
     }
-    return { ok: true, file: DOCS[docId].file, version }
+    return { ok: true, file: DOCS[docId].file, version, warnings: check.warnings }
   }
 
   async listVersions(docId: DocId): Promise<VersionSummary[]> {

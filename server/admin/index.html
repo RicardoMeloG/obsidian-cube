@@ -8,7 +8,7 @@
     :root {
       --bg: #08050d; --panel: #12101b; --panel-2: #1a1726; --line: #2a2740;
       --text: #e4eff8; --muted: #9a94b8; --accent: #b8aeff;
-      --ok: #89d6c7; --err: #ff7a7a; --sidebar: 250px;
+      --ok: #89d6c7; --err: #ff7a7a; --warn: #f0d2b4; --sidebar: 250px;
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg); color: var(--text);
@@ -70,6 +70,52 @@
     .auth-card .secret { font: 12px ui-monospace, monospace; color: var(--accent); word-break: break-all; text-align: center; }
     .auth-msg { margin-top: 12px; font-size: 13px; min-height: 18px; }
     .auth-msg.err { color: var(--err); } .auth-msg.ok { color: var(--ok); }
+    #status .warn { color: var(--warn); }
+    .view-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-left: auto; }
+    .view-switch button { border: 0; border-radius: 0; padding: 6px 12px; background: var(--panel-2); }
+    .view-switch button.active { background: var(--accent); color: #0b0713; font-weight: 600; }
+    /* Generated form (form.js, spec 011 AD-04). */
+    #form { flex: 1; overflow: auto; padding: 16px 20px 40px; background: var(--bg); }
+    .sf-root { display: grid; gap: 12px; max-width: 760px; }
+    .sf-field { display: grid; gap: 4px; }
+    .sf-label { font-size: 12px; color: var(--muted); }
+    .sf-optional { opacity: 0.7; }
+    .sf-hint { font-size: 11px; color: var(--muted); }
+    .sf-field input[type=text], .sf-field input[type=number], .sf-field select, .sf-field textarea, .sf-media input[type=text] {
+      width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; }
+    .sf-field textarea { resize: vertical; font: 13px/1.5 "Inter", system-ui, sans-serif; }
+    .sf-fixed { font-weight: 600; color: var(--accent); }
+    .sf-group { display: grid; gap: 10px; margin: 0; padding: 12px 14px 14px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--panel) 70%, transparent); }
+    .sf-group > legend { display: flex; gap: 10px; align-items: center; padding: 0 6px; font-weight: 600; font-size: 13px; }
+    .sf-union { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+    .sf-list > ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    .sf-item { display: grid; gap: 6px; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 8px; }
+    .sf-item[open] { padding-bottom: 12px; }
+    .sf-item > summary { cursor: pointer; list-style: none; }
+    .sf-item > summary::-webkit-details-marker { display: none; }
+    .sf-item > summary::before { content: '▸'; color: var(--muted); margin-right: 2px; }
+    .sf-item[open] > summary::before { content: '▾'; }
+    .sf-inline { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 6px; border-style: solid; padding: 6px; }
+    .sf-inline .sf-label { display: none; }
+    .sf-preview-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .sf-item-bar { display: flex; gap: 6px; align-items: center; }
+    .sf-item-bar button { padding: 2px 8px; }
+    .sf-index { color: var(--muted); font-size: 12px; }
+    .sf-count { color: var(--muted); font-weight: 400; }
+    .sf-add { justify-self: start; }
+    .sf-remove { padding: 2px 8px; font-size: 12px; color: var(--err); }
+    .sf-color { display: flex; gap: 8px; align-items: center; }
+    .sf-color input[type=color] { width: 42px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; }
+    .sf-media-row { display: flex; gap: 14px; align-items: flex-start; }
+    .sf-preview { width: 160px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); }
+    .sf-empty { display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+    .sf-media-actions { display: grid; gap: 8px; justify-items: start; }
+    .sf-upload { position: relative; display: inline-block; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); cursor: pointer; }
+    .sf-file { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .sf-library { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sf-pick { padding: 0; border-radius: 6px; overflow: hidden; }
+    .sf-pick img { display: block; width: 96px; height: 60px; object-fit: cover; }
+    .sf-error > input, .sf-error > textarea, .sf-error > select, .sf-group.sf-error { border-color: var(--err) !important; }
   </style>
 </head>
 <body>
@@ -128,13 +174,18 @@
             <button id="validate">Validar</button>
             <button id="saveDraft">Guardar borrador</button>
             <button id="publish" class="primary">Publicar</button>
+            <div class="view-switch" id="viewSwitch">
+              <button data-view="form" class="active">Formulario</button>
+              <button data-view="json">JSON</button>
+            </div>
           </div>
           <div class="toolbar">
             <label>Versiones</label>
             <select id="versions"><option value="">— sin versiones —</option></select>
             <button id="restore">Restaurar</button>
           </div>
-          <textarea id="content" spellcheck="false"></textarea>
+          <div id="form"></div>
+          <textarea id="content" class="hidden" spellcheck="false"></textarea>
           <div id="status" class="hint">Cargando…</div>
         </section>
 
@@ -149,16 +200,22 @@
     </div>
   </div>
 
+  <script src="/form.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const ta = $('content'), status = $('status'), source = $('source');
     const setStatus = (html, cls) => { status.className = cls || 'hint'; status.innerHTML = html; };
     const malformed = (e) => `<span class="err">✗ JSON malformado:</span> ${e}`;
     const parseEditor = () => { try { return { ok: true, data: JSON.parse(ta.value) }; } catch (e) { return { ok: false, error: e.message }; } };
+    const escapeHtml = (text) => String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const issueList = (issues) => `<ul>${(issues || []).map((e) => `<li><code>${escapeHtml(e.path)}</code> — ${escapeHtml(e.message)}</li>`).join('')}</ul>`;
     const renderErrors = (errors) => {
-      const items = (errors || []).map((e) => `<li><code>${e.path}</code> — ${e.message}</li>`).join('');
-      setStatus(`<span class="err">✗ Inválido (${(errors || []).length})</span><ul>${items}</ul>`, '');
+      setStatus(`<span class="err">✗ Inválido (${(errors || []).length})</span>${issueList(errors)}`, '');
+      markFormErrors(errors || []);
     };
+    // Warnings do not block publishing (spec 011: the template of a face may
+    // differ between languages while one of them is being changed).
+    const warningsHtml = (warnings) => warnings && warnings.length ? `<div><span class="warn">⚠ Avisos (${warnings.length})</span>${issueList(warnings)}</div>` : '';
 
     // ---- Icons ----
     const ICONS = {
@@ -182,6 +239,77 @@
     let currentTarget = null;  // { kind: 'face'|'general'|'visual', id? }
     let currentLang = 'en';
     let heldDoc = null;        // whole site.{lang} doc backing a face/general edit
+    let view = 'form';         // 'form' (generated from the schema) | 'json' (advanced)
+    let sliceValue = null;     // what the editor shows, before the edits
+    let form = null;           // the generated form, when view === 'form'
+    const schemas = {};        // JSON Schema of each document, from the kernel
+    async function docSchema(docId) {
+      if (!schemas[docId]) schemas[docId] = await (await fetch('/api/schema/' + docId)).json();
+      return schemas[docId];
+    }
+    // The part of the document's schema the editor shows: one face, the
+    // site-wide block, or the whole visual document.
+    function sliceSchema(schema) {
+      if (currentTarget.kind === 'face') return schema.properties.sections.items;
+      if (currentTarget.kind === 'general') {
+        const { sections, ...properties } = schema.properties;
+        return { ...schema, properties, required: (schema.required || []).filter((key) => key !== 'sections') };
+      }
+      return schema;
+    }
+    // Owner images: resized and encoded in the browser, then the image and its
+    // thumbnail are stored by the server (spec 011, AD-03).
+    const media = {
+      async upload(file) {
+        const send = async (url, blob) => {
+          const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'image/webp' }, body: blob });
+          const out = await res.json();
+          if (!res.ok) throw new Error(out.message || 'No se pudo subir la imagen.');
+          return out;
+        };
+        const image = await send('/api/media', await SchemaForm.toWebp(file, { width: 1600, height: 2000 }));
+        const thumb = await send('/api/media/' + image.hash + '/thumb', await SchemaForm.toWebp(file, { width: 320, height: 400 }));
+        return { src: image.src, thumb: thumb.thumb, width: image.width, height: image.height };
+      },
+      async list() {
+        const res = await fetch('/api/media');
+        return res.ok ? res.json() : [];
+      },
+    };
+    async function showSlice(value) {
+      sliceValue = value;
+      $('form').scrollTop = 0;
+      ta.value = JSON.stringify(value, null, 2);
+      if (view === 'form') {
+        form = SchemaForm.create($('form'), sliceSchema(await docSchema(underlyingDocId())), value, { media });
+      }
+    }
+    // What the editor holds now, from the form or from the JSON view.
+    function currentSlice() {
+      if (view === 'form' && form) return { ok: true, data: form.value() };
+      return parseEditor();
+    }
+    async function setView(next) {
+      if (next === view) return;
+      const current = currentSlice();
+      if (!current.ok) return setStatus(malformed(current.error), '');
+      view = next;
+      $('viewSwitch').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
+      $('form').classList.toggle('hidden', view !== 'form');
+      ta.classList.toggle('hidden', view !== 'json');
+      form = null;
+      await showSlice(current.data);
+    }
+    // Paths of the server's errors, relative to what the editor shows.
+    function markFormErrors(errors) {
+      if (!form) return;
+      let prefix = '';
+      if (currentTarget.kind === 'face') {
+        const index = (heldDoc.sections || []).findIndex((s) => s.id === currentTarget.id);
+        prefix = 'sections.' + index + '.';
+      }
+      form.markErrors(errors.map((e) => e.path).filter((path) => path.startsWith(prefix)).map((path) => path.slice(prefix.length)));
+    }
 
     const underlyingDocId = () => currentTarget.kind === 'visual' ? 'visual' : 'site.' + currentLang;
     const faceSlice = (doc, id) => (doc.sections || []).find((s) => s.id === id) || { id };
@@ -219,12 +347,11 @@
       const body = await res.json();
       if (currentTarget.kind === 'visual') {
         heldDoc = null;
-        ta.value = JSON.stringify(body.data, null, 2);
+        await showSlice(body.data);
         source.textContent = 'origen: ' + body.source;
       } else {
         heldDoc = body.data;
-        const slice = currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id);
-        ta.value = JSON.stringify(slice, null, 2);
+        await showSlice(currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id));
         source.textContent = `origen: ${body.source} · ${currentLang.toUpperCase()}`;
       }
       setStatus('Cargado. Edita y valida antes de publicar.', 'hint');
@@ -233,7 +360,7 @@
 
     // Merge the edited slice back into the full document the backend validates.
     function reconstructDoc() {
-      const parsed = parseEditor();
+      const parsed = currentSlice();
       if (!parsed.ok) return parsed;
       if (currentTarget.kind === 'visual') return { ok: true, data: parsed.data };
       if (currentTarget.kind === 'general') return { ok: true, data: Object.assign({}, parsed.data, { sections: heldDoc.sections }) };
@@ -243,11 +370,10 @@
       return { ok: true, data: doc };
     }
 
-    function applyLoadedDoc(data) {
-      if (currentTarget.kind === 'visual') { ta.value = JSON.stringify(data, null, 2); return; }
+    async function applyLoadedDoc(data) {
+      if (currentTarget.kind === 'visual') return showSlice(data);
       heldDoc = data;
-      const slice = currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id);
-      ta.value = JSON.stringify(slice, null, 2);
+      await showSlice(currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id));
     }
 
     async function loadVersions() {
@@ -265,7 +391,7 @@
       if (!rec.ok) return setStatus(malformed(rec.error), '');
       const res = await fetch('/api/content/' + underlyingDocId() + '/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec.data) });
       const out = await res.json();
-      if (out.ok) return setStatus('<span class="ok">✓ Válido contra el schema.</span>', '');
+      if (out.ok) { markFormErrors([]); return setStatus('<span class="ok">✓ Válido contra el schema.</span>' + warningsHtml(out.warnings), ''); }
       renderErrors(out.errors);
     }
 
@@ -286,7 +412,8 @@
       if (res.ok && out.ok) {
         if (currentTarget.kind !== 'visual') heldDoc = rec.data;
         const v = out.version ? ` · versión #${out.version.id}` : ' · (sin BD: sin versión)';
-        setStatus(`<span class="ok">✓ Publicado en ${out.file}${v}.</span>`, '');
+        markFormErrors([]);
+        setStatus(`<span class="ok">✓ Publicado en ${out.file}${v}.</span>` + warningsHtml(out.warnings), '');
         if (!$('previewPane').classList.contains('hidden')) $('preview').contentWindow.location.reload();
         await loadVersions();
       } else { renderErrors(out.errors || (out.message && out.message.errors)); }
@@ -297,7 +424,7 @@
       if (!id) return setStatus('<span class="err">✗ No hay versión seleccionada.</span>', '');
       const res = await fetch('/api/content/' + underlyingDocId() + '/restore/' + id, { method: 'POST' });
       const out = await res.json();
-      if (res.ok && out.data) { applyLoadedDoc(out.data); return setStatus(`<span class="ok">✓ Versión #${id} restaurada al borrador.</span>`, ''); }
+      if (res.ok && out.data) { await applyLoadedDoc(out.data); return setStatus(`<span class="ok">✓ Versión #${id} restaurada al borrador.</span>`, ''); }
       setStatus(`<span class="err">✗ ${out.message || 'No se pudo restaurar'}</span>`, '');
     }
 
@@ -306,6 +433,7 @@
     $('saveDraft').addEventListener('click', saveDraft);
     $('publish').addEventListener('click', publish);
     $('restore').addEventListener('click', restore);
+    $('viewSwitch').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
     $('refreshPreview').addEventListener('click', () => $('preview').contentWindow.location.reload());
     $('togglePreview').addEventListener('click', () => {
       const pane = $('previewPane'); pane.classList.toggle('hidden');

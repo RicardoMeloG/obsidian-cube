@@ -17,9 +17,10 @@ const ChipsSchema = z.array(Text).meta({ title: 'Etiquetas' })
 const HrefSchema = z.string().min(1).optional().meta({ title: 'Enlace' })
 
 // Owner images are uploaded through the admin and stored under their content
-// hash (AD-03); example content uses committed neutral images, which the
-// publish rules reject in owner content.
-export const MEDIA_SRC = /^\/(content\/media\/[a-f0-9]{64}|examples\/[a-z0-9-]+)\.webp$/
+// hash, the thumbnail beside its image as <hash>-thumb.webp (AD-03); example
+// content uses committed neutral images, which the publish rules reject in
+// owner content.
+export const MEDIA_SRC = /^\/(content\/media\/[a-f0-9]{64}(-thumb)?|examples\/[a-z0-9-]+)\.webp$/
 export const EXAMPLE_MEDIA_PREFIX = '/examples/'
 
 export const MediaRefSchema = z

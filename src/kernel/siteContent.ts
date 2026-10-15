@@ -14,87 +14,97 @@ export type SiteLocale = 'en' | 'es'
 export const FaceIdSchema = z.enum(FACE_ORDER as [FaceId, ...FaceId[]])
 const FeatureGlyphSchema = z.enum(FEATURE_GLYPHS as unknown as [FeatureGlyphId, ...FeatureGlyphId[]])
 
+// `meta({ title })` is the field's label in the admin's generated form
+// (spec 011, AD-04); the admin speaks Spanish.
 const FeatureSchema = z.object({
-  glyph: FeatureGlyphSchema,
-  label: z.string().min(1),
-  description: RichTextSchema,
+  glyph: FeatureGlyphSchema.meta({ title: 'Glifo' }),
+  label: z.string().min(1).meta({ title: 'Rótulo' }),
+  description: RichTextSchema.meta({ title: 'Descripción' }),
 })
 
 const FlowStepSchema = z.object({
-  label: z.string().min(1),
-  description: RichTextSchema,
+  label: z.string().min(1).meta({ title: 'Rótulo' }),
+  description: RichTextSchema.meta({ title: 'Descripción' }),
 })
 
 const ResearchConceptSchema = z.object({
-  key: z.string().min(1),
-  label: z.string().min(1),
-  axis: z.string().min(1),
-  summary: RichTextSchema,
-  detail: RichTextSchema,
+  key: z.string().min(1).meta({ title: 'Clave' }),
+  label: z.string().min(1).meta({ title: 'Rótulo' }),
+  axis: z.string().min(1).meta({ title: 'Eje' }),
+  summary: RichTextSchema.meta({ title: 'Resumen' }),
+  detail: RichTextSchema.meta({ title: 'Detalle' }),
 })
 
 const SiteSectionSchema = z.object({
-  id: FaceIdSchema,
-  label: z.string().min(1),
-  title: z.string().min(1),
-  eyebrow: z.string().min(1).optional(),
-  summary: RichTextSchema,
-  intro: RichTextSchema.optional(),
-  highlights: z.array(RichTextSchema).optional(),
-  proofPoints: z.array(RichTextSchema).optional(),
-  links: z.array(LinkSchema).optional(),
-  cta: CtaSchema.optional(),
-  features: z.array(FeatureSchema).optional(),
-  flowTitle: z.string().min(1).optional(),
-  flow: z.array(FlowStepSchema).optional(),
-  ctaPrimary: CtaSchema.optional(),
-  ctaSecondary: CtaSchema.optional(),
-  detail: z
-    .object({
-      title: z.string().min(1),
-      summary: RichTextSchema,
-      points: z.array(RichTextSchema).optional(),
-      links: z.array(LinkSchema).optional(),
-    })
-    .optional(),
-  researchConcepts: z.array(ResearchConceptSchema).optional(),
+  id: FaceIdSchema.meta({ title: 'Cara', widget: 'fixed' }),
+  label: z.string().min(1).meta({ title: 'Nombre en el cubo y el dock' }),
+  title: z.string().min(1).meta({ title: 'Título' }),
+  eyebrow: z.string().min(1).optional().meta({ title: 'Antetítulo' }),
+  summary: RichTextSchema.meta({ title: 'Resumen' }),
   // The line under the face name in the stage's dock (spec 011, AD-02).
-  tagline: z.string().min(1).optional(),
+  tagline: z.string().min(1).optional().meta({ title: 'Línea bajo el nombre en el dock' }),
+  ctaPrimary: CtaSchema.optional().meta({ title: 'Llamado principal' }),
+  ctaSecondary: CtaSchema.optional().meta({ title: 'Llamado secundario' }),
   // The face's composition in the stage layout (spec 011, AD-01).
   composition: CompositionSchema.optional(),
+  intro: RichTextSchema.optional().meta({ title: 'Introducción (diálogo)' }),
+  highlights: z.array(RichTextSchema).optional().meta({ title: 'Destacados (diálogo)' }),
+  proofPoints: z.array(RichTextSchema).optional().meta({ title: 'Pruebas (diálogo)' }),
+  links: z.array(LinkSchema).optional().meta({ title: 'Enlaces (diálogo)' }),
+  cta: CtaSchema.optional().meta({ title: 'Llamado antiguo' }),
+  features: z.array(FeatureSchema).optional().meta({ title: 'Señales (rieles)' }),
+  flowTitle: z.string().min(1).optional().meta({ title: 'Título del flujo (rieles)' }),
+  flow: z.array(FlowStepSchema).optional().meta({ title: 'Flujo (rieles)' }),
+  detail: z
+    .object({
+      title: z.string().min(1).meta({ title: 'Título' }),
+      summary: RichTextSchema.meta({ title: 'Resumen' }),
+      points: z.array(RichTextSchema).optional().meta({ title: 'Puntos' }),
+      links: z.array(LinkSchema).optional().meta({ title: 'Enlaces' }),
+    })
+    .optional()
+    .meta({ title: 'Detalle (diálogo)' }),
+  researchConcepts: z.array(ResearchConceptSchema).optional().meta({ title: 'Conceptos de investigación (rieles)' }),
 })
 
 export const SiteContentSchema = z.object({
-  locale: z.enum(['en', 'es']),
-  identity: z.object({
-    displayName: z.string().min(1),
-    fullName: z.string().min(1),
-    handle: z.string().min(1),
-    role: z.string().min(1),
-    // One line under the role, e.g. "AI Engineer · LLM agents · Python · AWS".
-    keywords: z.string().min(1).optional(),
-    // Profiles shown in the stage's top bar; e-mail is not shown there,
-    // CONTACT is the channel (spec 011, AD-02).
-    links: z
-      .object({
-        github: z.string().min(1).optional(),
-        linkedin: z.string().min(1).optional(),
-      })
-      .optional(),
-  }),
-  seo: z.object({
-    title: z.string().min(1),
-    description: z.string().min(1),
-    // Public origin of the deployed site (canonical and og:url), no trailing slash.
-    siteUrl: z.string().url().optional(),
-    // Share preview image: a path under public/ or an absolute URL.
-    image: z.string().min(1).optional(),
-  }),
-  hero: z.object({
-    headline: z.string().min(1),
-    summary: RichTextSchema,
-  }),
-  sections: z.array(SiteSectionSchema).length(FACE_ORDER.length),
+  locale: z.enum(['en', 'es']).meta({ title: 'Idioma', widget: 'fixed' }),
+  identity: z
+    .object({
+      displayName: z.string().min(1).meta({ title: 'Nombre visible' }),
+      fullName: z.string().min(1).meta({ title: 'Nombre completo' }),
+      handle: z.string().min(1).meta({ title: 'Usuario' }),
+      role: z.string().min(1).meta({ title: 'Rol' }),
+      // One line under the role, e.g. "AI Engineer · LLM agents · Python · AWS".
+      keywords: z.string().min(1).optional().meta({ title: 'Palabras clave' }),
+      // Profiles shown in the stage's top bar; e-mail is not shown there,
+      // CONTACT is the channel (spec 011, AD-02).
+      links: z
+        .object({
+          github: z.string().min(1).optional().meta({ title: 'GitHub' }),
+          linkedin: z.string().min(1).optional().meta({ title: 'LinkedIn' }),
+        })
+        .optional()
+        .meta({ title: 'Perfiles' }),
+    })
+    .meta({ title: 'Identidad' }),
+  seo: z
+    .object({
+      title: z.string().min(1).meta({ title: 'Título de la página' }),
+      description: z.string().min(1).meta({ title: 'Descripción' }),
+      // Public origin of the deployed site (canonical and og:url), no trailing slash.
+      siteUrl: z.string().url().optional().meta({ title: 'URL pública del sitio' }),
+      // Share preview image: a path under public/ or an absolute URL.
+      image: z.string().min(1).optional().meta({ title: 'Imagen al compartir' }),
+    })
+    .meta({ title: 'SEO' }),
+  hero: z
+    .object({
+      headline: z.string().min(1).meta({ title: 'Titular' }),
+      summary: RichTextSchema.meta({ title: 'Resumen' }),
+    })
+    .meta({ title: 'Portada' }),
+  sections: z.array(SiteSectionSchema).length(FACE_ORDER.length).meta({ title: 'Caras' }),
 })
 
 export type SiteContent = z.infer<typeof SiteContentSchema>
