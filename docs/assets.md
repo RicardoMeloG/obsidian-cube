@@ -4,7 +4,8 @@ Every file served from `public/` (except the content documents in `public/conten
 
 | Path | Source | Licence |
 |---|---|---|
-| `environments/obsidian-hall.jpg` | The cube's reflection environment: generated with an OpenAI image model on 2026-10-13 from the prompt below, resized to 1024 px wide. Replaced a photograph of a public building whose author was not recorded | Same as the repository (OpenAI's terms assign the output to the user) |
+| `environments/obsidian-hall.jpg` | The cube's reflection environment: generated with an OpenAI image model on 2026-10-13 from the prompt below, resized to 1024 px wide. Replaced a photograph of a public building whose author was not recorded. Since 2026-10-15 the site loads the atlas baked from it (next row); this file stays as its source | Same as the repository (OpenAI's terms assign the output to the user) |
+| `environments/obsidian-hall.cubeuv.webp` | Baked from `environments/obsidian-hall.jpg` by `scripts/bake-reflection.mjs` on 2026-10-15: the prefiltered reflection atlas three.js r184 would compute at load (768×1024, sRGB, WebP quality 0.9) | Same as the repository (derived from the image above) |
 | `favicon.svg` | Vite's logo, left by the project template; to be replaced by the site's own icon | pending |
 | `js-flag.js` | Written for this site: marks the page as running JavaScript before it paints | Same as the repository |
 | `og-image.jpg` | Rendered from this site (the cube on the AGENTIC face, interface hidden), 2026-10-12; rendered again with the new reflection environment on 2026-10-13 | Same as the repository |
