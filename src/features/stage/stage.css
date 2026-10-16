@@ -563,8 +563,10 @@
     }
   }
 
-  /* A veil behind the top bar, so a long name wrapping over the cube's top
-     still reads at AA (the layout check measures it). */
+  /* A veil behind the top bar: the hero's camera is close, so a world can
+     rise behind the name and the role (SECURITY's dome did, spec 011, S5).
+     It stays dense down through the role and fades by the cube's top edge;
+     the layout check measures the name and the role over every world. */
   .stage-top::before {
     @variant stacked {
       position: absolute;
@@ -575,8 +577,9 @@
       content: '';
       background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--color-night-950) 86%, transparent),
-        color-mix(in srgb, var(--color-night-950) 62%, transparent) 62%,
+        color-mix(in srgb, var(--color-night-950) 92%, transparent),
+        color-mix(in srgb, var(--color-night-950) 90%, transparent) 70%,
+        color-mix(in srgb, var(--color-night-950) 60%, transparent) 88%,
         transparent
       );
     }

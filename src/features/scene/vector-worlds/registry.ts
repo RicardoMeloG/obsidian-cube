@@ -78,11 +78,13 @@ export const WORLD_REGISTRY: Record<WorldId, WorldEntry> = {
   contact: {
     id: 'contact',
     label: WORLD_LABELS.contact,
-    caption: 'placeholder — design pending',
+    caption: 'channel network converging on the cube — signals travel inward',
     Component: lazy(() => import('./worlds/contactWorld').then((m) => ({ default: m.ContactWorld }))),
     showcase: {
-      camera: { position: [0, 0.55, 4.6], fov: 48, near: 0.1, far: 80 },
-      fog: { near: 9, far: 28 },
+      // The stage camera (CubeScene): the network is composed around the cube.
+      camera: { position: [0, 0.62, 12.8], fov: 37, near: 0.1, far: 80 },
+      fog: { near: 9, far: 26 },
+      lookAt: [0, 0.06, 0],
     },
   },
 }

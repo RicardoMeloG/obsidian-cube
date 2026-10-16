@@ -7,6 +7,7 @@
 //   node scripts/walkthrough.mjs --viewport=1440x900 --lang=es
 //   node scripts/walkthrough.mjs --admin     also the admin page (server on 5182)
 //   node scripts/walkthrough.mjs --content=stress   every slot at its budget
+//   node scripts/walkthrough.mjs --content=example  the committed example (safe to share)
 //
 // Screenshots go to walkthrough/ (gitignored): they may show private content.
 import { spawn } from 'node:child_process'
@@ -22,7 +23,8 @@ const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contac
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.split('=')[1]?.split(',') ?? fallback
 const viewports = option('viewport', ['1440x900', '1366x768', '390x844'])
 const locales = option('lang', ['es', 'en'])
-const stress = option('content', [])[0] === 'stress'
+const content = option('content', [])[0]
+const stress = content === 'stress'
 const readJson = (path) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8'))
 const budgets = readJson('../src/kernel/layoutBudgets.json')
 
@@ -49,6 +51,8 @@ try {
       const layout = 'stage'
       for (const locale of locales) {
         const page = await browser.newPage({ viewport: { width, height } })
+        // Without the private documents the site falls back to the example.
+        if (content === 'example') await page.route('**/content/{site.*,visual}.json', (route) => route.fulfill({ status: 404, body: '' }))
         if (stress) {
           const example = readJson(`../public/content/site.example.${locale}.json`)
           const stand = readFileSync(fileURLToPath(new URL('../public/examples/project-1.webp', import.meta.url)))
@@ -57,6 +61,8 @@ try {
         }
         page.on('pageerror', (error) => errors.push(`${layout} ${viewport} ${locale}: ${error.message}`))
         page.on('console', (message) => {
+          // The example run refuses the private documents on purpose.
+          if (content === 'example' && message.text().includes('status of 404')) return
           if (message.type() === 'error') errors.push(`${layout} ${viewport} ${locale}: ${message.text().slice(0, 160)}`)
         })
         for (const face of FACES) {

@@ -21,8 +21,9 @@
 // Requires `npm run build` first. The layout pages run without WebGL: the
 // geometry is DOM only and the still image takes the canvas's place, while a
 // software-rendered scene can starve the page's main thread on a small CI
-// runner. The scene itself is exercised by the degradation check, with WebGL
-// in software (SwiftShader) so the result does not depend on the GPU.
+// runner. The scene itself is exercised by the degradation check and by the
+// contrast of the name over every world, with WebGL in software (SwiftShader)
+// so the result does not depend on the GPU.
 
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -123,8 +124,10 @@ function contrast(a, b) {
   return (light + 0.05) / (dark + 0.05)
 }
 
-async function identityContrast(page) {
-  const failures = []
+// The WCAG ratio of the name and of the role over what lies behind them; null
+// when the element is missing.
+async function identityRatios(page) {
+  const ratios = {}
   for (const [part, selector] of [['name', 'h1'], ['role', 'h1 + p']]) {
     const sample = await page.evaluate((selector) => {
       const element = document.querySelector(selector)
@@ -142,7 +145,7 @@ async function identityContrast(page) {
       return { box: { x: box.x, y: box.y, width: box.width, height: box.height }, color: [r, g, b, a / 255] }
     }, selector)
     if (!sample) {
-      failures.push(`contrast-${part}-missing`)
+      ratios[part] = null
       continue
     }
     // Hide the text and its shadow, photograph the background, restore.
@@ -165,10 +168,16 @@ async function identityContrast(page) {
     }
     const [r, g, b, alpha] = sample.color
     const text = [r, g, b].map((value, index) => value * alpha + lightest[index] * (1 - alpha))
-    const ratio = contrast(text, lightest)
-    if (ratio < AA) failures.push(`contrast-${part} ${ratio.toFixed(2)}`)
+    ratios[part] = contrast(text, lightest)
   }
-  return failures
+  return ratios
+}
+
+const contrastFailures = (ratios) =>
+  Object.entries(ratios).flatMap(([part, ratio]) => (ratio === null ? [`contrast-${part}-missing`] : ratio < AA ? [`contrast-${part} ${ratio.toFixed(2)}`] : []))
+
+async function identityContrast(page) {
+  return contrastFailures(await identityRatios(page))
 }
 
 // Runs in the page: the stage (spec 011) for the face on screen. Every block
@@ -434,6 +443,55 @@ async function checkDegradation(noWebglBrowser) {
   return failures
 }
 
+// Contrast over the worlds (spec 011, S5). The layout pages run without WebGL,
+// so their contrast is measured over the still image. Here the scene runs
+// (software WebGL) and the name and the role are measured over every face's
+// world, on the stage and on the phone's hero, in three frames: the worlds
+// move, and the worst frame counts.
+const WORLD_VIEWPORTS = ['1366x768', '390x844']
+async function checkWorldContrast() {
+  const failures = []
+  const browser = await launch(SOFTWARE_WEBGL)
+  try {
+    for (const viewport of WORLD_VIEWPORTS) {
+      const [width, height] = viewport.split('x').map(Number)
+      for (const locale of LOCALES) {
+        const context = await browser.newContext({ viewport: { width, height } })
+        context.setDefaultTimeout(120000)
+        try {
+          const page = await context.newPage()
+          watchCsp(page, `worlds ${viewport} ${locale}`)
+          await page.goto(`${BASE}/?intro=0&lang=${locale}`)
+          await page.waitForSelector('.stage[data-transition="idle"]')
+          for (const face of FACES) {
+            if ((await page.getAttribute('.stage', 'data-face')) !== face) {
+              await page.click(`.stage-dock a[data-section-id="${face}"]`)
+              await page.waitForSelector(`.stage[data-transition="idle"][data-face="${face}"]`)
+            }
+            // The hero scrolls the composition into view; the world is behind the top.
+            await page.evaluate(() => window.scrollTo(0, 0))
+            const worst = {}
+            for (let frame = 0; frame < 3; frame += 1) {
+              // The first wait lets the face's world compile and appear.
+              await page.waitForTimeout(frame === 0 ? 3000 : 800)
+              for (const [part, ratio] of Object.entries(await identityRatios(page))) {
+                worst[part] = ratio === null || worst[part] === null ? null : Math.min(ratio, worst[part] ?? Infinity)
+              }
+            }
+            for (const failure of contrastFailures(worst)) failures.push(`worlds ${viewport} ${locale} ${face} ${failure}`)
+          }
+        } finally {
+          await context.close()
+        }
+      }
+    }
+  } finally {
+    await browser.close()
+  }
+  console.log(`  worlds: ${failures.length} failures`)
+  return failures
+}
+
 // Behaviour (spec 010, P3 exit criteria): the detail dialog's keyboard and
 // focus contract, and the first-visit intro handing over to the interface.
 // Run without WebGL except the intro, which needs the scene to land.
@@ -543,6 +601,7 @@ async function main() {
     if (contentMode === 'built') {
       found.layout.push(...(await checkDegradation(browser)))
       found.layout.push(...(await checkBehaviour(browser)))
+      found.layout.push(...(await checkWorldContrast()))
     }
     found.layout.push(...cspViolations)
 
@@ -554,10 +613,10 @@ async function main() {
 
     if (args.has('--update-known')) {
       // A blank page is never accepted as known debt.
-      const degradation = found.layout.filter((id) => /^(degradation|behaviour|csp) /.test(id))
+      const degradation = found.layout.filter((id) => /^(degradation|behaviour|worlds|csp) /.test(id))
       if (degradation.length > 0) {
         for (const id of degradation) console.log(`FAIL ${id}`)
-        console.log('Degradation and behaviour failures cannot be recorded as known.')
+        console.log('Degradation, behaviour and world contrast failures cannot be recorded as known.')
         process.exitCode = 1
         return
       }
