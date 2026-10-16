@@ -1,6 +1,6 @@
 # 011: Stage Layout and Editable Face Compositions — Proposal
 
-**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 to S2 done, the drift audit after S2 resolved (audit-1.md); S3 built, its end-to-end exit pending the owner's login; S4 done, the drift audit after S4 resolved (audit-2.md); S5 done; S6 met by S4.
+**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 to S2 done, the drift audit after S2 resolved (audit-1.md); S3 built, its end-to-end exit pending the owner's login; S4 done, the drift audit after S4 resolved (audit-2.md); S5 done; S6 met by S4; the drift audit before acceptance recorded (audit-3.md, 2026-10-16): its two medium findings resolved the same day, its five low ones recorded for the owner's decision; acceptance itself waits for the owner's content (section 8, criterion 1) and the walkthrough a person looks at (criterion 4).
 **Builds on:** the stage concept (`?layout=escenario`, commit `ae0b93d`), ADR 004 (admin on AWS), ADR 005 (content kernel), ADR 006 (frontend architecture).
 
 ## 1. Problem

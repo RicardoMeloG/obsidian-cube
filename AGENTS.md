@@ -86,7 +86,7 @@ The cube has six faces, each with a stable semantic identity:
 
 All six faces share the same frame (double-diamond, inset bevel, corner brackets, label, three dots). Inside the frame each face carries its own accent color and inner glyph, assigned from `public/content/visual.json` (see `docs/decisions/003-per-face-accent-and-glyph.md`).
 
-Every face must point at least one real, inspectable artifact through its CTAs or `detail.links`. CONTACT is a permanent face (owner, 2026-10-14; ADR 008): contact must be easy to reach for recruiters, and the CV is requested behind a captcha, never shown.
+Every face must point at least one real, inspectable artifact through its CTAs, a link inside its composition or `detail.links`. CONTACT is a permanent face (owner, 2026-10-14; ADR 008): contact must be easy to reach for recruiters, and the CV is requested behind a captcha, never shown.
 
 ## Hard Rules
 
