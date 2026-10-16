@@ -21,6 +21,12 @@
   .ca-item {
     display: grid;
     grid-template-columns: 2.8em 1fr auto;
+
+    /* An item without an image: no empty frame. */
+    &:not(:has(img)) {
+      grid-template-columns: 1fr auto;
+    }
+
     align-items: center;
     gap: 0.85em;
     width: 100%;
@@ -151,6 +157,10 @@
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
     align-items: start;
     gap: 1em;
+
+    &:not(:has(.ca-shot)) {
+      grid-template-columns: minmax(0, 1fr);
+    }
 
     @variant phone {
       grid-template-columns: minmax(0, 1fr);

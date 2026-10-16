@@ -61,6 +61,7 @@ describe('publish rules on compositions', () => {
       .replaceAll('your-handle', 'ada')
       .replaceAll('your-project', 'engine')
       .replace(/\/examples\/[a-z0-9-]+\.webp/g, `/content/media/${'a'.repeat(64)}.webp`)
+      .replaceAll('Illustrative data', 'From the migration log')
     const owner = JSON.parse(text) as SiteContent
     for (const section of owner.sections) {
       section.ctaPrimary = { label: 'Open', href: 'https://example.com/artifact' }
@@ -75,9 +76,25 @@ describe('publish rules on compositions', () => {
 
   it('refuse example images in owner content', () => {
     const content = ownerContent((composition) => {
-      if (composition.template === 'catalog') composition.items[0].image.src = '/examples/project-1.webp'
+      if (composition.template === 'catalog') composition.items[0].image!.src = '/examples/project-1.webp'
     })
     expect(publishIssues(content).map((issue) => issue.message)).toContain('Reemplaza las imágenes de ejemplo por imágenes subidas desde el admin.')
+  })
+
+  it('refuse data labelled as illustrative', () => {
+    const content = ownerContent((composition) => {
+      if (composition.template === 'case') composition.map!.note = 'Datos ilustrativos'
+    })
+    expect(publishIssues(content).map((issue) => issue.message)).toContain('Los datos ilustrativos no se publican: pon datos reales o quita el bloque.')
+  })
+
+  it('accept a case without its map and catalog items without images: no data, no block', () => {
+    const content = ownerContent((composition) => {
+      if (composition.template === 'case') delete composition.map
+      if (composition.template === 'catalog') for (const item of composition.items) delete item.image
+    })
+    expect(SiteContentSchema.safeParse(content).success).toBe(true)
+    expect(publishIssues(content)).toEqual([])
   })
 
   it('refuse a slot over its budget and a list over its count, pointing at the slot', () => {

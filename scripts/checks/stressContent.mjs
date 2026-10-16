@@ -27,6 +27,7 @@ function publishable(value) {
     .replaceAll('your-handle', 'stress-owner')
     .replaceAll('your-project', 'stress-project')
     .replace(/\/examples\/[a-z0-9-]+\.webp/g, STRESS_MEDIA)
+    .replace(/illustrative data|datos ilustrativos/gi, 'stress data')
   return JSON.parse(text)
 }
 

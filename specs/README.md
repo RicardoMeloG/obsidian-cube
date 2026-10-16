@@ -2,7 +2,7 @@
 
 Future product milestones should be described here before implementation.
 
-The path to publishing runs in three stages, each closed before the next starts (ADR 007): normalization (spec 010, closed), compositions (spec 011, ADR 008), content, security, release. Specs not yet written, numbered when they start (001–003 are taken by the rescued drafts below):
+The path to publishing runs in five stages, each closed before the next starts (ADR 007, ADR 008): normalization (spec 010, closed), compositions (spec 011), content, security, release. Specs not yet written, numbered when they start (001–003 are taken by the rescued drafts below):
 
 1. Content stage: `evidence-per-face` — one inspectable artifact per face and the rewrite of the generic copy (the publish rules already require an artifact link per face).
 2. Release stage: `publish-real-content` — the first deploy with the real identity, the publish step to S3 and the invalidation.

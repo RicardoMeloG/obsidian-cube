@@ -7,7 +7,8 @@ import { StageIcon } from '../StageIcon'
 import './case.css'
 
 // case — the case and its before/after on the left, a status map on the
-// right, and the story (one step per item) as a band across the bottom.
+// right when there is real data for it, and the story (one step per item) as
+// a band across the bottom.
 export function Case({ composition, face, counter, onOpenDetail }: TemplateProps<'case'>) {
   const { map } = composition
   return (
@@ -39,19 +40,21 @@ export function Case({ composition, face, counter, onOpenDetail }: TemplateProps
         </div>
       </div>
 
-      <article className="st-panel cs-map" style={rise(1)}>
-        <SectionLabel trail={map.note}>{map.title}</SectionLabel>
-        <ul className="cs-cells" aria-label={map.title}>
-          {map.cells.map((state, index) => (
-            <li key={index} data-state={state} aria-label={map.legend[state]} />
-          ))}
-        </ul>
-        <ul className="cs-legend">
-          <li data-state="done">{map.legend.done}</li>
-          <li data-state="active">{map.legend.active}</li>
-          <li data-state="pending">{map.legend.pending}</li>
-        </ul>
-      </article>
+      {map && (
+        <article className="st-panel cs-map" style={rise(1)}>
+          <SectionLabel trail={map.note}>{map.title}</SectionLabel>
+          <ul className="cs-cells" aria-label={map.title}>
+            {map.cells.map((state, index) => (
+              <li key={index} data-state={state} aria-label={map.legend[state]} />
+            ))}
+          </ul>
+          <ul className="cs-legend">
+            <li data-state="done">{map.legend.done}</li>
+            <li data-state="active">{map.legend.active}</li>
+            <li data-state="pending">{map.legend.pending}</li>
+          </ul>
+        </article>
+      )}
 
       <article className="st-panel st-panel--glass cs-band" style={rise(2)}>
         <ol className="cs-steps">

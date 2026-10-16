@@ -35,4 +35,21 @@ describe('stage compositions', () => {
       })
     }
   }
+
+  // No data, no block: a case without its map and items without images show
+  // neither, rather than an empty frame (2026-10-16).
+  it('leave out the blocks the owner has no data for', () => {
+    const faces = resolveSections(normalizeSections(getDefaultSiteContent('en').sections, 'en'), getDefaultVisualContent())
+    const render = (template: 'case' | 'catalog') => {
+      const face = structuredClone(faces.find((candidate) => candidate.composition.template === template)!)
+      const composition = face.composition
+      if (composition.template === 'case') delete composition.map
+      if (composition.template === 'catalog') for (const item of composition.items) delete item.image
+      return renderToStaticMarkup(<StageComposition face={face} counter="01 / 06" onOpenDetail={() => {}} />)
+    }
+    expect(render('case')).not.toContain('cs-map')
+    const catalog = render('catalog')
+    expect(catalog).not.toContain('<img')
+    expect(catalog).not.toContain('ca-shot')
+  })
 })

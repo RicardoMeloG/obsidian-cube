@@ -52,7 +52,8 @@
       },
       text: 'Elegir de la biblioteca',
     })
-    const alt = el('input', { type: 'text', value: (value && value.alt) || '', placeholder: 'Qué muestra la imagen', oninput: (event) => (get(path).alt = event.target.value) })
+    // The alternative text belongs to an image: no image yet, nothing to describe.
+    const alt = el('input', { type: 'text', value: (value && value.alt) || '', disabled: !value, placeholder: 'Qué muestra la imagen', oninput: (event) => (get(path).alt = event.target.value) })
     return el('fieldset', { class: 'sf-group sf-media', 'data-path': path.join('.') }, [
       el('legend', {}, [label || 'Imagen', required ? null : el('button', { type: 'button', class: 'sf-remove', onclick: () => (remove(path), render()), text: 'Quitar' })]),
       el('div', { class: 'sf-media-row' }, [preview, el('div', { class: 'sf-media-actions' }, [el('label', { class: 'sf-upload' }, ['Subir imagen…', file]), browse, status])]),

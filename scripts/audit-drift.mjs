@@ -1,8 +1,11 @@
 // Drift audit (AGENTS.md, definition of done, item 8): two local models, each
 // without prior context, read the declared rules and a set of files and report
-// only drift they can prove by quoting both the code and the rule. Their raw
-// answers go to audit-runs/ (gitignored); a person verifies every finding and
-// records the result next to the spec as audit-N.md.
+// only drift they can prove by quoting both the code and the rule. They also
+// read the project's objective (Direction, Audience, MVP Definition) and say
+// whether the work brings the site closer to it or postpones it (2026-10-16:
+// the gates check the code, not the objective). Their raw answers go to
+// audit-runs/ (gitignored); a person verifies every finding and records the
+// result next to the spec as audit-N.md.
 //
 //   node scripts/audit-drift.mjs --spec=specs/011-stage-compositions --label=stage \
 //     --files=src/features/stage/StageView.tsx,src/features/stage/blocks.tsx
@@ -35,7 +38,9 @@ function section(text, start, end) {
 const agents = read('AGENTS.md')
 const spec = read(`${specDir}/spec.md`)
 const architecture = read('docs/architecture.md')
+const objective = `# AGENTS.md: the objective\n${section(agents, '## Direction', '## Identity')}${section(agents, '## Audience', '## Narrative')}${section(agents, '## MVP Definition', '## Other References')}`
 const rules = [
+  objective,
   `# AGENTS.md (excerpts)\n${section(agents, '## Experience Architecture', '## Visual Strategy')}${section(agents, '## Hard Rules', '## Engineering Contract')}${section(agents, '## Architecture Rules', '## Content Strategy')}`,
   `# ${specDir}/spec.md\n${spec}`,
   `# docs/architecture.md: dependency rules\n${section(architecture, '**Dependency rules**', '## Flows')}`,
@@ -49,11 +54,13 @@ const prompt = `You are an independent architecture auditor with no prior contex
 
 Find DRIFT: places where the code contradicts a rule, or where a rule the spec says is enforced is not actually enforced by the code shown. Examples: owner content written in code; a module importing what its rule forbids; a gate that claims to check something it does not; a file over the size limit; a field declared in the kernel that nothing renders or edits; naming against the declared vocabulary; a security rule of the admin broken.
 
+Then judge the work against the OBJECTIVE (the first section of the rules: Direction, Audience, MVP Definition): does it bring the site closer to that objective, is it neutral, or does it postpone it? Quote the objective text your verdict rests on.
+
 Rules for your answer:
 - Report only what you can prove by quoting both the code (file and line number as shown) and the exact rule text it breaks.
 - Do not report style preferences, hypothetical future problems or things outside the rules.
 - If you find nothing, return an empty list.
-Return ONLY JSON: {"findings":[{"file":"...","line":0,"code":"exact quote","rule":"exact quote of the rule","problem":"one sentence","severity":"high|medium|low"}]}
+Return ONLY JSON: {"objective":{"verdict":"closer|neutral|postpones","quote":"exact quote of the objective","reason":"one or two sentences"},"findings":[{"file":"...","line":0,"code":"exact quote","rule":"exact quote of the rule","problem":"one sentence","severity":"high|medium|low"}]}
 
 RULES:
 ${rules}
@@ -90,15 +97,18 @@ for (const model of models) {
   }
   const match = /\{[\s\S]*\}/.exec(result.response)
   let findings = null
+  let verdict = null
   try {
-    findings = JSON.parse(match?.[0] ?? '').findings
+    const parsed = JSON.parse(match?.[0] ?? '')
+    findings = parsed.findings
+    verdict = parsed.objective ?? null
   } catch {
     // kept raw below
   }
   const seconds = Math.round((Date.now() - started) / 1000)
   const file = `audit-runs/${label}-${model.replace(/[:/]/g, '_')}.json`
   const { error, doneReason } = result
-  writeFileSync(file, JSON.stringify({ model, label, seconds, tokensIn: result.prompt_eval_count, doneReason, error, findings, raw: findings ? undefined : result.response }, null, 1))
-  const outcome = findings ? `${findings.length} findings` : `no answer (${error ?? `ended: ${doneReason}`})`
+  writeFileSync(file, JSON.stringify({ model, label, seconds, tokensIn: result.prompt_eval_count, doneReason, error, objective: verdict, findings, raw: findings ? undefined : result.response }, null, 1))
+  const outcome = findings ? `${findings.length} findings, objective: ${verdict?.verdict ?? '?'}` : `no answer (${error ?? `ended: ${doneReason}`})`
   console.log(`${model} ${label}: ${outcome} in ${seconds}s, ${result.prompt_eval_count ?? '?'} tokens in → ${file}`)
 }

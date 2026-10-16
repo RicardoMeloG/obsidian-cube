@@ -50,6 +50,10 @@ function compositionLinks(value: unknown, path: (string | number)[] = []): { pat
 // Placeholders of the example content that must never reach the public site.
 const PLACEHOLDERS = ['your-handle', 'your-project', 'Portfolio Owner']
 
+// The example labels its made-up data; owner content shows real data or leaves
+// the block out (the map and the images are optional, 2026-10-16).
+const ILLUSTRATIVE = /illustrative data|datos ilustrativos/i
+
 // Allowed link targets: the web over HTTPS, e-mail, or a path on this site.
 export function isAllowedHref(href: string): boolean {
   return /^https:\/\/[^\s/]+\.[^\s]+$/i.test(href) || /^mailto:[^\s@]+@[^\s@]+$/i.test(href) || /^\/(?!\/)/.test(href) || /^#/.test(href)
@@ -118,6 +122,9 @@ export function publishIssues(content: SiteContent): Issue[] {
   }
   if (serialized.includes(`"${EXAMPLE_MEDIA_PREFIX}`)) {
     issues.push({ path: [], message: 'Reemplaza las imágenes de ejemplo por imágenes subidas desde el admin.' })
+  }
+  if (ILLUSTRATIVE.test(serialized)) {
+    issues.push({ path: [], message: 'Los datos ilustrativos no se publican: pon datos reales o quita el bloque.' })
   }
   return issues
 

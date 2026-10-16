@@ -49,11 +49,11 @@ Long form:
 The site is a **single-screen experience** built around a persistent obsidian cube.
 
 - The cube stays visible at the center of the screen at all times on desktop. It is **not** a one-shot portal.
-- Selecting a face does **not** navigate to a separate page or full-screen overlay. Instead, the surrounding side panels update in place to reveal that face's minimal content.
+- Selecting a face does **not** navigate to a separate page or full-screen overlay. Instead, the composition around the cube updates in place to reveal that face's minimal content.
 - Desktop layout: cube center, the face's composition around it (one template per face, chosen and filled from the admin; spec 011, E-1), face navigation on the bottom dock.
 - Content per face is intentionally minimal: it must fit a single viewport without scroll on a standard 1440-1920px desktop. **No long-form essays inside the cube experience.**
 - Responsive: on stacked screens the cube is the hero on top, the face's composition follows in reading order in one column, and the dock stays fixed at the bottom.
-- Long-form deep-dive pages (methodology, project archive, research index) live on separate routes reached from side-panel CTAs and may scroll. They are not part of the single-screen experience.
+- Long-form deep-dive pages (methodology, project archive, research index) live on separate routes reached from the composition's CTAs and may scroll. They are not part of the single-screen experience.
 
 For materials, color, motion, layout details, and tokens, see `docs/visual-direction.md` — the only other always-loaded document.
 
@@ -63,7 +63,7 @@ Each cube face is paired with its own custom vector background that functions as
 
 - **Background = retention** (the free sample that stops the indifferent visitor from bouncing).
 - **Cube = invitation** (the anchor that offers a way into the content).
-- **Side panels = conversion** (the reward for the truly interested).
+- **Composition = conversion** (the reward for the truly interested; the side panels of ADR 001).
 
 Supporting rules:
 
@@ -100,7 +100,7 @@ Product:
 
 Design:
 
-- The cube is the persistent focal element; selecting a face updates side panels in place — the cube does not disappear.
+- The cube is the persistent focal element: it stays at the centre and visible on every face; selecting a face updates the composition in place — the cube does not disappear.
 - Each face's primary content must fit a single viewport on desktop without scroll, and collapse responsively on narrow viewports.
 - All six cube faces share the same frame; accent color and inner glyph vary per face, nothing else.
 - The owner's name and role are the first text read on every face (top-left, `h1`, not covered by any layer) and must meet AA contrast; the face title may be larger.
@@ -132,7 +132,7 @@ Before reporting a change complete (definition of done; items marked with a phas
 5. Every slice, visual or not, closes with a visual walkthrough a person looks at (owner, 2026-10-15): `node scripts/walkthrough.mjs` photographs every face in every layout, both languages, at 1440×900, 1366×768 and 390×844 (screenshots in `walkthrough/`, gitignored); add `--admin` when the admin changed. Green gates do not prove the experience still holds; the walkthrough's findings are reported.
 6. `docs/architecture.md` is updated in the same change when a boundary, flow or rule status changes.
 7. Changes stay scoped to one product hito per commit.
-8. A spec in progress is audited for drift at the checkpoints its slice table names, by agents without prior context (`node scripts/audit-drift.mjs`: two local models, each on its own), against `AGENTS.md`, its ADRs and the spec; every finding is verified, and the result is recorded next to the spec (`audit-N.md`) and resolved before the next slice.
+8. A spec in progress is audited for drift at the checkpoints its slice table names, by agents without prior context (`node scripts/audit-drift.mjs`: two local models, each on its own), against `AGENTS.md`, its ADRs and the spec, and judged against the objective (Direction, Audience, MVP Definition: closer, neutral or postpones); every finding is verified, and the result is recorded next to the spec (`audit-N.md`) and resolved before the next slice.
 
 Admin and backend rules:
 
@@ -218,11 +218,11 @@ Large changes follow: spec (`specs/NNN-*/`) → independent audit by an agent wi
 Phase 1 ships when (status as of the 2026-10-09 audit):
 
 - [x] The cube is the persistent focal element of the home experience.
-- [x] Each face reveals minimal content on the surrounding side panels in a single viewport (no overlay routing, no scroll on desktop).
+- [x] Each face reveals minimal content in the composition around the cube in a single viewport (no overlay routing, no scroll on desktop).
 - [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, the composition in one column, the dock fixed at the viewport bottom with the content padded above it (spec 011, S4).
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
-- [ ] At least one deep-dive page exists (methodology) reached from a side-panel CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
+- [ ] At least one deep-dive page exists (methodology) reached from a composition CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
 - [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`. CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [ ] Real identity and at least one real artifact per face, live at a public URL.

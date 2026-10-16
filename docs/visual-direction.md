@@ -27,10 +27,10 @@ The design should read as premium because it is precise, not because it is decor
 ## Cube Rules
 
 - The cube is the **persistent focal element** of the entire experience, always visible at screen center on desktop.
-- The cube is not a one-shot portal. Selecting a face updates the surrounding side panels in place; the cube does not disappear, navigate, or fade out.
+- The cube is not a one-shot portal. Selecting a face updates the composition around it in place; the cube does not disappear, navigate, or fade out.
 - The cube rotates on drag and snaps to the selected face on click. Audio cues stay subtle and gesture-driven.
 - All six faces share the same frame: inset bevel, corner brackets, double-diamond, section label, "OBSIDIAN CUBE" subtitle, three accent dots. Inside the frame each face carries its own accent color and a quiet inner glyph in that accent (ADR 003). The frame, bevel, brackets and typography never change per face.
-- Per-face accents (from `visual.json`, defaults in `src/kernel/faces.ts`): agentic violet `#b8aeff`, products copper `#c08b5a`, systems steel blue `#8bb4dd`, security mint `#89d6c7`, research lavender `#9fa9ef`, contact sand `#f0d2b4`. The same accent drives the second title line and the eyebrow in the side panels.
+- Per-face accents (from `visual.json`, defaults in `src/kernel/faces.ts`): agentic violet `#b8aeff`, products copper `#c08b5a`, systems steel blue `#8bb4dd`, security mint `#89d6c7`, research lavender `#9fa9ef`, contact sand `#f0d2b4`. The same accent drives the second title line and the eyebrow in the composition.
 - Material direction: deep obsidian (`#010208`), high metalness (≈0.92), low-to-mid roughness (≈0.13), strong clearcoat. Edges should catch a clean top rim highlight; the underside should bathe in violet underglow.
 - Avoid postprocessing that creates instability.
 - `Bloom` is prohibited for production because it caused visible flicker.
@@ -61,7 +61,7 @@ Behind the cube and behind the platform, the scene includes a **violet "wave-fie
 - Motion: a slow, continuous wave displacement on the Z (height) axis — combine two or three sine waves of different wavelengths and phases so the surface never visually repeats. Amplitude must stay small enough that the cube reads as the focal element, not the waves.
 - Tempo: think tide, not ocean storm. Period in the order of 4-8 seconds per major undulation, with finer ripples superimposed.
 - Color discipline: violet/indigo only. Do not let the wave-field shift toward generic neon cyan or magenta. It is the same family as the ambient glow.
-- Density: roughly poster-quality — visible structure but never crowded. Fade to black at the horizon and at the screen edges so it never competes with side-panel content.
+- Density: roughly poster-quality — visible structure but never crowded. Fade to black at the horizon and at the screen edges so it never competes with the composition.
 - Performance: implement as a `BufferGeometry` driven by an animation loop or a shader; avoid per-frame allocations and avoid heavy postprocessing.
 
 ### Environment reflection (for the cube)
@@ -71,7 +71,7 @@ Behind the cube and behind the platform, the scene includes a **violet "wave-fie
 - The wave-field should contribute soft violet reflections on the cube's lower edges, reinforcing the underglow.
 - Prefer high-contrast light bands, pale sky, distant dark forms, and subtle gold/ice highlights.
 
-## Layout: Single-Screen Side Panels
+## Layout: Single-Screen Stage
 
 The experience is a single-viewport composition. Selecting a face never navigates away.
 
@@ -87,21 +87,20 @@ Desktop composition (≈1440-1920px):
 Hard constraints:
 
 - The entire composition must fit in a single viewport at standard desktop widths without scrolling. Treat each face as a poster, not a page.
-- Side panel content per face is minimal: short paragraph, list of named items, one or two CTAs. No long-form essays inside the cube experience.
-- Switching faces is a soft cross-fade of the side-panel content; the cube animates in place.
+- The composition per face is minimal: short paragraph, list of named items, one or two CTAs. No long-form essays inside the cube experience.
+- Switching faces is a soft cross-fade of the composition; the cube animates in place.
 
 Responsive collapse (≤900px):
 
 - Cube remains the visual anchor, scaled down.
 - The cube is the hero on top; the composition follows below in its reading order, one column; the dock is fixed at the bottom (two rows of three on phones).
-- Bottom breadcrumb may collapse to a horizontal scroller.
 - Maintain the no-scroll-on-desktop rule only for desktop; mobile may scroll, but the first fold must include the cube and the face's headline.
 
-Surface rules (for side-panel cards and pills):
+Surface rules (for the composition's panels, cards and pills):
 
 - Cards should feel like polished obsidian panels: dark, reflective, thin bordered, and responsive to the pointer.
 - Cards may use tiny corner marks, inner highlights, and cursor-following light.
-- Do not nest cards inside cards.
+- One level of nesting, the stage's grammar: a block's panel may hold item cards (the featured case, the proofs, the callouts, the channels), because icons, images and cards are what break the rails' monotony (owner, 2026-10-14). No card inside an item card; an icon tile or a chip is not a card.
 - Do not use large rounded SaaS-style cards.
 - Repeated cards should share a common interaction model and visual grammar.
 
@@ -149,7 +148,7 @@ The palette lives in `src/styles/tokens.css`, the single source: page and abyss,
 - Generic purple gradients used as decoration (the violet ambient must read as volumetric/nebula light, not as a flat SaaS gradient).
 - Decorative orb/bokeh backgrounds.
 - Excessive cards.
-- Floating nested cards.
+- Cards nested more than one level deep, or floating outside a block's panel.
 - Busy sci-fi dashboards.
 - Hero sections that look like a SaaS template.
 - Bloom-driven glow.
@@ -157,7 +156,7 @@ The palette lives in `src/styles/tokens.css`, the single source: page and abyss,
 - Gold ornament used as luxury decoration without structural purpose.
 - Icon styles that do not match the cube glyph geometry.
 - Per-face divergence beyond accent color and inner glyph: the frame, bevel, brackets and typography are shared by all six faces (ADR 003).
-- Six identical compositions. The side-panel layout may vary in at least two faces (for example the research concept map) so the walk across the cube does not feel like the same poster six times.
+- Six identical compositions. Each face picks its template (spec 011) so the walk across the cube does not feel like the same poster six times.
 - Full-page section overlays that hide the cube (the cube must remain visible in the primary experience).
 
 ## Tailwind Implementation

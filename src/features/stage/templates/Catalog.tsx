@@ -9,7 +9,8 @@ import { StageIcon } from '../StageIcon'
 import './catalog.css'
 
 // catalog — the items on the left and the chosen item's sheet on the right,
-// with its image; the centre stays clear for the cube (spec 011, E-3).
+// with its image when it has one; the centre stays clear for the cube (spec
+// 011, E-3).
 export function Catalog({ composition, face, counter, onOpenDetail }: TemplateProps<'catalog'>) {
   const [selectedId, setSelectedId] = useState(composition.items[0]?.id)
   const item = composition.items.find((candidate) => candidate.id === selectedId) ?? composition.items[0]
@@ -28,7 +29,7 @@ export function Catalog({ composition, face, counter, onOpenDetail }: TemplatePr
                 aria-pressed={candidate.id === item.id}
                 onClick={() => setSelectedId(candidate.id)}
               >
-                <img src={candidate.image.thumb ?? candidate.image.src} alt="" width={64} height={40} />
+                {candidate.image && <img src={candidate.image.thumb ?? candidate.image.src} alt="" width={64} height={40} />}
                 <span>
                   <strong>{candidate.name}</strong>
                   <small>
@@ -59,9 +60,11 @@ export function Catalog({ composition, face, counter, onOpenDetail }: TemplatePr
         </header>
         <RichText className="ca-text" html={item.text} />
         <div className="ca-detail__body">
-          <figure className="ca-shot">
-            <img src={item.image.src} alt={item.image.alt} width={item.image.width} height={item.image.height} />
-          </figure>
+          {item.image && (
+            <figure className="ca-shot">
+              <img src={item.image.src} alt={item.image.alt} width={item.image.width} height={item.image.height} />
+            </figure>
+          )}
           <dl className="ca-facts">
           {item.facts.map((fact, index) => (
             <div key={index}>

@@ -78,7 +78,7 @@ If E-1 is taken: the stage is the desktop experience, the rails retire from desk
 | No content in code: the stage reads only the kernel's normalized content | Lint (`STAGE_TEXT` in `eslint.config.js`): no text of two words or more in the stage's JSX, no literal in `aria-label`, `title`, `alt` or `placeholder`. Single words written in markup and strings held in constants are left to review, **unchecked** (audit-1, F-2): a rule on every string literal also catches class names |
 | JSON Schema generation covers every document | Unit test |
 | The admin form round-trips the example documents | Playwright test on the admin page |
-| Example media never published as owner content | Publish rules, unit test |
+| Example media never published as owner content, nor data labelled as illustrative; a block without data (the `case` map, a `catalog` image) is left out, never filled with made-up data (2026-10-16) | Publish rules, unit test; `StageComposition.test.tsx` |
 | DOM files ≤ 250 lines, boundaries, copy dictionary | `fileSize.test.ts`, `eslint.config.js`, `boundaries.test.ts` |
 | First-view budget | `npm run check:budget`; a raise needs this spec to say why |
 
@@ -115,6 +115,8 @@ A page builder; 3D worlds other than CONTACT's (S5); the contact form and the CV
 | E-7 | The contact form | **Neither option.** The contact form, the CV request and its captcha are solved together with the rest of security in a stage of their own, the last before the release (ADR 008). The `channels` template ships without the form. |
 
 Added by the owner at entry: the CONTACT background, a placeholder until now, is built in this spec (slice S5), so every face reaches the content stage with its final shape and world.
+
+Outside audit (owner, 2026-10-16): of its seven-step plan, this spec takes only what belongs to it, because strong changes of direction now would cost visibility. Applied: the branches pushed; `deploy.yml` on demand only (it failed after every CI on main for lack of an AWS account); documents that still described the rails or contradicted the stage (the stage count in `specs/README.md`, the side panels in `AGENTS.md` and `docs/visual-direction.md`, the nesting rule written as the stage's one level of cards); the `case` map and `catalog` images optional, so a block without data is left out, and a publish rule against data labelled as illustrative; the drift audit judging the work against the objective. Everything else is weighed at the entry of its stage (`docs/roadmap.md`).
 
 ## 8. Acceptance
 

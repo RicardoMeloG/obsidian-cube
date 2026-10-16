@@ -85,7 +85,9 @@ const CatalogSchema = z
           status: Text.meta({ title: 'Estado' }),
           text: RichTextSchema.meta({ title: 'Texto' }),
           chips: ChipsSchema,
-          image: MediaRefSchema,
+          // Optional: without a real image the sheet shows none, rather than a
+          // made-up one (2026-10-16).
+          image: MediaRefSchema.optional(),
           facts: z.array(IconItemSchema).meta({ title: 'Datos' }),
           links: z
             .array(z.object({ label: Text.meta({ title: 'Texto' }), href: z.string().min(1).meta({ title: 'Enlace' }) }))
@@ -116,6 +118,9 @@ const CaseSchema = z
           .meta({ title: 'Leyenda' }),
         cells: z.array(z.enum(CELL_STATES)).meta({ title: 'Celdas' }),
       })
+      // Optional: without real data the block does not appear, rather than an
+      // illustrative map (2026-10-16).
+      .optional()
       .meta({ title: 'Mapa de estado' }),
     steps: z.array(IconItemSchema).meta({ title: 'Pasos' }),
   })
