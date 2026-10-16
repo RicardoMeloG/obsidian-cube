@@ -1,14 +1,12 @@
 name: Deploy static site
 
-# Publishes the built frontend to S3 + CloudFront: on demand, or after the CI
-# workflow passed on main (never on a red build). Does anything only once the
-# AWS OIDC role and target variables are set.
+# Publishes the built frontend to S3 + CloudFront, on demand only. It used to
+# run after every green CI on main and failed each time, because the AWS
+# account, the OIDC role and the target variables do not exist yet (five
+# failures, 2026-10-10 to 10-16); how deploys run is decided at the release
+# stage (spec 010, D-6).
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
 
 permissions:
   id-token: write # OIDC: assume the deploy role, no long-lived AWS keys
@@ -17,14 +15,10 @@ permissions:
 jobs:
   deploy:
     name: Build & deploy
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
-        with:
-          # The commit the CI run tested, not whatever main points at now.
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
