@@ -47,8 +47,10 @@ Defined in `infra/` with the **AWS CDK (TypeScript)**.
    - Secret `AWS_DEPLOY_ROLE_ARN` — the OIDC role ARN.
    - Variables `AWS_REGION`, `SITE_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID` — from step 2.
 
-After that, pushing to `main` (or running the *Deploy static site* workflow)
-publishes the site.
+After that, running the *Deploy static site* workflow publishes the site. It
+runs on demand only (2026-10-16): after every CI on `main` it failed for lack
+of the account; whether it runs on its own again is decided at the release
+stage (spec 010, D-6).
 
 ## Local verification (no AWS account needed)
 

@@ -15,10 +15,9 @@ const s3Commands = workflow
 const syncCommands = s3Commands.filter((line) => line.includes('aws s3 sync'))
 
 describe('deploy workflow', () => {
-  it('deploys only on demand or after a green CI run (audit-2 B-08)', () => {
-    expect(workflow).not.toMatch(/^\s*push:/m)
-    expect(workflow).toMatch(/workflow_run:\s*\n\s*workflows: \[CI\]/)
-    expect(workflow).toContain("github.event.workflow_run.conclusion == 'success'")
+  it('deploys only on demand, never on its own (2026-10-16, until the release stage)', () => {
+    const triggers = /^on:\n((?: {2}.*\n)+)/m.exec(workflow.replace(/\r/g, ''))?.[1] ?? ''
+    expect(triggers.match(/^ {2}\w+/gm)).toEqual(['  workflow_dispatch'])
   })
 
   it('never removes, copies or moves anything onto content/ (audit-2 B-08)', () => {
