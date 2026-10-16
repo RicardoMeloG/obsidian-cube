@@ -7,7 +7,7 @@
 // other id does. A known id that no longer fails is reported so the list only
 // shrinks.
 //
-//   node scripts/check-layout.mjs              PR matrix (3 viewports)
+//   node scripts/check-layout.mjs              default matrix (4 viewports, every layout mode)
 //   node scripts/check-layout.mjs --full       full matrix (9 viewports)
 //   node scripts/check-layout.mjs --update-known   record current failures as known
 //   node scripts/check-layout.mjs --content=stress every field at its budget
@@ -40,8 +40,13 @@ const KNOWN_PATH = fileURLToPath(new URL('./checks/layout-known.json', import.me
 const PORT = 4179
 const BASE = `http://127.0.0.1:${PORT}`
 
-const PR_VIEWPORTS = ['1600x725', '1366x768', '390x844']
+// The default matrix renders every layout mode (audit-3 F-2: until 2026-10-16
+// no default viewport was taller than 900px, so `desktop` was only ever
+// checked at night): 1920×1080 is desktop, 1600×725 and 1366×768 are
+// desktop-short, 390×844 is stacked. A run that misses a mode fails.
+const PR_VIEWPORTS = ['1920x1080', '1600x725', '1366x768', '390x844']
 const FULL_VIEWPORTS = ['2048x1152', '1920x1080', '1600x725', '1536x864', '1440x900', '1366x768', '1280x720', '768x1024', '390x844']
+const LAYOUT_MODES = ['stacked', 'desktop', 'desktop-short']
 const LOCALES = ['en', 'es']
 const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contact']
 
@@ -364,7 +369,7 @@ async function measurePage(page, viewport, locale) {
   }
 
   console.log(`  ${viewport} ${locale} (${mode}): ${results.layout.length} layout, ${results.axe.length} axe`)
-  return results
+  return { ...results, mode }
 }
 
 const launch = (args) => chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH || undefined, args })
@@ -590,12 +595,19 @@ async function main() {
     browser = await launch(NO_WEBGL)
     console.log(`Layout check on ${viewports.length} viewports × ${LOCALES.length} locales, content: ${contentMode}`)
     const found = { layout: [], axe: [] }
+    const modes = new Set()
     for (const viewport of viewports) {
       for (const locale of LOCALES) {
         const results = await checkPage(browser, viewport, locale)
         found.layout.push(...results.layout)
         found.axe.push(...results.axe)
+        modes.add(results.mode)
       }
+    }
+    // A matrix that never renders a mode proves nothing about it: a rule under
+    // that mode's variant could push a block off-screen unseen (audit-3 F-2).
+    for (const mode of LAYOUT_MODES) {
+      if (!modes.has(mode)) found.layout.push(`matrix ${mode} never rendered`)
     }
 
     if (contentMode === 'built') {
@@ -613,10 +625,10 @@ async function main() {
 
     if (args.has('--update-known')) {
       // A blank page is never accepted as known debt.
-      const degradation = found.layout.filter((id) => /^(degradation|behaviour|worlds|csp) /.test(id))
+      const degradation = found.layout.filter((id) => /^(degradation|behaviour|worlds|csp|matrix) /.test(id))
       if (degradation.length > 0) {
         for (const id of degradation) console.log(`FAIL ${id}`)
-        console.log('Degradation, behaviour and world contrast failures cannot be recorded as known.')
+        console.log('Degradation, behaviour, world contrast and matrix failures cannot be recorded as known.')
         process.exitCode = 1
         return
       }

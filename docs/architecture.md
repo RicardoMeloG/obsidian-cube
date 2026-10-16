@@ -94,13 +94,13 @@ Imports across top-level modules use `@/`; a relative path that climbs into anot
 | Rule | Status | Gate |
 |---|---|---|
 | Personal data never in the repository | In force | `.gitignore`; `npm run check:privacy` in CI and pre-push (H-08a); `--history` (authors, messages and the content of every past version) before publishing a repository |
-| Build, lint and unit tests pass; tests are type-checked | In force | CI; `tsconfig.test.json` in `tsc -b` |
+| Build, lint and unit tests pass; tests are type-checked | In force | CI, on every push to any branch and on pull requests (audit-3 F-1; the trigger is tested by `scripts/checks/ciWorkflow.test.ts`); `tsconfig.test.json` in `tsc -b` |
 | CDK synthesises | In force | CI |
 | Server linted and type-checked | In force | `npm run lint`, `npm run typecheck:server` (H-05) |
 | Kernel pure, server imports only the kernel | In force | `tsconfig.kernel.json` in `tsc -b`, lint rules in `eslint.config.js` (H-15, H-04b); the rules themselves are tested by `scripts/checks/boundaries.test.ts` |
 | Owner content wins; a missing field falls back to the example in the same language | In force | `src/kernel/siteContent.test.ts` |
 | Every public asset has a recorded source and licence | In force, two pending | `docs/assets.md`, `scripts/checks/assets.test.ts` |
-| Layout: name first; every block of a composition fits its area without scrolling; nothing painted over another block, the chrome or the content inside a block; desktop: the centre clear for the cube and every CTA in view; stacked: the composition below the cube, no sideways scroll, every CTA and the end of the page clear of the dock | In force, no known failures | `npm run check:layout` (H-06; spec 011, AD-06) |
+| Layout: name first; every block of a composition fits its area without scrolling; nothing painted over another block, the chrome or the content inside a block; desktop: the centre clear for the cube and every CTA in view; stacked: the composition below the cube, no sideways scroll, every CTA and the end of the page clear of the dock | In force, no known failures | `npm run check:layout` (H-06; spec 011, AD-06). The default matrix renders every layout mode (1920×1080 desktop, 1600×725 and 1366×768 desktop-short, 390×844 stacked) and fails if a mode was not rendered; `--full` adds the rest of the sizes at night (audit-3 F-2) |
 | Name and role at AA contrast over what lies behind them: the still image on the layout pages, and every face's world with the scene running (software WebGL, 1366×768 and 390×844, both languages, the worst of three frames) | In force since 2026-10-15, no known failures | `npm run check:layout` (H-06; spec 011, S5) |
 | Every text slot of a template reaches the page | In force | `src/features/stage/StageComposition.test.tsx` |
 | The admin's generated form round-trips every example document unchanged; lists, template switch, text, image upload and field errors write what they show | In force | `npm run check:admin` (spec 011, AD-04), against a stand-in API: the check never bypasses the owner's login |

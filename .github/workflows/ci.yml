@@ -1,8 +1,11 @@
 name: CI
 
 on:
+  # Every branch, whatever its prefix: a stage's branch is gated by CI, not by
+  # the runs its commit messages declare (audit-3 F-1, 2026-10-16; the
+  # trigger is tested by scripts/checks/ciWorkflow.test.ts).
   push:
-    branches: [main, "feature/**"]
+    branches: ["**"]
   pull_request:
   # Nightly: the layout check on the full viewport matrix.
   schedule:
@@ -44,7 +47,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run build
-      - name: Layout check (PR matrix, full matrix at night)
+      - name: Layout check (default matrix, every layout mode; full matrix at night)
         run: npm run check:layout -- ${{ github.event_name == 'schedule' && '--full' || '' }}
       - name: Layout check with every field at its budget
         run: npm run check:layout -- --content=stress ${{ github.event_name == 'schedule' && '--full' || '' }}
