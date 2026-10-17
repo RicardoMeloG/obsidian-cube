@@ -5,7 +5,10 @@
     "title": 28,
     "summary": 112,
     "ctaLabel": 20,
-    "tagline": 28
+    "tagline": 28,
+    "name": 24,
+    "role": 36,
+    "keywords": 48
   },
   "templates": {
     "_note": "Measured 2026-10-15 (spec 011 S2): the stress content at these limits passes the layout check on the full matrix, both languages.",

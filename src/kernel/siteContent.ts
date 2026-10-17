@@ -31,7 +31,10 @@ const SiteSectionSchema = z.object({
   highlights: z.array(RichTextSchema).optional().meta({ title: 'Destacados (diálogo)' }),
   proofPoints: z.array(RichTextSchema).optional().meta({ title: 'Pruebas (diálogo)' }),
   links: z.array(LinkSchema).optional().meta({ title: 'Enlaces (diálogo)' }),
-  cta: CtaSchema.optional().meta({ title: 'Llamado antiguo' }),
+  // Legacy: no component draws it (only the static HTML for crawlers reads
+  // it). Read-only in the admin until a content migration retires it
+  // (audit-3 F-7).
+  cta: CtaSchema.optional().meta({ title: 'Llamado antiguo (heredado, solo lectura)', widget: 'fixed' }),
   detail: z
     .object({
       title: z.string().min(1).meta({ title: 'Título' }),
@@ -49,7 +52,9 @@ export const SiteContentSchema = z.object({
     .object({
       displayName: z.string().min(1).meta({ title: 'Nombre visible' }),
       fullName: z.string().min(1).meta({ title: 'Nombre completo' }),
-      handle: z.string().min(1).meta({ title: 'Usuario' }),
+      // `handle` was retired on 2026-10-16 (audit-3 F-7): nothing rendered it;
+      // the GitHub profile URL in `links` carries it. Older documents that
+      // still have the key parse, and the key is dropped.
       role: z.string().min(1).meta({ title: 'Rol' }),
       // One line under the role, e.g. "AI Engineer · LLM agents · Python · AWS".
       keywords: z.string().min(1).optional().meta({ title: 'Palabras clave' }),

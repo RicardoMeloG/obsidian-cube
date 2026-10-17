@@ -56,7 +56,7 @@ describe('publish rules on compositions', () => {
   // The example made publishable except for what each test breaks.
   function ownerContent(change: (composition: Composition) => void): SiteContent {
     const content = structuredClone(getDefaultSiteContent('en'))
-    content.identity = { ...content.identity, displayName: 'Ada', fullName: 'Ada Lovelace', handle: 'ada' }
+    content.identity = { ...content.identity, displayName: 'Ada', fullName: 'Ada Lovelace' }
     const text = JSON.stringify(content)
       .replaceAll('your-handle', 'ada')
       .replaceAll('your-project', 'engine')

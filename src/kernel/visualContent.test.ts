@@ -10,9 +10,10 @@ describe('visualContent defaults', () => {
     expect(getDefaultVisualContent()).toEqual(visualExample)
   })
 
-  it('name every world as the kernel catalog does', () => {
+  it('list every world of the kernel catalog, in its order; the names are code (audit-3 F-7)', () => {
     expect(visualExample.worlds.map((world) => world.id)).toEqual(WORLD_IDS)
-    for (const world of visualExample.worlds) expect(world.label).toBe(WORLD_LABELS[world.id as keyof typeof WORLD_LABELS])
+    for (const world of visualExample.worlds) expect(world).not.toHaveProperty('label')
+    for (const id of WORLD_IDS) expect(WORLD_LABELS[id]).toBeTruthy()
   })
 
   it('exposes all six worlds enabled and a 1:1 face->world mapping', () => {

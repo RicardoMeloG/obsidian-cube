@@ -1,6 +1,6 @@
 # 011: Stage Layout and Editable Face Compositions — Proposal
 
-**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 to S2 done, the drift audit after S2 resolved (audit-1.md); S3 built, its end-to-end exit pending the owner's login; S4 done, the drift audit after S4 resolved (audit-2.md); S5 done; S6 met by S4; the drift audit before acceptance recorded (audit-3.md, 2026-10-16): its two medium findings resolved the same day, its five low ones recorded for the owner's decision; acceptance itself waits for the owner's content (section 8, criterion 1) and the walkthrough a person looks at (criterion 4).
+**Status:** accepted (2026-10-15), branch `concept/escenario`. Entry decisions taken by the owner (section 7); ADR 008 accepted. S0 to S2 done, the drift audit after S2 resolved (audit-1.md); S3 built, its end-to-end exit pending the owner's login; S4 done, the drift audit after S4 resolved (audit-2.md); S5 done; S6 met by S4; the drift audit before acceptance recorded (audit-3.md, 2026-10-16): its seven findings resolved the same day, except that the one line of result per face stays unchecked (F-3); acceptance itself waits for the owner's content (section 8, criterion 1) and the walkthrough a person looks at (criterion 4).
 **Builds on:** the stage concept (`?layout=escenario`, commit `ae0b93d`), ADR 004 (admin on AWS), ADR 005 (content kernel), ADR 006 (frontend architecture).
 
 ## 1. Problem
@@ -78,7 +78,7 @@ If E-1 is taken: the stage is the desktop experience, the rails retire from desk
 | No content in code: the stage reads only the kernel's normalized content | Lint (`STAGE_TEXT` in `eslint.config.js`): no text of two words or more in the stage's JSX, no literal in `aria-label`, `title`, `alt` or `placeholder`. Single words written in markup and strings held in constants are left to review, **unchecked** (audit-1, F-2): a rule on every string literal also catches class names |
 | JSON Schema generation covers every document | Unit test |
 | The admin form round-trips the example documents | Playwright test on the admin page |
-| Example media never published as owner content, nor data labelled as illustrative; a block without data (the `case` map, a `catalog` image) is left out, never filled with made-up data (2026-10-16) | Publish rules, unit test; `StageComposition.test.tsx` |
+| Example media never published as owner content, nor data labelled as illustrative; a block without data (the `case` map, a `catalog` image) is left out, never filled with made-up data (2026-10-16) | Publish rules, unit test; `StageComposition.test.tsx`; `check:layout -- --content=stress` renders the stress content again without the optional blocks (audit-3 F-6) |
 | DOM files ≤ 250 lines, boundaries, copy dictionary | `fileSize.test.ts`, `eslint.config.js`, `boundaries.test.ts` |
 | First-view budget | `npm run check:budget`; a raise needs this spec to say why |
 

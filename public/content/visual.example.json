@@ -1,11 +1,11 @@
 {
   "worlds": [
-    { "id": "agentic", "label": "AGENTIC PLEXUS", "enabled": true },
-    { "id": "products", "label": "PRODUCT BOX FIELD", "enabled": true },
-    { "id": "systems", "label": "CITY CORRIDOR", "enabled": true },
-    { "id": "security", "label": "ARROW SHIELD", "enabled": true },
-    { "id": "research", "label": "PARAMO VALLEY", "enabled": true },
-    { "id": "contact", "label": "CONTACT SIGNAL", "enabled": true }
+    { "id": "agentic", "enabled": true },
+    { "id": "products", "enabled": true },
+    { "id": "systems", "enabled": true },
+    { "id": "security", "enabled": true },
+    { "id": "research", "enabled": true },
+    { "id": "contact", "enabled": true }
   ],
   "faces": {
     "agentic": { "worldId": "agentic", "accent": "#b8aeff", "icon": "sparkles" },

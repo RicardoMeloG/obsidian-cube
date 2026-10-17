@@ -179,7 +179,8 @@ Face content shape (primary scene, must stay minimal):
 
 - `title` (2-4 strong words), `eyebrow`, `summary` (one thesis line), `tagline` (the line under the face name in the dock)
 - `composition`: one of the templates of `src/kernel/compositions.ts` (spec 011) with its slots filled; every slot has a measured budget in `layoutBudgets.json`, enforced when publishing
-- `ctaPrimary` + `ctaSecondary` — at least one of them, a link inside the composition, or one `detail.links` entry, must carry a real `href` to an artifact
+- `ctaPrimary` + `ctaSecondary` — at least one of them, a link inside the composition, or one `detail.links` entry, must carry a real `https:` `href` to an artifact; a `mailto:` is a channel, not an artifact (audit-3 F-3). The one line of result the artifact deserves is unchecked: no field carries it yet
+- The top bar's `identity.displayName`, `role` and `keywords` have budgets too (`layoutBudgets.json`: `name`, `role`, `keywords`), enforced when publishing like the face fields (audit-3 F-4)
 - `label` (the face name on the cube and the dock): 13 characters at most — "INVESTIGACIÓN" is the ceiling
 - Images are uploaded through the admin (WebP, stored by hash); example images are refused in owner content
 - Copy must name concrete things (a tool, a system, a result). Generic consultancy phrasing ("real impact", "practical vision") is a defect, not content.

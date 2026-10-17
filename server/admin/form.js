@@ -47,7 +47,12 @@
     function field(fieldSchema, path, { required, label }) {
       const value = get(path)
       if (fieldSchema.const !== undefined) return null
-      if (fieldSchema.widget === 'fixed') return wrap(path, label, true, el('output', { class: 'sf-fixed', text: String(value) }))
+      if (fieldSchema.widget === 'fixed') {
+        // Read-only: a value the owner does not edit here. An absent optional
+        // one (a legacy field such as `cta`, audit-3 F-7) is not offered.
+        if (value === undefined && !required) return null
+        return wrap(path, label, true, el('output', { class: 'sf-fixed', text: typeof value === 'object' ? JSON.stringify(value) : String(value) }))
+      }
       if (fieldSchema.oneOf) return union(fieldSchema, path, { required, label })
       if (isNullable(fieldSchema)) return nullable(fieldSchema, path, label)
       if (fieldSchema.widget === 'media') return window.SchemaFormMedia.field({ get, set, remove, render, wrap, media }, fieldSchema, path, { required, label })

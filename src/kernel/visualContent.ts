@@ -18,10 +18,11 @@ const WorldIdSchema = z.enum(WORLD_IDS as [WorldId, ...WorldId[]])
 const HexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'accent must be a 6-digit hex color')
 
 // A world in the catalog: it can be enabled or disabled whether or not a face
-// points at it.
+// points at it. Its name is code (`WORLD_LABELS`, shown by the dev showcase);
+// the editable `label` was retired on 2026-10-16 (audit-3 F-7) because
+// nothing rendered it. Older documents that still have it parse.
 const WorldCatalogEntrySchema = z.object({
   id: WorldIdSchema.meta({ title: 'Mundo', widget: 'fixed' }),
-  label: z.string().min(1).meta({ title: 'Nombre' }),
   enabled: z.boolean().meta({ title: 'Activo' }),
 })
 

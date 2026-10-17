@@ -10,7 +10,8 @@
 //   node scripts/check-layout.mjs              default matrix (4 viewports, every layout mode)
 //   node scripts/check-layout.mjs --full       full matrix (9 viewports)
 //   node scripts/check-layout.mjs --update-known   record current failures as known
-//   node scripts/check-layout.mjs --content=stress every field at its budget
+//   node scripts/check-layout.mjs --content=stress every field at its budget, and
+//                                                  again without the optional blocks
 //   node scripts/check-layout.mjs --content=example  the committed example
 //
 // Without --content the check uses what the build contains: the example in CI,
@@ -64,7 +65,10 @@ const readJson = (path) => JSON.parse(readFileSync(fileURLToPath(new URL(path, i
 const budgets = readJson('../src/kernel/layoutBudgets.json')
 const examples = { en: readJson('../public/content/site.example.en.json'), es: readJson('../public/content/site.example.es.json') }
 
-// Serves the site documents for --content=stress|example.
+// Serves the site documents for --content=stress|example. The stress content
+// is served twice: every slot at its budget, then without the optional blocks
+// (audit-3 F-6), the other shape the admin accepts.
+let stressBare = false
 async function serveContent(context) {
   if (contentMode === 'built') return
   // Stress content points at owner media; any image stands in for it.
@@ -73,7 +77,7 @@ async function serveContent(context) {
   await context.route('**/content/site.*.json', (route) => {
     const locale = route.request().url().includes('site.es.json') ? 'es' : 'en'
     if (contentMode === 'example') return route.fulfill({ status: 404, body: '' })
-    return route.fulfill({ contentType: 'application/json', body: JSON.stringify(buildStressContent(examples[locale], budgets)) })
+    return route.fulfill({ contentType: 'application/json', body: JSON.stringify(buildStressContent(examples[locale], budgets, { bare: stressBare })) })
   })
 }
 
@@ -310,12 +314,12 @@ function measureStage({ queries }) {
 // layout-report/ (uploaded by CI), so a failure there can be read, not guessed.
 const REPORT_DIR = fileURLToPath(new URL('../layout-report/', import.meta.url))
 
-async function checkPage(browser, viewport, locale) {
+async function checkPage(browser, viewport, locale, variant = '') {
   const [width, height] = viewport.split('x').map(Number)
   const context = await browser.newContext({ viewport: { width, height } })
   await serveContent(context)
   const page = await context.newPage()
-  watchCsp(page, `${viewport} ${locale}`)
+  watchCsp(page, [viewport, locale, variant].filter(Boolean).join(' '))
   const pageErrors = []
   page.on('pageerror', (error) => pageErrors.push(`pageerror: ${error.message}`))
   page.on('crash', () => pageErrors.push('crash: the page process crashed'))
@@ -323,10 +327,10 @@ async function checkPage(browser, viewport, locale) {
     if (message.type() === 'error' || message.type() === 'warning') pageErrors.push(`${message.type()}: ${message.text().slice(0, 300)}`)
   })
   try {
-    return await measurePage(page, viewport, locale)
+    return await measurePage(page, viewport, locale, variant)
   } catch (error) {
     mkdirSync(REPORT_DIR, { recursive: true })
-    const name = `${viewport}-${locale}`
+    const name = [viewport, locale, variant].filter(Boolean).join('-')
     await page.screenshot({ path: `${REPORT_DIR}${name}.png` }).catch(() => undefined)
     writeFileSync(`${REPORT_DIR}${name}.log`, [String(error), '', ...pageErrors].join('\n'))
     console.log(`  ${viewport} ${locale}: unexpected error, see layout-report/${name}.log`)
@@ -337,21 +341,24 @@ async function checkPage(browser, viewport, locale) {
   }
 }
 
-async function measurePage(page, viewport, locale) {
+async function measurePage(page, viewport, locale, variant = '') {
   const results = { layout: [], axe: [] }
+  // Failure ids start with the viewport (the known list is keyed by it); a
+  // stress variant is named after the locale.
+  const where = [viewport, locale, variant].filter(Boolean).join(' ')
   await page.goto(`${BASE}/?intro=0&lang=${locale}`)
   await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
   await page.evaluate(() => document.fonts.ready)
   // The layout is measured with the served font (ADR 006, AD-10).
   if (!(await page.evaluate(() => document.fonts.check('16px "Inter Variable"')))) {
-    results.layout.push(`${viewport} ${locale} font-not-loaded`)
+    results.layout.push(`${where} font-not-loaded`)
   }
 
-  for (const failure of await identityContrast(page)) results.layout.push(`${viewport} ${locale} ${failure}`)
+  for (const failure of await identityContrast(page)) results.layout.push(`${where} ${failure}`)
 
   // Accessibility of the landing face (the dialog and other faces share markup).
   const axe = await new AxeBuilder({ page }).analyze()
-  for (const violation of axe.violations) results.axe.push(`${viewport} ${locale} ${violation.id}`)
+  for (const violation of axe.violations) results.axe.push(`${where} ${violation.id}`)
 
   let mode = ''
   for (const face of FACES) {
@@ -363,12 +370,12 @@ async function measurePage(page, viewport, locale) {
     await page.evaluate(() => Promise.race([Promise.all(document.getAnimations().map((animation) => animation.finished)), new Promise((resolve) => setTimeout(resolve, 3000))]))
     const measured = await page.evaluate(measureStage, { queries: MODE_QUERIES })
     mode = measured.mode
-    for (const failure of measured.failures) results.layout.push(`${viewport} ${locale} ${face} ${failure}`)
-    for (const warning of measured.warnings ?? []) console.log(`  warning: ${viewport} ${locale} ${face} ${warning}`)
+    for (const failure of measured.failures) results.layout.push(`${where} ${face} ${failure}`)
+    for (const warning of measured.warnings ?? []) console.log(`  warning: ${where} ${face} ${warning}`)
     await page.evaluate(() => window.scrollTo(0, 0))
   }
 
-  console.log(`  ${viewport} ${locale} (${mode}): ${results.layout.length} layout, ${results.axe.length} axe`)
+  console.log(`  ${where} (${mode}): ${results.layout.length} layout, ${results.axe.length} axe`)
   return { ...results, mode }
 }
 
@@ -593,15 +600,21 @@ async function main() {
   try {
     await waitForServer()
     browser = await launch(NO_WEBGL)
-    console.log(`Layout check on ${viewports.length} viewports × ${LOCALES.length} locales, content: ${contentMode}`)
+    // Stress content twice: every slot at its budget, then without the
+    // optional blocks (audit-3 F-6).
+    const variants = contentMode === 'stress' ? [['', false], ['bare', true]] : [['', false]]
+    console.log(`Layout check on ${viewports.length} viewports × ${LOCALES.length} locales, content: ${contentMode}${variants.length > 1 ? ' (full, then without the optional blocks)' : ''}`)
     const found = { layout: [], axe: [] }
     const modes = new Set()
     for (const viewport of viewports) {
       for (const locale of LOCALES) {
-        const results = await checkPage(browser, viewport, locale)
-        found.layout.push(...results.layout)
-        found.axe.push(...results.axe)
-        modes.add(results.mode)
+        for (const [variant, bare] of variants) {
+          stressBare = bare
+          const results = await checkPage(browser, viewport, locale, variant)
+          found.layout.push(...results.layout)
+          found.axe.push(...results.axe)
+          modes.add(results.mode)
+        }
       }
     }
     // A matrix that never renders a mode proves nothing about it: a rule under

@@ -1,8 +1,10 @@
 // Stress content for the layout check (spec 010, H-06b): the example content
-// with every field of a face's heading and every slot of its composition filled
-// to its layout budget, every list at its maximum, links and identity made
-// publishable. If this fits, any content the
-// admin accepts fits. stressContent.test.ts checks it passes the publish rules.
+// with every field of a face's heading, the top bar's identity and every slot
+// of its composition filled to its layout budget, every list at its maximum,
+// links made publishable. With `bare`, the optional blocks (the `case` map,
+// the `catalog` images) are left out, the other shape the admin accepts
+// (audit-3 F-6). If both fit, any content the admin accepts fits.
+// stressContent.test.ts checks they pass the publish rules.
 
 // Long words, so lines break late, as in the Spanish copy.
 const WORDS = ['implementación', 'arquitectura', 'observabilidad', 'verificable', 'producción', 'integración', 'experimentación']
@@ -82,15 +84,17 @@ function fillList(items, size, makeItem) {
   return Array.from({ length: size }, (_, index) => makeItem(items[index % items.length], index))
 }
 
-export function buildStressContent(example, budgets) {
+export function buildStressContent(example, budgets, { bare = false } = {}) {
   const { chars } = budgets
   const content = structuredClone(example)
 
   content.identity = {
     ...content.identity,
-    displayName: 'Valentina Hernández',
+    // The top bar's texts at their budgets (audit-3 F-4).
+    displayName: fillTo('Valentina Hernández', chars.name),
     fullName: 'Valentina Hernández Ugarte-Iturriaga',
-    handle: 'stress-owner',
+    role: fillTo(content.identity.role, chars.role),
+    keywords: fillTo(content.identity.keywords ?? '', chars.keywords),
     links: { github: 'https://github.com/stress-owner', linkedin: 'https://www.linkedin.com/in/stress-owner' },
   }
 
@@ -114,5 +118,11 @@ export function buildStressContent(example, budgets) {
     }
     return next
   })
+  if (bare) {
+    for (const { composition } of content.sections) {
+      if (composition?.template === 'case') delete composition.map
+      if (composition?.template === 'catalog') for (const item of composition.items) delete item.image
+    }
+  }
   return content
 }

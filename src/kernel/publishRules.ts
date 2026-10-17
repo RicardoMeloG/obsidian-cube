@@ -9,10 +9,11 @@ import { normalizeSections, SiteContentSchema } from './siteContent'
 import type { SiteContent } from './siteContent'
 import budgets from './layoutBudgets.json'
 
-// Longest text, in characters, each field of a face's heading may hold
-// (layoutBudgets.json, also read by the layout check's stress content). Set
-// from the layout check: every field at its limit, in both locales, fits every
-// supported screen. `label` is the face name on the cube and the dock.
+// Longest text, in characters, each field of a face's heading may hold, and
+// the name, role and keywords of the top bar, shown on every face (audit-3
+// F-4). layoutBudgets.json is also read by the layout check's stress content.
+// Set from the layout check: every field at its limit, in both locales, fits
+// every supported screen. `label` is the face name on the cube and the dock.
 export const LAYOUT_BUDGETS = budgets.chars
 
 // Budgets of each composition template (spec 011, AD-06), by slot path:
@@ -65,8 +66,10 @@ export function visibleLength(value: string): number {
   return value.replace(/<[^>]*>/g, '').replace(/&[a-z0-9#]+;/gi, '_').length
 }
 
-function isOutsideLink(href: string): boolean {
-  return /^(https:|mailto:)/i.test(href)
+// An inspectable artifact lives on the web. A mailto: is a channel, not an
+// artifact (audit-3 F-3): CONTACT meets the rule with its profile links.
+function isArtifactLink(href: string): boolean {
+  return /^https:/i.test(href)
 }
 
 type Issue = { path: (string | number)[]; message: string }
@@ -82,6 +85,11 @@ export function publishIssues(content: SiteContent): Issue[] {
     if (limits.min !== undefined && length < limits.min) issues.push({ path, message: `Mínimo ${limits.min} elementos.` })
     if (length > limits.max) issues.push({ path, message: `Máximo ${limits.max} elementos; la columna no muestra más.` })
   }
+
+  // The top bar shows these on every face and in every mode (audit-3 F-4).
+  tooLong(['identity', 'displayName'], content.identity.displayName, LAYOUT_BUDGETS.name)
+  tooLong(['identity', 'role'], content.identity.role, LAYOUT_BUDGETS.role)
+  tooLong(['identity', 'keywords'], content.identity.keywords, LAYOUT_BUDGETS.keywords)
 
   content.sections.forEach((section, index) => {
     const at = (...path: (string | number)[]) => ['sections', index, ...path]
@@ -107,8 +115,8 @@ export function publishIssues(content: SiteContent): Issue[] {
     for (const link of links) {
       if (!isAllowedHref(link.href)) issues.push({ path: link.path, message: 'Usa un enlace https: o mailto:, o una ruta de este sitio.' })
     }
-    if (!links.some((link) => isOutsideLink(link.href))) {
-      issues.push({ path: at(), message: 'Enlaza al menos un artefacto (https: o mailto:) desde esta cara.' })
+    if (!links.some((link) => isArtifactLink(link.href))) {
+      issues.push({ path: at(), message: 'Enlaza al menos un artefacto (https:) desde esta cara.' })
     }
   })
 
