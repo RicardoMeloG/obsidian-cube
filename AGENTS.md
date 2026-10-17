@@ -127,7 +127,7 @@ Before reporting a change complete (definition of done; items marked with a phas
 
 1. `npm run build`, `npm run lint` (site and server), `npm run typecheck:server` and `npm test` pass.
 2. `npm run check:budget`, `npm run check:privacy`, `npm run check:docs` and `npm run check:tokens` pass.
-3. `npm run check:layout` passes: no layout or accessibility failure beyond the known ones in `scripts/checks/layout-known.json`. A fix removes its entry; a new entry needs a reason in the commit. `npm run check:admin` passes when the admin or a schema changed.
+3. `npm run check:layout` passes: no layout or accessibility failure beyond the known ones in `scripts/checks/layout-known.json`. A fix removes its entry; a new entry needs a reason in the commit. Add `--worlds` when a world, the top bar or its veil changed, and `--full --worlds` before a stage's acceptance: CI runs both only on demand while the site is being built (2026-10-16). `npm run check:admin` passes when the admin or a schema changed.
 4. The pre-push hook is enabled (`git config core.hooksPath .githooks`).
 5. Every slice, visual or not, closes with a visual walkthrough a person looks at (owner, 2026-10-15): `node scripts/walkthrough.mjs` photographs every face in every layout, both languages, at 1440×900, 1366×768 and 390×844 (screenshots in `walkthrough/`, gitignored); add `--admin` when the admin changed. Green gates do not prove the experience still holds; the walkthrough's findings are reported.
 6. `docs/architecture.md` is updated in the same change when a boundary, flow or rule status changes.

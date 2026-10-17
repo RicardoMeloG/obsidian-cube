@@ -9,6 +9,7 @@
 //
 //   node scripts/check-layout.mjs              default matrix (4 viewports, every layout mode)
 //   node scripts/check-layout.mjs --full       full matrix (9 viewports)
+//   node scripts/check-layout.mjs --worlds     also the contrast over every world
 //   node scripts/check-layout.mjs --update-known   record current failures as known
 //   node scripts/check-layout.mjs --content=stress every field at its budget, and
 //                                                  again without the optional blocks
@@ -22,9 +23,12 @@
 // Requires `npm run build` first. The layout pages run without WebGL: the
 // geometry is DOM only and the still image takes the canvas's place, while a
 // software-rendered scene can starve the page's main thread on a small CI
-// runner. The scene itself is exercised by the degradation check and by the
-// contrast of the name over every world, with WebGL in software (SwiftShader)
-// so the result does not depend on the GPU.
+// runner. The scene itself is exercised by the degradation check and, with
+// --worlds, by the contrast of the name over every world, with WebGL in
+// software (SwiftShader) so the result does not depend on the GPU. --worlds is
+// on demand while the site is being built (2026-10-16): it took 30 to 36
+// minutes of a 40-minute CI run. Run it when a world, the top bar or its veil
+// changes, and before a stage's acceptance.
 
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -459,7 +463,7 @@ async function checkDegradation(noWebglBrowser) {
 // so their contrast is measured over the still image. Here the scene runs
 // (software WebGL) and the name and the role are measured over every face's
 // world, on the stage and on the phone's hero, in three frames: the worlds
-// move, and the worst frame counts.
+// move, and the worst frame counts. Only with --worlds.
 const WORLD_VIEWPORTS = ['1366x768', '390x844']
 async function checkWorldContrast() {
   const failures = []
@@ -626,7 +630,9 @@ async function main() {
     if (contentMode === 'built') {
       found.layout.push(...(await checkDegradation(browser)))
       found.layout.push(...(await checkBehaviour(browser)))
-      found.layout.push(...(await checkWorldContrast()))
+      if (args.has('--worlds')) found.layout.push(...(await checkWorldContrast()))
+    } else if (args.has('--worlds')) {
+      console.log('  worlds: not run, the contrast over the worlds is measured on the built content')
     }
     found.layout.push(...cspViolations)
 

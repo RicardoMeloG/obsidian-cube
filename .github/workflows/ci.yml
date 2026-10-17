@@ -7,11 +7,30 @@ on:
   push:
     branches: ["**"]
   pull_request:
-  # Nightly: the layout check on the full viewport matrix.
-  schedule:
-    - cron: "0 6 * * *"
+  # While the site is being built (owner, 2026-10-16), the heavy checks run on
+  # demand: the full viewport matrix and the contrast over the worlds, whose
+  # software WebGL took 30 to 36 minutes of a 40-minute run. No nightly run:
+  # it re-checked an unchanged main. Whether they return on every push or on
+  # a schedule is decided at the release stage's entry (docs/roadmap.md).
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Full viewport matrix (9 sizes)
+        type: boolean
+        default: false
+      worlds:
+        description: Contrast of name and role over every world (software WebGL, about 35 minutes)
+        type: boolean
+        default: false
 
-# Gates of spec 010 (docs/architecture.md, "Rules and their gates").
+# A newer push to a branch cancels the run it made stale; a manual run is
+# never cancelled by a push.
+concurrency:
+  group: ci-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+# Gates of spec 010 (docs/architecture.md, "Rules and their gates"). The CDK
+# synth runs only when infra/ changes (infra.yml).
 jobs:
   frontend:
     name: Lint · Types · Test · Build · Budget · Privacy · Docs · Tokens
@@ -47,10 +66,10 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run build
-      - name: Layout check (default matrix, every layout mode; full matrix at night)
-        run: npm run check:layout -- ${{ github.event_name == 'schedule' && '--full' || '' }}
+      - name: Layout check (default matrix, every layout mode; on demand, the full matrix and the worlds)
+        run: npm run check:layout -- ${{ inputs.full && '--full' || '' }} ${{ inputs.worlds && '--worlds' || '' }}
       - name: Layout check with every field at its budget
-        run: npm run check:layout -- --content=stress ${{ github.event_name == 'schedule' && '--full' || '' }}
+        run: npm run check:layout -- --content=stress ${{ inputs.full && '--full' || '' }}
       - name: Admin form round-trips every document (spec 011, AD-04)
         run: npm run check:admin
       - name: Keep the layout evidence of a failure
@@ -60,20 +79,3 @@ jobs:
           name: layout-report
           path: layout-report/
           if-no-files-found: ignore
-
-  infra:
-    name: CDK synth
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: infra
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: infra/package-lock.json
-      - run: npm ci
-      # Offline synth: validates the infra compiles to CloudFormation.
-      - run: npm run synth

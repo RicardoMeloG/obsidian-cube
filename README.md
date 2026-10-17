@@ -76,6 +76,7 @@ npm run check:privacy    # no personal data in publishable files
 npm run check:docs       # no undated measurements in living docs
 npm run check:tokens     # colours and type only from the tokens
 npm run check:layout     # layout, accessibility, contrast and CSP on a viewport matrix (Playwright)
+npm run check:layout -- --worlds   # also name and role over every world (software WebGL; on demand in CI)
 git config core.hooksPath .githooks   # once per clone: privacy check before every push
 ```
 
