@@ -7,6 +7,7 @@ import { HOST, PORT } from './address'
 import { AppModule } from './app.module'
 import { appEnv, publishRulesBlock } from './appEnv'
 import { adminAuthOff } from './auth/devBypass'
+import { noFraming } from './noFraming'
 
 // Minimal .env loader (no dependency): populate process.env before Nest builds
 // the DB pool. Existing env vars win.
@@ -25,6 +26,7 @@ async function bootstrap() {
   appEnv() // a wrong APP_ENV stops the server before it listens
   const authOff = adminAuthOff() // and so does ADMIN_AUTH=off in production
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] })
+  app.use(noFraming) // on every response, before any route (audit-4 F-1)
   // Uploaded images arrive as raw WebP (spec 011, AD-03); the media store
   // checks them. A site document with its compositions fits well under 1 MB.
   app.useBodyParser('raw', { type: 'image/webp', limit: '3mb' })

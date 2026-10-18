@@ -87,7 +87,6 @@ describe('publish rules', () => {
       composition: undefined,
       detail: undefined,
       links: undefined,
-      cta: undefined,
     }
     const messages = publishIssues({ ...example, sections: [section, ...example.sections.slice(1)] }).map((issue) => issue.message)
     expect(messages).toContain('Enlaza al menos un artefacto (https:) desde esta cara.')

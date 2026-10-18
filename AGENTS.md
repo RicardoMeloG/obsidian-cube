@@ -137,7 +137,7 @@ Before reporting a change complete (definition of done; items marked with a phas
 Admin and backend rules:
 
 - The custom login (bcrypt + TOTP in `server/auth/`) never leaves `127.0.0.1`. Authentication in production is Cognito's; do not add homegrown auth to the cloud path (ADR 004).
-- In development an agent works on the local admin without the owner (owner, 2026-10-18): `ADMIN_AUTH=off` in `.env` skips the login for requests made on this machine to the admin's own address (`server/auth/devBypass.ts`); it needs `APP_ENV=development`, and with production the server refuses to start. The admin shows the bypass as its user name. Never widen it beyond loopback.
+- In development an agent works on the local admin without the owner (owner, 2026-10-18): `ADMIN_AUTH=off` in `.env` skips the login for requests made on this machine to the admin's own address (`server/auth/devBypass.ts`); it needs `APP_ENV=development`, and with production the server refuses to start. The admin shows the bypass as its user name. Never widen it beyond loopback, and keep the admin out of other pages' frames (`server/noFraming.ts`, audit-4 F-1): a framed admin with the bypass on is signed in.
 - The owner's personal data (email, admin user) is never written in code or committed; the Cognito user is created out of band.
 - "Publish" must reach the deploy target: validate, write to the site bucket under `content/`, invalidate `/content/*`. The local NestJS publish writes to disk only and is not production.
 - Code deploys never delete or overwrite private content: `deploy.yml` excludes `content/*` from the deleting sync and uploads hashed `assets/` without deleting old ones (spec 010, AD-11; gated by `scripts/checks/deployWorkflow.test.ts`).

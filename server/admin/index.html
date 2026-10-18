@@ -459,7 +459,8 @@
       const me = await (await fetch('/auth/me')).json();
       $('whoami').textContent = me.username || '';
       // Development bypass (ADMIN_AUTH=off): shown, never silent.
-      if (me.bypass) $('whoami').classList.add('warn');
+      // With the bypass there is no session to leave: «Salir» would come straight back (audit-4).
+      if (me.bypass) { $('whoami').classList.add('warn'); $('logout').classList.add('hidden'); }
       $('auth').classList.add('hidden');
       $('app').classList.remove('hidden');
       buildNav();

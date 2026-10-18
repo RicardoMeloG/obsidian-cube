@@ -7,7 +7,9 @@ import { PORT } from '../address'
 // never on by default; with APP_ENV=production it stops the server. Even then
 // it only lets through requests made on this machine to the admin's own
 // address, with no Origin from another site: a page open in the browser cannot
-// drive the admin, and a DNS name pointed at 127.0.0.1 is refused.
+// call the admin's API, and a DNS name pointed at 127.0.0.1 is refused. Nor can
+// it frame the admin and lay its own button over it: the admin refuses every
+// frame (noFraming.ts, audit-4 F-1).
 export function adminAuthOff(env: NodeJS.ProcessEnv = process.env): boolean {
   const value = env.ADMIN_AUTH
   if (value === undefined || value === '' || value === 'on') return false
