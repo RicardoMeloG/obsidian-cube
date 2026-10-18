@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). The compositions stage (spec 011, ADR 008) is under way: since S4 (2026-10-15) every screen shows the stage, one template per face read from the content (the hero on stacked screens), and the rails are gone. Then content, security and the release.
+**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). The compositions stage (spec 011, ADR 008) is built and merged into `main` (2026-10-18): every screen shows the stage, one template per face read from the content (the hero on stacked screens), and the rails are gone; its last two acceptance criteria close with the content stage. Then content, security and the release.
 
 ## System
 
