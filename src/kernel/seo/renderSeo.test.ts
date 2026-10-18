@@ -27,7 +27,6 @@ const base: SeoInput = {
       summary: 'Tools &amp; experiments.',
       ctaPrimary: { label: 'Repository', href: 'https://github.com/ada/tool' },
       ctaSecondary: undefined,
-      cta: undefined,
       links: undefined,
       detail: {
         title: 'Products',

@@ -123,11 +123,11 @@ describe('publish rules', () => {
     expect(issues.some((issue) => issue.message.startsWith('Usa un enlace https:'))).toBe(true)
   })
 
-  it('check the links of the older fields too: cta and links (audit-2 B-11)', () => {
-    const section = { ...example.sections[0], cta: { label: 'Go', href: 'javascript:alert(1)' }, links: [{ label: 'Old', href: 'http://plain.example.com' }] }
+  it('check the links of the older field too: links (audit-2 B-11; `cta` retired 2026-10-18)', () => {
+    const section = { ...example.sections[0], links: [{ label: 'Old', href: 'http://plain.example.com' }] }
     const paths = publishIssues({ ...example, sections: [section, ...example.sections.slice(1)] })
       .filter((issue) => issue.message.startsWith('Usa un enlace https:'))
       .map((issue) => issue.path.join('.'))
-    expect(paths).toEqual(['sections.0.cta.href', 'sections.0.links.0.href'])
+    expect(paths).toEqual(['sections.0.links.0.href'])
   })
 })

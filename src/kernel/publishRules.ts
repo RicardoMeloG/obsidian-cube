@@ -109,8 +109,7 @@ export function publishIssues(content: SiteContent): Issue[] {
       { path: at('ctaPrimary', 'href'), href: section.ctaPrimary?.href },
       { path: at('ctaSecondary', 'href'), href: section.ctaSecondary?.href },
       ...(section.detail?.links ?? []).map((link, item) => ({ path: at('detail', 'links', item, 'href'), href: link.href })),
-      // Older fields, still shown when a face has no detail (audit-2 B-11).
-      { path: at('cta', 'href'), href: section.cta?.href },
+      // Older field, still shown when a face has no detail (audit-2 B-11).
       ...(section.links ?? []).map((link, item) => ({ path: at('links', item, 'href'), href: link.href })),
       ...compositionLinks(section.composition).map((link) => ({ path: at('composition', ...link.path), href: link.href })),
     ].filter((link): link is { path: Issue['path']; href: string } => Boolean(link.href))

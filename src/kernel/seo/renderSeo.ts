@@ -56,7 +56,7 @@ function publicLinks(content: SeoInput): { label: string; href: string }[] {
   const seen = new Set<string>()
   const links: { label: string; href: string }[] = []
   for (const section of content.sections) {
-    const candidates = [section.ctaPrimary, section.ctaSecondary, ...(section.detail?.links ?? []), section.cta, ...(section.links ?? [])]
+    const candidates = [section.ctaPrimary, section.ctaSecondary, ...(section.detail?.links ?? []), ...(section.links ?? [])]
     for (const link of candidates) {
       if (!link || !isPublicLink(link.href) || seen.has(link.href)) continue
       seen.add(link.href)

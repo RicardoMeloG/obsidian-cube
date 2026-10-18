@@ -31,10 +31,6 @@ const SiteSectionSchema = z.object({
   highlights: z.array(RichTextSchema).optional().meta({ title: 'Destacados (diálogo)' }),
   proofPoints: z.array(RichTextSchema).optional().meta({ title: 'Pruebas (diálogo)' }),
   links: z.array(LinkSchema).optional().meta({ title: 'Enlaces (diálogo)' }),
-  // Legacy: no component draws it (only the static HTML for crawlers reads
-  // it). Read-only in the admin until a content migration retires it
-  // (audit-3 F-7).
-  cta: CtaSchema.optional().meta({ title: 'Llamado antiguo (heredado, solo lectura)', widget: 'fixed' }),
   detail: z
     .object({
       title: z.string().min(1).meta({ title: 'Título' }),
@@ -130,7 +126,6 @@ export function normalizeSections(sections: SiteSection[], locale: SiteLocale): 
       highlights: section?.highlights,
       proofPoints: section?.proofPoints,
       links: section?.links,
-      cta: section?.cta,
       ctaPrimary: section?.ctaPrimary ?? fallback.ctaPrimary,
       ctaSecondary: section?.ctaSecondary ?? fallback.ctaSecondary,
       detail: section?.detail ?? fallback.detail,

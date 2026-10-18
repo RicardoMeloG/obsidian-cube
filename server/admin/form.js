@@ -49,7 +49,7 @@
       if (fieldSchema.const !== undefined) return null
       if (fieldSchema.widget === 'fixed') {
         // Read-only: a value the owner does not edit here. An absent optional
-        // one (a legacy field such as `cta`, audit-3 F-7) is not offered.
+        // one is not offered.
         if (value === undefined && !required) return null
         return wrap(path, label, true, el('output', { class: 'sf-fixed', text: typeof value === 'object' ? JSON.stringify(value) : String(value) }))
       }
