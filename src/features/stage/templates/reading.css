@@ -1,0 +1,182 @@
+/* Stage template `reading` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
+@reference "../../../index.css";
+
+@layer components {
+  .rd-margin {
+    display: grid;
+    align-content: start;
+    gap: 1em;
+
+    @variant desktop {
+      grid-column: 1 / span 4;
+      align-self: center;
+    }
+  }
+
+  .rd-distinctions {
+    display: grid;
+    gap: 0.8em;
+  }
+
+  .rd-distinctions > div {
+    display: grid;
+    gap: 0.25em;
+    padding-left: 0.9em;
+    border-left: 2px solid var(--hair-accent);
+  }
+
+  .rd-distinctions dt {
+    font-size: 0.86em;
+    font-weight: 700;
+  }
+
+  .rd-distinctions dd {
+    font-size: 0.8em;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  /* The question and the document keep to the right columns: the centre is
+     the cube's (E-3). */
+  .rd-right {
+    display: grid;
+    gap: 0.9em;
+    min-height: 0;
+
+    @variant desktop {
+      grid-column: 8 / span 5;
+      align-self: center;
+    }
+  }
+
+  .rd-column {
+    gap: 1em;
+    padding: 1.5em 1.7em;
+  }
+
+  .rd-question__label {
+    font-size: 0.66em;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .rd-question {
+    font-size: 1.32em;
+    font-weight: 300;
+    line-height: 1.28;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .rd-question::before {
+    content: '“';
+    color: var(--accent);
+  }
+
+  .rd-question::after {
+    content: '”';
+    color: var(--accent);
+  }
+
+  .rd-chain {
+    position: relative;
+    display: grid;
+    gap: 0.95em;
+    padding-top: 0.4em;
+  }
+
+  .rd-chain::before {
+    position: absolute;
+    top: 1.4em;
+    bottom: 1.4em;
+    left: 1.05em;
+    width: 1px;
+    content: '';
+    background: linear-gradient(180deg, var(--accent), var(--hair-accent));
+  }
+
+  .rd-chain > li {
+    display: grid;
+    grid-template-columns: 2.1em 1fr;
+    column-gap: 1em;
+    row-gap: 0.2em;
+  }
+
+  .rd-chain__node {
+    position: relative;
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+    width: 2.1em;
+    height: 2.1em;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: var(--color-night-950);
+    color: var(--accent);
+  }
+
+  .rd-chain small {
+    font-size: 0.64em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .rd-chain p {
+    font-size: 0.9em;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .rd-notes {
+    gap: 0.8em;
+  }
+
+  .rd-notes__doc {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 1em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .rd-notes__doc > span:last-child {
+    display: grid;
+    gap: 0.2em;
+  }
+
+  .rd-notes__icon {
+    display: grid;
+    place-items: center;
+    width: 3em;
+    height: 3.7em;
+    border: 1px solid var(--hair-accent);
+    border-radius: 0.5em;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+  }
+
+  .rd-notes small {
+    font-size: 0.62em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .rd-notes strong {
+    font-size: 1.1em;
+  }
+
+  .rd-notes__meta {
+    font-size: 0.8em;
+    color: var(--ink-3);
+  }
+}

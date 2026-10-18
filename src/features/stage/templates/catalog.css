@@ -1,0 +1,219 @@
+/* Stage template `catalog` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
+@reference "../../../index.css";
+
+@layer components {
+  .ca-list {
+    gap: 0.85em;
+
+    @variant desktop {
+      grid-column: 1 / span 5;
+      align-self: center;
+    }
+  }
+
+  .ca-items {
+    display: grid;
+    gap: 0.45em;
+  }
+
+  .ca-item {
+    display: grid;
+    grid-template-columns: 2.8em 1fr auto;
+
+    /* An item without an image: no empty frame. */
+    &:not(:has(img)) {
+      grid-template-columns: 1fr auto;
+    }
+
+    align-items: center;
+    gap: 0.85em;
+    width: 100%;
+    padding: 0.5em 0.7em 0.5em 0.5em;
+    border: 1px solid transparent;
+    border-radius: 0.8em;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 180ms, border-color 180ms;
+  }
+
+  .ca-item:hover {
+    background: color-mix(in srgb, var(--color-ink-50) 3%, transparent);
+  }
+
+  .ca-item.is-selected {
+    border-color: var(--hair-accent);
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+
+  .ca-item img {
+    width: 2.8em;
+    height: 2.8em;
+    border: 1px solid var(--hair);
+    border-radius: 0.6em;
+    object-fit: cover;
+  }
+
+  .ca-item span {
+    display: grid;
+    gap: 0.15em;
+  }
+
+  .ca-item strong {
+    font-size: 0.9em;
+  }
+
+  .ca-item small {
+    font-size: 0.74em;
+    color: var(--ink-3);
+  }
+
+  .ca-item svg {
+    color: var(--ink-3);
+  }
+
+  /* The sheet keeps to the right columns: the centre is the cube's (E-3). */
+  .ca-detail {
+    gap: 0.8em;
+    animation-name: stage-rise;
+
+    @variant desktop {
+      grid-column: 8 / span 5;
+      align-self: center;
+    }
+  }
+
+  .ca-detail__head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1.5em;
+  }
+
+  .ca-detail__head > div {
+    display: grid;
+    gap: 0.4em;
+  }
+
+  .ca-detail h3 {
+    font-size: 1.3em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .ca-status {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.4em 0.85em;
+    border: 1px solid var(--hair-accent);
+    border-radius: 999px;
+    font-size: 0.7em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .ca-status span {
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 0.8em var(--accent);
+  }
+
+  .ca-shot {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border: 1px solid var(--hair);
+    border-radius: 0.8em;
+    box-shadow: 0 1.2em 3em color-mix(in srgb, var(--color-black) 55%, transparent);
+  }
+
+  .ca-shot img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+  }
+
+  .ca-text {
+    font-size: 0.84em;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .ca-detail__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 1em;
+
+    &:not(:has(.ca-shot)) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    @variant phone {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .ca-facts {
+    min-width: 0;
+    display: grid;
+    gap: 0.6em;
+  }
+
+  .ca-facts > div {
+    display: grid;
+    gap: 0.2em;
+    padding-bottom: 0.55em;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .ca-facts dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    font-size: 0.66em;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .ca-facts dd {
+    font-size: 0.78em;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .ca-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8em;
+  }
+
+  .ca-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .ca-list .st-actions {
+    margin-top: 0.3em;
+  }
+}

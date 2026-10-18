@@ -2,7 +2,7 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). Next: the content stage, then the release.
+**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). The compositions stage (spec 011, ADR 008) is built and merged into `main` (2026-10-18): every screen shows the stage, one template per face read from the content (the hero on stacked screens), and the rails are gone; its last two acceptance criteria close with the content stage. Then content, security and the release.
 
 ## System
 
@@ -27,8 +27,8 @@ Two layers: the repository holds code and example content; the owner's content i
 | Path | What | Notes |
 |---|---|---|
 | `src/` | Public site: React 19, TypeScript, Vite, React Three Fiber, Tailwind v4 | One package with the admin server; `@/` is `src/` |
-| `src/kernel/` | Content kernel: render schemas, publish rules and layout budgets (`publishRules.ts`, `layoutBudgets.json`), face and world catalogs, defaults (the bundled example), SEO renderer | ADR 005 |
-| `server/` | Local NestJS admin, `127.0.0.1:5182` | Retired by ADR 004 slice 6; imports only `src/kernel`; linted and type-checked |
+| `src/kernel/` | Content kernel: render schemas, the composition templates and the icon catalog (`compositions.ts`, `icons.ts`), publish rules and layout budgets (`publishRules.ts`, `layoutBudgets.json`, per template since spec 011), face and world catalogs, defaults (the bundled example), SEO renderer | ADR 005 |
+| `server/` | Local NestJS admin, `127.0.0.1:5182`: the page (`admin/index.html`) with the form generated from the kernel's schemas (`admin/form.js`), content, media and auth | Retired by ADR 004 slice 6, except the page, which the Cognito admin reuses with another API; imports only `src/kernel`; linted, type-checked and tested |
 | `infra/` | AWS CDK | Own `package.json`, lockfile and TypeScript version |
 | `scripts/` | Gate scripts (`check-*.mjs`) and their data in `scripts/checks/` | Known layout failures, budget ratchet, deploy test |
 | `docs/`, `specs/` | Direction, ADRs, specs | `AGENTS.md` is the constitution |
@@ -43,8 +43,10 @@ src/
                      face transition, intro lifecycle, face in the URL, intro planning
     scene/           R3F: SceneLayer (canvas, still-image fallback, wiring to the store),
                      CubeScene, PremiumCube, environment, intro timeline, vector worlds
-    faces/           FaceRails (the two rails), FeatureGlyph, DetailDialog
-    navigation/      FaceStrip, RotateHint
+    stage/           the desktop layout (spec 011): StageView (top bar, content, dock), StageComposition
+                     and one component per template in templates/, each with its stylesheet
+    faces/           DetailDialog (a face's long form, opened from its calls to action)
+    navigation/      RotateHint (the invitation to drag the cube in the hero)
     content/         loaders, locale, sanitizer, RichText, interface copy dictionary
     audio/           the gesture-driven cube sounds (no autoplay), used by the scene
     dev/             world showcase and its shortcut (development only)
@@ -54,11 +56,11 @@ src/
   kernel/            the content contract (ADR 005)
 ```
 
-Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's gradients and grid, the canvas box), `src/app/intro.css` (the intro choreography, deliberately unlayered), `FaceRails.css`, `FaceStrip.css`, `DetailDialog.css` (layered gradients, decorations, choreography) and `src/ui/ornaments.css`. The dev showcase's stylesheet travels only with its development chunk. There is no global stylesheet besides `src/index.css` (Tailwind, tokens, base layer).
+Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's gradients and grid, the canvas box), `src/app/intro.css` (the intro choreography, deliberately unlayered), `DetailDialog.css` (layered gradients, decorations, choreography), `src/ui/ornaments.css`, and the stage's `stage.css` with one stylesheet per template (the stage is sized in em from a font size that follows the viewport, which utilities express poorly). `stage.css` loads before the templates' sheets, which refine it. The dev showcase's stylesheet travels only with its development chunk. There is no global stylesheet besides `src/index.css` (Tailwind, tokens, base layer).
 
-**Layout modes.** Three modes decide the composition: `desktop` (cube in the centre, rails left and right), `desktop-short` (the same on a short screen, compact rhythm) and `stacked` (cube on top, the page scrolls). Six width refinements adjust inside them: `stacked-wide` (tablet landscape), `tight` (≤ 1100px, narrower rails), `narrow` (≤ 720px, phone-sized stacked page), `phone` (≤ 680px, the strip takes two rows), `phone-small` (≤ 389px, one-column research map) and `tiny` (≤ 340px, the tightest strip). They are the breakpoints of the CSS before the migration, kept so the migration changed no pixel; merging `narrow` and `phone` is a design change for a visual review, not a normalization. All nine queries live in `src/styles/layoutModes.ts`; Tailwind's own breakpoints are removed, so there is no other way to write one.
+**Layout modes.** Three modes decide the composition: `desktop` (the stage: the face's composition around the cube, the dock at the bottom), `desktop-short` (the same on a short screen) and `stacked` (the hero: the cube on top, the composition in one column below it, the page scrolls). Six width refinements adjust inside them: `stacked-wide` (tablet landscape), `tight` (≤ 1100px), `narrow` (≤ 720px), `phone` (≤ 680px: the dock takes two rows, the top bar shows icons), `phone-small` (≤ 389px) and `tiny` (≤ 340px). The stage uses `stacked`, `desktop`, `desktop-short` and `phone`; the others are kept from the migration and are candidates for removal when nothing uses them. All nine queries live in `src/styles/layoutModes.ts`; Tailwind's own breakpoints are removed, so there is no other way to write one.
 
-**How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the strip dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the rails follow `displayedFace` through the transition; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
+**How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the dock dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the composition follows `displayedFace` through the transition; the store's `layout` is `stage` on desktop (the cube recedes while the visitor reads) and `hero` on stacked screens; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
 
 **Dependency rules** (in force, `eslint.config.js`, tested by `scripts/checks/boundaries.test.ts`):
 
@@ -69,7 +71,7 @@ Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's 
 | `ui` | features, app, three, R3F |
 | `features/experience` | other features, ui, app, three, R3F |
 | `features/scene` | faces, navigation, content, dev, ui, app |
-| `features/faces`, `features/navigation` | scene, audio, dev, app, three, R3F |
+| `features/faces`, `features/navigation`, `features/stage` | scene, audio, dev, app, three, R3F; the stage also writes no text in its markup (spec 011, AD-07) |
 | `features/content` | other features, ui, app, three; no lazy loading |
 | `features/audio` | anything under `@/` |
 | `features/dev` | app; no lazy loading |
@@ -81,7 +83,9 @@ Imports across top-level modules use `@/`; a relative path that climbs into anot
 
 - **Build-time SEO.** `vite.config.ts` (`seoFromContent`) reads `public/content/site.en.json`, or the committed example if absent, and renders the head tags, JSON-LD and a plain-text body into `index.html` with `src/kernel/seo/renderSeo.ts`. CI has no private content, so a CI build carries the example identity.
 - **Content at runtime.** The site renders the bundled example first, fetches `content/site.{locale}.json` and `content/visual.json` (`src/features/content/loadContent.ts`), validates them with the kernel, and keeps the example when a document is absent, not JSON or invalid. Empty fields of a published face are filled from the example in the same language.
-- **Publish (today).** The local admin validates with `PublishableSiteContentSchema` (the render schema plus layout budgets, link rules and no example placeholders) and writes `public/content/*.json` on disk. Not production. The site itself loads with the tolerant render schema, so content published under older rules keeps rendering.
+- **Edit (spec 011, S3).** The admin page asks `GET /api/schema/:doc` for the document's JSON Schema (`z.toJSONSchema` of the kernel schema, `server/content/docs.ts`) and generates its form from it: groups, lists with add, remove and reorder, selects, the template switch, rich text with its allowed tags, images. The JSON view stays as the advanced view. A field added to the kernel appears in the form with no admin change.
+- **Images (spec 011, S3).** The page resizes and encodes to WebP in the browser (at most 1600×2000, and a 320×400 thumbnail); `POST /api/media` checks the header, size and dimensions (`server/media/`) and stores the image under its SHA-256 as `public/content/media/<hash>.webp`, the thumbnail as `<hash>-thumb.webp`, gitignored like the documents. The library is `GET /api/media`.
+- **Publish (today).** The local admin validates with `PublishableSiteContentSchema` (the render schema plus layout budgets, link rules, no example placeholders, no example images and no data labelled as illustrative) and writes `public/content/*.json` on disk. A face whose two languages use different templates is a warning, not an error. Not production. The site itself loads with the tolerant render schema, so content published under older rules keeps rendering.
 - **Publish (target, ADR 004).** Lambda validates with the kernel, writes to `content/` in the site bucket, renders SEO into `index.html`, invalidates.
 - **Deploy.** `deploy.yml` builds, uploads the hashed `assets/` without deleting old chunks, then syncs the rest with `--delete` excluding `content/*` and `assets/*` (AD-11). **Known gap:** CloudFront still rewrites 403/404 to `index.html` with status 200 (AD-09); removed in the publish track, together with the lifecycle rule for old chunks.
 
@@ -90,20 +94,26 @@ Imports across top-level modules use `@/`; a relative path that climbs into anot
 | Rule | Status | Gate |
 |---|---|---|
 | Personal data never in the repository | In force | `.gitignore`; `npm run check:privacy` in CI and pre-push (H-08a); `--history` (authors, messages and the content of every past version) before publishing a repository |
-| Build, lint and unit tests pass; tests are type-checked | In force | CI; `tsconfig.test.json` in `tsc -b` |
-| CDK synthesises | In force | CI |
+| Build, lint and unit tests pass; tests are type-checked | In force | CI, on every push to any branch and on pull requests (audit-3 F-1; the trigger is tested by `scripts/checks/ciWorkflow.test.ts`); `tsconfig.test.json` in `tsc -b` |
+| CDK synthesises | In force | CI, when `infra/` changes (`.github/workflows/infra.yml`, 2026-10-16) |
 | Server linted and type-checked | In force | `npm run lint`, `npm run typecheck:server` (H-05) |
 | Kernel pure, server imports only the kernel | In force | `tsconfig.kernel.json` in `tsc -b`, lint rules in `eslint.config.js` (H-15, H-04b); the rules themselves are tested by `scripts/checks/boundaries.test.ts` |
 | Owner content wins; a missing field falls back to the example in the same language | In force | `src/kernel/siteContent.test.ts` |
-| Every public asset has a recorded source and licence | In force, two pending | `docs/assets.md`, `scripts/checks/assets.test.ts` |
-| Layout: no rail over the strip, CTAs in view, name first and not covered, fixed chrome never overlaps; name and role at AA contrast over the real background | In force, no known failures | `npm run check:layout` (H-06) |
-| Content within its layout budget fits every supported screen | In force | `npm run check:layout -- --content=stress` (H-06b); publish rules in `src/kernel/publishRules.ts`, tested by `scripts/checks/stressContent.test.ts` |
+| Every public asset has a recorded source and licence | In force, none pending (2026-10-16; audit-3 F-5) | `docs/assets.md`, `scripts/checks/assets.test.ts` |
+| Layout: name first; every block of a composition fits its area without scrolling; nothing painted over another block, the chrome or the content inside a block; desktop: the centre clear for the cube and every CTA in view; stacked: the composition below the cube, no sideways scroll, every CTA and the end of the page clear of the dock | In force, no known failures | `npm run check:layout` (H-06; spec 011, AD-06). The default matrix renders every layout mode (1920×1080 desktop, 1600×725 and 1366×768 desktop-short, 390×844 stacked) and fails if a mode was not rendered (audit-3 F-2); `--full` adds the rest of the sizes, on demand while the site is being built (2026-10-16): run it before a stage's acceptance, locally or by CI's manual run |
+| Name and role at AA contrast over what lies behind them: the still image on the layout pages, and every face's world with the scene running (software WebGL, 1366×768 and 390×844, both languages, the worst of three frames) | In force since 2026-10-15, no known failures; on demand while the site is being built (2026-10-16) | `npm run check:layout -- --worlds` (H-06; spec 011, S5): run it when a world, the top bar or its veil changes, and before a stage's acceptance, locally or by CI's manual run. Off on every push since 2026-10-16: its software WebGL took 30 to 36 minutes of a 40-minute CI run. Whether it returns on every push or on a schedule is decided at the release stage's entry |
+| Every text slot of a template reaches the page | In force | `src/features/stage/StageComposition.test.tsx` |
+| The admin's generated form round-trips every example document unchanged; lists, template switch, text, image upload and field errors write what they show | In force | `npm run check:admin` (spec 011, AD-04), against a stand-in API: the check never bypasses the owner's login |
+| Uploaded images are WebP within their size, stored by content hash; no path from the request reaches the disk | In force | `server/media/mediaStore.test.ts` |
+| The admin's routes need a full session (password and TOTP) | In force, unchecked by a test | `AuthGuard` on every controller but the page and `form.js`; verified by hand on 2026-10-15 (401 without a session) |
+| Content within its layout budget fits every supported screen: every face field, every template slot and the top bar's name, role and keywords (audit-3 F-4) | In force, every template included (budgets measured 2026-10-15; the identity's on 2026-10-16) | `npm run check:layout -- --content=stress` (H-06b) renders the stress content twice, every slot at its budget and again without the optional blocks (audit-3 F-6); publish rules in `src/kernel/publishRules.ts`, tested by `scripts/checks/stressContent.test.ts` |
+| Every face links at least one inspectable artifact over `https:`; a `mailto:` is a channel, not an artifact (audit-3 F-3) | In force. The one line of result per face (`AGENTS.md`, Direction) is **unchecked**: no field of the content model carries it yet | Publish rules in `src/kernel/publishRules.ts`, tested by `scripts/checks/stressContent.test.ts` |
 | One source for layout modes; no numeric breakpoints or loose width variants in components | In force | `src/styles/layoutModes.test.ts` (H-17) |
 | No blank page without WebGL or when a world fails | In force | Degradation checks in `npm run check:layout` (H-18) |
 | Accessibility: no axe violations | In force, no known failures | `npm run check:layout` (H-13) |
 | Security headers (CSP, HSTS, nosniff, frame and referrer policy); no inline code in `index.html` | In force: enforced in `vite preview` and the layout check, report-only in CloudFront | `infra/security-headers.json`; violations fail `npm run check:layout`; `scripts/checks/indexHtml.test.ts` |
 | First-view budget, ratchet that only goes down; built first-view files preloaded | In force | `npm run check:budget`, limit in `scripts/checks/budget.json` (H-07) |
-| Deploy never deletes content, and runs only after a green CI | In force | `scripts/checks/deployWorkflow.test.ts` (H-14) |
+| Deploy never deletes content, and runs only on demand (since 2026-10-16; the release stage decides how deploys run, D-6) | In force | `scripts/checks/deployWorkflow.test.ts` (H-14) |
 | Colours only from tokens (no default palette, no literals, no unused token); base type only from type roles | In force | `npm run check:tokens` (H-08b) |
 | Module boundaries; no locale comparisons or lazy loading in interface code | In force | `npm run lint`, rules tested by `scripts/checks/boundaries.test.ts` (H-04) |
 | DOM-layer files ≤ 250 lines | In force | `scripts/checks/fileSize.test.ts` (H-16) |

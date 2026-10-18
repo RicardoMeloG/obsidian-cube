@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import { existsSync, readFileSync } from 'node:fs'
 import session from 'express-session'
 import { NestFactory } from '@nestjs/core'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import { AppModule } from './app.module'
 
 const PORT = 5182
@@ -24,7 +25,11 @@ function loadEnv() {
 
 async function bootstrap() {
   loadEnv()
-  const app = await NestFactory.create(AppModule, { logger: ['log', 'error', 'warn'] })
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] })
+  // Uploaded images arrive as raw WebP (spec 011, AD-03); the media store
+  // checks them. A site document with its compositions fits well under 1 MB.
+  app.useBodyParser('raw', { type: 'image/webp', limit: '3mb' })
+  app.useBodyParser('json', { limit: '1mb' })
 
   // Signed httpOnly session cookie holds the auth stage (password → full).
   // In-memory store: a server restart simply requires re-login (fine for a

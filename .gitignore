@@ -36,3 +36,12 @@ public/content/visual.json
 
 # Layout check evidence on failure (scripts/check-layout.mjs)
 layout-report/
+
+# Visual walkthrough screenshots (scripts/walkthrough.mjs); may show private content
+walkthrough/
+
+# Raw answers of the local drift auditors (scripts/audit-drift.mjs)
+audit-runs/
+
+# Media uploaded by the owner through the admin (spec 011, AD-03)
+public/content/media/

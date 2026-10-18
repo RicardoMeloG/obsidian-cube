@@ -7,13 +7,15 @@ import { describe, expect, it } from 'vitest'
 // grows past this is doing more than one thing. Scene files are exempt: 3D
 // worlds are long by nature and were moved as they were.
 const LIMIT = 250
-const DOM_LAYERS = ['src/app', 'src/features/faces', 'src/features/navigation', 'src/features/content', 'src/features/experience', 'src/ui', 'src/lib']
+// The admin page's scripts too (audit-2 of spec 011): the page's own inline
+// script in index.html is not measured, unchecked.
+const DOM_LAYERS = ['src/app', 'src/features/faces', 'src/features/navigation', 'src/features/stage', 'src/features/content', 'src/features/experience', 'src/ui', 'src/lib', 'server/admin']
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((name) => {
     const path = join(directory, name)
     if (statSync(path).isDirectory()) return sourceFiles(path)
-    return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : []
+    return /\.(tsx?|js)$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : []
   })
 }
 

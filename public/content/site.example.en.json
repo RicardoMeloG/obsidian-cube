@@ -3,9 +3,12 @@
   "identity": {
     "displayName": "Portfolio Owner",
     "fullName": "Portfolio Owner",
-    "handle": "your-handle",
     "role": "Agentic Product Engineer",
-    "keywords": "AI Engineer · LLM agents · Python · AWS"
+    "keywords": "AI Engineer · LLM agents · Python · AWS",
+    "links": {
+      "github": "https://github.com/your-handle",
+      "linkedin": "https://www.linkedin.com/in/your-handle"
+    }
   },
   "seo": {
     "title": "Agentic Portfolio | Agentic Product Engineer",
@@ -23,19 +26,6 @@
       "title": "Agentic Product Engineering",
       "eyebrow": "Positioning",
       "summary": "Design and construction of <strong>autonomous systems</strong> that perceive, decide, and act to deliver <em>real impact</em>.",
-      "features": [
-        { "glyph": "eye", "label": "Practical Vision", "description": "Agents that turn intent into measurable results." },
-        { "glyph": "shield", "label": "Verifiable Systems", "description": "Real constraints, observability, auditable decisions." },
-        { "glyph": "rocket", "label": "Design to Production", "description": "Fast prototypes to reliable, scalable solutions." },
-        { "glyph": "chart", "label": "Real Impact", "description": "Value measurable in business and in people." }
-      ],
-      "flowTitle": "AGENTIC FLOW",
-      "flow": [
-        { "label": "SPECIFY", "description": "Define objective, context, and verifiable constraints." },
-        { "label": "PROTOTYPE", "description": "Build fast, iterate with real data, validate assumptions." },
-        { "label": "VERIFY", "description": "Measure, test, ensure the agent meets its purpose." },
-        { "label": "SHIP", "description": "Deploy with monitoring, traceability, and continuous control." }
-      ],
       "ctaPrimary": { "label": "EXPLORE APPROACH" },
       "ctaSecondary": { "label": "VIEW METHODOLOGY" },
       "detail": {
@@ -46,6 +36,50 @@
           "The prototype is validated as a real product, not as decoration.",
           "Each iteration leaves traceable decisions for future development."
         ]
+      },
+      "tagline": "Building with agents",
+      "composition": {
+        "template": "showcase",
+        "featured": {
+          "icon": "sparkles",
+          "label": "Featured case",
+          "title": "Your-project — a live example",
+          "text": "A short account of one project built with agents: what it does and how it was checked.",
+          "chips": ["Specs", "Agents", "CI"],
+          "href": "https://github.com/your-handle/your-project"
+        },
+        "stepsTitle": "Operating model",
+        "steps": [
+          { "icon": "file", "label": "Specify", "text": "Goal, context and limits in a testable spec." },
+          { "icon": "send", "label": "Delegate", "text": "Agents with scoped tools and explicit rules." },
+          { "icon": "check", "label": "Review", "text": "Tests, checks and human review before accepting." },
+          { "icon": "package", "label": "Ship", "text": "Validated work reaches production and is kept." }
+        ],
+        "proofsTitle": "Inspectable evidence",
+        "proofsTrail": "Spec → ADR → CI",
+        "proofs": [
+          {
+            "icon": "file",
+            "kind": "Specification",
+            "title": "Project specs",
+            "text": "Goal, scope and constraints, written before the code.",
+            "chips": ["Markdown"]
+          },
+          {
+            "icon": "split",
+            "kind": "Decision record",
+            "title": "Decision log",
+            "text": "Why each decision, with its alternatives and costs.",
+            "chips": ["ADR"]
+          },
+          {
+            "icon": "gauge",
+            "kind": "Quality gate",
+            "title": "Checks on every change",
+            "text": "Tests, layout and weight budgets in continuous integration.",
+            "chips": ["CI"]
+          }
+        ]
       }
     },
     {
@@ -54,19 +88,6 @@
       "title": "Public Products",
       "eyebrow": "Open Source",
       "summary": "Open-source tools and product experiments that demonstrate execution, safety, and usability.",
-      "features": [
-        { "glyph": "rocket", "label": "Main Repository", "description": "The project that best shows current direction." },
-        { "glyph": "spark", "label": "This Prototype", "description": "The site itself as evidence of the workflow." },
-        { "glyph": "eye", "label": "Design Judgment", "description": "Choices made under real constraints, not on a whiteboard." },
-        { "glyph": "chart", "label": "Maintainability", "description": "Code that survives past the demo." }
-      ],
-      "flowTitle": "RELEASE FLOW",
-      "flow": [
-        { "label": "SCOPE", "description": "Pick what is worth shipping and what is not." },
-        { "label": "BUILD", "description": "Working software over polished promises." },
-        { "label": "HARDEN", "description": "Tests, docs, error paths, observability." },
-        { "label": "PUBLISH", "description": "Open the artifact and own its evolution." }
-      ],
       "ctaPrimary": { "label": "OPEN REPOSITORY", "href": "https://github.com/your-handle/your-project" },
       "ctaSecondary": { "label": "VIEW PROJECTS" },
       "detail": {
@@ -84,6 +105,76 @@
             "href": "https://github.com/your-handle/your-project"
           }
         ]
+      },
+      "tagline": "Tools in use",
+      "composition": {
+        "template": "catalog",
+        "listTitle": "Selected",
+        "items": [
+          {
+            "id": "project-one",
+            "name": "Example project one",
+            "meta": "Desktop",
+            "status": "Open source",
+            "text": "One sentence on the problem this tool solves and who uses it.",
+            "chips": ["Python", "Qt"],
+            "image": {
+              "src": "/examples/project-1.webp",
+              "thumb": "/examples/project-1-thumb.webp",
+              "alt": "Main window of the first example project",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problem", "text": "What was slow, manual or risky before." },
+              { "icon": "lightbulb", "label": "My part", "text": "What you designed and built." },
+              { "icon": "trend", "label": "Result", "text": "What changed for the people who use it." }
+            ],
+            "links": [
+              { "label": "Repository", "href": "https://github.com/your-handle/your-project" }
+            ]
+          },
+          {
+            "id": "project-two",
+            "name": "Example project two",
+            "meta": "Web",
+            "status": "In development",
+            "text": "One sentence on a second tool, in the words of its users.",
+            "chips": ["TypeScript", "AWS"],
+            "image": {
+              "src": "/examples/project-2.webp",
+              "thumb": "/examples/project-2-thumb.webp",
+              "alt": "Dashboard of the second example project",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problem", "text": "The need it answers." },
+              { "icon": "lightbulb", "label": "My part", "text": "Your share of the work." },
+              { "icon": "trend", "label": "Result", "text": "A measurable outcome." }
+            ]
+          },
+          {
+            "id": "project-three",
+            "name": "Example project three",
+            "meta": "Prototype",
+            "status": "Open source",
+            "text": "One sentence on an experiment worth showing.",
+            "chips": ["Agents"],
+            "image": {
+              "src": "/examples/project-3.webp",
+              "thumb": "/examples/project-3-thumb.webp",
+              "alt": "Screen of the third example project",
+              "width": 1600,
+              "height": 1000
+            },
+            "facts": [
+              { "icon": "alert", "label": "Problem", "text": "The question it explores." },
+              { "icon": "lightbulb", "label": "My part", "text": "How you approached it." },
+              { "icon": "trend", "label": "Result", "text": "What it showed." }
+            ]
+          }
+        ]
       }
     },
     {
@@ -92,19 +183,6 @@
       "title": "Production Systems",
       "eyebrow": "Architecture",
       "summary": "Legacy modernization, databases, architecture, cloud direction, and real operational constraints.",
-      "features": [
-        { "glyph": "shield", "label": "Legacy Modernization", "description": "Move forward without breaking what already works." },
-        { "glyph": "spark", "label": "Data and Integrations", "description": "Schemas, contracts, and reliable boundaries." },
-        { "glyph": "rocket", "label": "Cloud Direction", "description": "A pragmatic path toward serverless and managed services." },
-        { "glyph": "chart", "label": "Operational Continuity", "description": "Uptime, runbooks, and humane on-call." }
-      ],
-      "flowTitle": "DELIVERY FLOW",
-      "flow": [
-        { "label": "OBSERVE", "description": "See the real system before changing it." },
-        { "label": "CONTAIN", "description": "Stabilize the riskiest seams first." },
-        { "label": "EVOLVE", "description": "Incremental rewrites under feature flags." },
-        { "label": "OPERATE", "description": "Logs, metrics, traces, and clear ownership." }
-      ],
       "ctaPrimary": { "label": "VIEW ARCHITECTURE" },
       "ctaSecondary": { "label": "CASE STUDIES" },
       "detail": {
@@ -115,6 +193,43 @@
           "Separate boundaries so change can stay incremental.",
           "Design with monitoring and recovery from the beginning."
         ]
+      },
+      "tagline": "Systems in production",
+      "composition": {
+        "template": "case",
+        "caseLabel": "Anonymized case",
+        "caseName": "Modernizing a system in use",
+        "before": { "title": "Before", "items": ["A monolith without tests", "Manual deployments"] },
+        "after": { "title": "After", "items": ["Modules with tests", "Deployment per module"] },
+        "map": {
+          "title": "Migration map",
+          "note": "Illustrative data",
+          "legend": { "done": "Migrated", "active": "In progress", "pending": "Pending" },
+          "cells": [
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "active",
+            "active",
+            "active",
+            "done",
+            "done",
+            "pending",
+            "pending"
+          ]
+        },
+        "steps": [
+          { "icon": "factory", "label": "Context", "text": "An operation that runs every day on the system." },
+          { "icon": "alert", "label": "Constraint", "text": "It cannot stop: each change lives beside the system in use." },
+          { "icon": "branch", "label": "Decision", "text": "Incremental migration, one module at a time." },
+          { "icon": "trend", "label": "Result", "text": "New modules with tests; the old system retires in parts." }
+        ]
       }
     },
     {
@@ -123,19 +238,6 @@
       "title": "Security Mindset",
       "eyebrow": "Risk Control",
       "summary": "Secure defaults, MFA, rate limiting, validation, and production risk awareness.",
-      "features": [
-        { "glyph": "lock", "label": "Secure Defaults", "description": "Least privilege, no secrets in repos, signed releases." },
-        { "glyph": "shield", "label": "Strong Auth", "description": "MFA, short-lived tokens, audit trail." },
-        { "glyph": "eye", "label": "Input Validation", "description": "Schema-first inputs, rate limits, abuse controls." },
-        { "glyph": "chart", "label": "Risk Proportion", "description": "Controls matched to actual blast radius." }
-      ],
-      "flowTitle": "CONTROLS FLOW",
-      "flow": [
-        { "label": "INVENTORY", "description": "Know what you protect and why." },
-        { "label": "HARDEN", "description": "MFA, secrets, dependency hygiene, WAF where it pays." },
-        { "label": "MONITOR", "description": "Detect abuse, log carefully, avoid sensitive content in logs." },
-        { "label": "RESPOND", "description": "Rotate, contain, write a clean post-mortem." }
-      ],
       "ctaPrimary": { "label": "VIEW CONTROLS" },
       "ctaSecondary": { "label": "THREAT MODEL" },
       "detail": {
@@ -146,6 +248,29 @@
           "Add CAPTCHA or rate limits only when there is an abuse vector.",
           "Secrets and private content should never live in the public repository."
         ]
+      },
+      "tagline": "Security by design",
+      "composition": {
+        "template": "ledger",
+        "callouts": [
+          { "icon": "key", "label": "Trust boundary", "text": "Name the one door to private data." },
+          {
+            "icon": "shield",
+            "label": "Architecture decision",
+            "title": "What you delegate on purpose",
+            "text": "A control you chose not to build yourself, and why."
+          }
+        ],
+        "console": {
+          "title": "Control register",
+          "rows": [
+            { "status": "implemented", "id": "auth.mfa", "text": "Second factor required for the admin" },
+            { "status": "verified", "id": "headers.csp", "text": "Security headers checked on every build" },
+            { "status": "verified", "id": "check.privacy", "text": "No personal data in the code" },
+            { "status": "planned", "id": "example.next", "text": "The next control on your list" }
+          ],
+          "statusLabels": { "implemented": "Implemented", "verified": "Verified", "planned": "Planned" }
+        }
       }
     },
     {
@@ -154,49 +279,6 @@
       "title": "Independent Research",
       "eyebrow": "Research",
       "summary": "Philosophy applied to AI: separating output from truth, representation from reality, and behavior from agency.",
-      "features": [
-        { "glyph": "eye", "label": "Truth", "description": "Criteria for representations that stay accountable to reality." },
-        { "glyph": "spark", "label": "Meaning", "description": "Understanding as reconstruction and experiential injection." },
-        { "glyph": "shield", "label": "Purpose", "description": "Separating own direction from borrowed purpose." },
-        { "glyph": "chart", "label": "AI", "description": "Taxonomies that avoid confusing simulation with subjectivity." }
-      ],
-      "researchConcepts": [
-        {
-          "key": "truth",
-          "label": "Truth as Being",
-          "axis": "Truth",
-          "summary": "Output quality is not the same as truth.",
-          "detail": "The research line separates being from its representations. An answer can be useful, fluent, or convincing, but it gains strength only when it remains accountable to what it claims to represent."
-        },
-        {
-          "key": "representation",
-          "label": "Fidelity",
-          "axis": "Representation",
-          "summary": "Not every representation carries the same weight.",
-          "detail": "Fidelity is not measured by beauty, authority, or immediate utility, but by the effective relation between representation, experience, and contrast with being."
-        },
-        {
-          "key": "meaning",
-          "label": "Meaning",
-          "axis": "Reconstruction",
-          "summary": "Meaning does not live inside the sign.",
-          "detail": "A representation means something when a system can reconstruct what the representation does not contain by itself. This separates language processing from understanding."
-        },
-        {
-          "key": "purpose",
-          "label": "Own Purpose",
-          "axis": "Agency",
-          "summary": "Goal-directed behavior is not enough for owned direction.",
-          "detail": "The central question for agents and AI is not only what they do, but where their direction comes from: prompt, reward, external mission, or internal appropriation."
-        }
-      ],
-      "flowTitle": "INQUIRY FLOW",
-      "flow": [
-        { "label": "BEING", "description": "Separate reality, manifestation, and narrative." },
-        { "label": "REPRESENT", "description": "Measure fidelity, trace, and mediation." },
-        { "label": "MEAN", "description": "Explain reconstruction and experiential injection." },
-        { "label": "DIRECT", "description": "Evaluate borrowed purpose, agency, and simulation." }
-      ],
       "ctaPrimary": { "label": "VIEW SYSTEM" },
       "ctaSecondary": { "label": "CONCEPTS" },
       "detail": {
@@ -207,6 +289,23 @@
           "Representation fidelity: not every useful answer represents well what it claims to represent.",
           "Own purpose: the question is not whether behavior is directed, but where direction comes from."
         ]
+      },
+      "tagline": "Open questions",
+      "composition": {
+        "template": "reading",
+        "questionLabel": "Central question",
+        "question": "The one question your research tries to answer, in a sentence.",
+        "chain": [
+          { "icon": "lightbulb", "label": "Thesis", "text": "Your answer, stated so it can be wrong." },
+          { "icon": "scale", "label": "Strongest objection", "text": "The best case against it." },
+          { "icon": "alert", "label": "Limit", "text": "What the argument does not claim." }
+        ],
+        "distinctionsTitle": "Distinctions",
+        "distinctions": [
+          { "term": "First term", "text": "A distinction the argument depends on." },
+          { "term": "Second term", "text": "Another one, in a line." }
+        ],
+        "document": { "label": "Public document", "title": "Research notes", "meta": "10 min read" }
       }
     },
     {
@@ -215,19 +314,6 @@
       "title": "Contact",
       "eyebrow": "Reach Out",
       "summary": "Professional links and contact channels for collaboration and opportunities.",
-      "features": [
-        { "glyph": "spark", "label": "Public Name", "description": "Use the searchable full name for record." },
-        { "glyph": "rocket", "label": "GitHub", "description": "Open-source work and this prototype." },
-        { "glyph": "eye", "label": "LinkedIn", "description": "Professional context and history." },
-        { "glyph": "shield", "label": "Email", "description": "Direct, low-noise channel for opportunities." }
-      ],
-      "flowTitle": "CHANNELS",
-      "flow": [
-        { "label": "OPEN", "description": "Inbox is open for serious collaboration." },
-        { "label": "BRIEF", "description": "Send context: role, scope, constraints." },
-        { "label": "MEET", "description": "Short call to align on fit and scope." },
-        { "label": "COMMIT", "description": "Move only when both sides see the value." }
-      ],
       "ctaPrimary": { "label": "VIEW CHANNELS" },
       "ctaSecondary": { "label": "OPEN GITHUB", "href": "https://github.com/your-handle" },
       "detail": {
@@ -239,16 +325,18 @@
           "The form can add validation, CAPTCHA, or rate limits when needed."
         ],
         "links": [
-          {
-            "label": "GitHub",
-            "description": "Replace this link with your public profile.",
-            "href": "https://github.com/your-handle"
-          },
-          {
-            "label": "Form",
-            "description": "Future route for structured contact.",
-            "href": "/contact"
-          }
+          { "label": "GitHub", "description": "Replace this link with your public profile.", "href": "https://github.com/your-handle" },
+          { "label": "Form", "description": "Future route for structured contact.", "href": "/contact" }
+        ]
+      },
+      "tagline": "Get in touch",
+      "composition": {
+        "template": "channels",
+        "availability": "Open to roles and collaborations · remote or hybrid",
+        "channels": [
+          { "kind": "email", "label": "Email", "text": "Write directly", "href": "mailto:owner@example.com" },
+          { "kind": "github", "label": "GitHub", "text": "Public code and projects", "href": "https://github.com/your-handle" },
+          { "kind": "linkedin", "label": "LinkedIn", "text": "Career and context", "href": "https://www.linkedin.com/in/your-handle" }
         ]
       }
     }

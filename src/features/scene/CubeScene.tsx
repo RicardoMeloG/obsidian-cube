@@ -57,6 +57,9 @@ type CubeSceneProps = {
   intro: CubeIntroConfig
   onIntroPhase?: (phase: IntroPhase) => void
   onEngaged?: () => void
+  // Stage layout (spec 011): the camera pulls back so the cube waits small
+  // behind the content; it comes forward again to turn or to be explored.
+  recede?: boolean
   // Called once every shader of the first view is compiled (see below).
   onReady?: () => void
 }
@@ -103,6 +106,10 @@ const _introEuler = new Euler()
 const _introQuat = new Quaternion()
 const _turnQuat = new Quaternion()
 const _yAxis = new Vector3(0, 1, 0)
+
+// Camera pulled back for the stage layout, and how fast it travels there.
+const STAGE_CAMERA = { z: 12.8, y: 0.62, targetY: 0.06 }
+const STAGE_EASE = 0.075
 
 const PLATFORM_GLOW_OPACITY = 0.85
 const PLATFORM_CORE_OPACITY = 1
@@ -201,8 +208,11 @@ export function CubeScene({
   onIntroPhase,
   onEngaged,
   onReady,
+  recede = false,
 }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
+  // 0 = camera at the front (hero layout, intro, face change), 1 = pulled back.
+  const depthRef = useRef(recede ? 1 : 0)
   const worldId = sections.find((section) => section.id === activeSectionId)?.worldId ?? null
   const platformGlowTexture = useMemo(
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
@@ -368,8 +378,13 @@ export function CubeScene({
     introState.time = intro.freezeAt ?? (introState.skipped ? Math.max(elapsed, INTRO.end) : elapsed)
     const introTime = introState.time
 
-    camera.position.set(cameraPosition[0], cameraPosition[1], cameraPosition[2])
-    camera.lookAt(0, cameraTargetY, 0)
+    const depth = (depthRef.current += ((recede ? 1 : 0) - depthRef.current) * STAGE_EASE)
+    camera.position.set(
+      cameraPosition[0],
+      cameraPosition[1] + (STAGE_CAMERA.y - cameraPosition[1]) * depth,
+      cameraPosition[2] + (STAGE_CAMERA.z - cameraPosition[2]) * depth,
+    )
+    camera.lookAt(0, cameraTargetY + (STAGE_CAMERA.targetY - cameraTargetY) * depth, 0)
 
     rig.scale.setScalar(cubeScale)
 

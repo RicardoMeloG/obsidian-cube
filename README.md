@@ -9,7 +9,7 @@ This project is **not** a public CV. It is visible proof of a transition into Ag
 A single-screen experience built around a persistent obsidian cube.
 
 - The cube stays at screen center; it is not a portal that disappears on selection.
-- Selecting a face updates the surrounding side panels in place — left rail carries the narrative, right rail carries the numbered process, the cube animates between faces but never goes away.
+- Selecting a face changes the composition around the cube in place — each face has its own shape (a showcase, a catalog with screenshots, a case with its status map, a register of controls, a reading, the contact channels), chosen and filled from the admin; the cube turns between faces but never goes away. On phones the cube is the hero and the composition follows below it.
 - All content per face fits a single desktop viewport without scrolling; the layout treats each face as a poster, not a page.
 - Each face opens its long form in a detail dialog; whether the first release also has a methodology page is decision D-8 (release stage).
 - Bilingual (English / Spanish), driven by structured JSON content with Zod validation.
@@ -76,6 +76,7 @@ npm run check:privacy    # no personal data in publishable files
 npm run check:docs       # no undated measurements in living docs
 npm run check:tokens     # colours and type only from the tokens
 npm run check:layout     # layout, accessibility, contrast and CSP on a viewport matrix (Playwright)
+npm run check:layout -- --worlds   # also name and role over every world (software WebGL; on demand in CI)
 git config core.hooksPath .githooks   # once per clone: privacy check before every push
 ```
 

@@ -8,12 +8,17 @@ export type InterfaceCopy = {
   experienceLabel: string
   languageLabel: string
   faceStripLabel: string
-  researchConceptsLabel: string
-  // Shown under a research concept in its dialog.
-  conceptSource: string
   close: string
   hintPointer: string
   hintTouch: string
+  // The stage (spec 011): the button that brings the cube forward, its
+  // way back and the hint while exploring, and the top bar's way to CONTACT.
+  explore: string
+  exploreBack: string
+  exploreHint: string
+  contactLink: string
+  githubLink: string
+  linkedinLink: string
 }
 
 const COPY: Record<SiteLocale, InterfaceCopy> = {
@@ -21,21 +26,29 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     experienceLabel: 'Portfolio',
     languageLabel: 'Language',
     faceStripLabel: 'Cube faces',
-    researchConceptsLabel: 'Research concepts',
-    conceptSource: 'A concept from the private philosophical archive.',
     close: 'Close',
     hintPointer: 'Drag to rotate',
     hintTouch: 'Swipe to rotate',
+    explore: 'Explore the cube',
+    exploreBack: 'Back to the content',
+    exploreHint: 'Drag to rotate · click a face to open it · Esc to go back',
+    contactLink: 'Email',
+    githubLink: 'GitHub',
+    linkedinLink: 'LinkedIn',
   },
   es: {
     experienceLabel: 'Portafolio',
     languageLabel: 'Idioma',
     faceStripLabel: 'Caras del cubo',
-    researchConceptsLabel: 'Conceptos de investigación',
-    conceptSource: 'Concepto curado desde el sistema filosófico privado.',
     close: 'Cerrar',
     hintPointer: 'Arrastra para girar',
     hintTouch: 'Desliza para girar',
+    explore: 'Explorar el cubo',
+    exploreBack: 'Volver al contenido',
+    exploreHint: 'Arrastra para girar · haz clic en una cara para abrirla · Esc para volver',
+    contactLink: 'Correo',
+    githubLink: 'GitHub',
+    linkedinLink: 'LinkedIn',
   },
 }
 

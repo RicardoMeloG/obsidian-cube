@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import type { ZodType } from 'zod'
 import { PublishableSiteContentSchema } from '../../src/kernel/publishRules'
 import { VisualContentSchema } from '../../src/kernel/visualContent'
@@ -39,6 +40,20 @@ export const DOCS: Record<DocId, DocDescriptor> = {
     example: 'visual.example.json',
     schema: VisualContentSchema,
   },
+}
+
+// The document's schema as JSON Schema, from which the admin page generates
+// its form (spec 011, AD-04). The publish rules' refinements do not travel:
+// the server still validates with the Zod schema.
+export function formSchema(id: DocId) {
+  return z.toJSONSchema(DOCS[id].schema)
+}
+
+// The other language of a site document, for the cross-language warning.
+export function otherLanguage(id: DocId): DocId | null {
+  if (id === 'site.en') return 'site.es'
+  if (id === 'site.es') return 'site.en'
+  return null
 }
 
 export function isDocId(value: string): value is DocId {

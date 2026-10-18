@@ -7,10 +7,12 @@
 // other id does. A known id that no longer fails is reported so the list only
 // shrinks.
 //
-//   node scripts/check-layout.mjs              PR matrix (3 viewports)
+//   node scripts/check-layout.mjs              default matrix (4 viewports, every layout mode)
 //   node scripts/check-layout.mjs --full       full matrix (9 viewports)
+//   node scripts/check-layout.mjs --worlds     also the contrast over every world
 //   node scripts/check-layout.mjs --update-known   record current failures as known
-//   node scripts/check-layout.mjs --content=stress every field at its budget
+//   node scripts/check-layout.mjs --content=stress every field at its budget, and
+//                                                  again without the optional blocks
 //   node scripts/check-layout.mjs --content=example  the committed example
 //
 // Without --content the check uses what the build contains: the example in CI,
@@ -21,8 +23,12 @@
 // Requires `npm run build` first. The layout pages run without WebGL: the
 // geometry is DOM only and the still image takes the canvas's place, while a
 // software-rendered scene can starve the page's main thread on a small CI
-// runner. The scene itself is exercised by the degradation check, with WebGL
-// in software (SwiftShader) so the result does not depend on the GPU.
+// runner. The scene itself is exercised by the degradation check and, with
+// --worlds, by the contrast of the name over every world, with WebGL in
+// software (SwiftShader) so the result does not depend on the GPU. --worlds is
+// on demand while the site is being built (2026-10-16): it took 30 to 36
+// minutes of a 40-minute CI run. Run it when a world, the top bar or its veil
+// changes, and before a stage's acceptance.
 
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -39,8 +45,13 @@ const KNOWN_PATH = fileURLToPath(new URL('./checks/layout-known.json', import.me
 const PORT = 4179
 const BASE = `http://127.0.0.1:${PORT}`
 
-const PR_VIEWPORTS = ['1600x725', '1366x768', '390x844']
+// The default matrix renders every layout mode (audit-3 F-2: until 2026-10-16
+// no default viewport was taller than 900px, so `desktop` was only ever
+// checked at night): 1920×1080 is desktop, 1600×725 and 1366×768 are
+// desktop-short, 390×844 is stacked. A run that misses a mode fails.
+const PR_VIEWPORTS = ['1920x1080', '1600x725', '1366x768', '390x844']
 const FULL_VIEWPORTS = ['2048x1152', '1920x1080', '1600x725', '1536x864', '1440x900', '1366x768', '1280x720', '768x1024', '390x844']
+const LAYOUT_MODES = ['stacked', 'desktop', 'desktop-short']
 const LOCALES = ['en', 'es']
 const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contact']
 
@@ -58,13 +69,19 @@ const readJson = (path) => JSON.parse(readFileSync(fileURLToPath(new URL(path, i
 const budgets = readJson('../src/kernel/layoutBudgets.json')
 const examples = { en: readJson('../public/content/site.example.en.json'), es: readJson('../public/content/site.example.es.json') }
 
-// Serves the site documents for --content=stress|example.
+// Serves the site documents for --content=stress|example. The stress content
+// is served twice: every slot at its budget, then without the optional blocks
+// (audit-3 F-6), the other shape the admin accepts.
+let stressBare = false
 async function serveContent(context) {
   if (contentMode === 'built') return
+  // Stress content points at owner media; any image stands in for it.
+  const stand = readFileSync(fileURLToPath(new URL('../public/examples/project-1.webp', import.meta.url)))
+  await context.route('**/content/media/*.webp', (route) => route.fulfill({ contentType: 'image/webp', body: stand }))
   await context.route('**/content/site.*.json', (route) => {
     const locale = route.request().url().includes('site.es.json') ? 'es' : 'en'
     if (contentMode === 'example') return route.fulfill({ status: 404, body: '' })
-    return route.fulfill({ contentType: 'application/json', body: JSON.stringify(buildStressContent(examples[locale], budgets)) })
+    return route.fulfill({ contentType: 'application/json', body: JSON.stringify(buildStressContent(examples[locale], budgets, { bare: stressBare })) })
   })
 }
 
@@ -120,8 +137,10 @@ function contrast(a, b) {
   return (light + 0.05) / (dark + 0.05)
 }
 
-async function identityContrast(page) {
-  const failures = []
+// The WCAG ratio of the name and of the role over what lies behind them; null
+// when the element is missing.
+async function identityRatios(page) {
+  const ratios = {}
   for (const [part, selector] of [['name', 'h1'], ['role', 'h1 + p']]) {
     const sample = await page.evaluate((selector) => {
       const element = document.querySelector(selector)
@@ -139,7 +158,7 @@ async function identityContrast(page) {
       return { box: { x: box.x, y: box.y, width: box.width, height: box.height }, color: [r, g, b, a / 255] }
     }, selector)
     if (!sample) {
-      failures.push(`contrast-${part}-missing`)
+      ratios[part] = null
       continue
     }
     // Hide the text and its shadow, photograph the background, restore.
@@ -162,32 +181,51 @@ async function identityContrast(page) {
     }
     const [r, g, b, alpha] = sample.color
     const text = [r, g, b].map((value, index) => value * alpha + lightest[index] * (1 - alpha))
-    const ratio = contrast(text, lightest)
-    if (ratio < AA) failures.push(`contrast-${part} ${ratio.toFixed(2)}`)
+    ratios[part] = contrast(text, lightest)
   }
-  return failures
+  return ratios
 }
 
-// Runs in the page: every geometric assertion for the face on screen.
-function measureFace({ queries }) {
+const contrastFailures = (ratios) =>
+  Object.entries(ratios).flatMap(([part, ratio]) => (ratio === null ? [`contrast-${part}-missing`] : ratio < AA ? [`contrast-${part} ${ratio.toFixed(2)}`] : []))
+
+async function identityContrast(page) {
+  return contrastFailures(await identityRatios(page))
+}
+
+// Runs in the page: the stage (spec 011) for the face on screen. Every block
+// of the composition fits its area without scrolling, nothing it paints
+// overlaps another block, the chrome or itself, and the name comes first.
+// Desktop: the centre stays clear for the cube (E-3) and the calls to action
+// are in view. Stacked (the hero): the composition starts below the cube, the
+// page never scrolls sideways, and every call to action can be scrolled clear
+// of the fixed dock.
+function measureStage({ queries }) {
   const failures = []
   const vw = window.innerWidth
   const vh = window.innerHeight
   const stacked = window.matchMedia(queries.stacked).matches
   const mode = stacked ? 'stacked' : window.matchMedia(queries.short).matches ? 'desktop-short' : 'desktop'
-  const strip = document.querySelector('.face-strip')?.getBoundingClientRect()
+  const visible = (element) => {
+    const style = getComputedStyle(element)
+    const box = element.getBoundingClientRect()
+    return style.visibility !== 'hidden' && Number(style.opacity) > 0 && box.width > 0 && box.height > 0
+  }
+  const overlaps = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+  const leafElements = (root) => [...root.querySelectorAll('*')].filter((element) => element.children.length === 0 && visible(element))
+  const leaves = (selector) => [...document.querySelectorAll(selector)].flatMap((root) => leafElements(root).map((element) => element.getBoundingClientRect()))
+  const collide = (a, b) => a.some((boxA) => b.some((boxB) => overlaps(boxA, boxB)))
 
   // Name first: the page's single h1, in the top-left quarter, not covered.
   const headings = document.querySelectorAll('h1')
   const name = headings[0]
-  if (headings.length !== 1 || !name || !name.textContent?.trim()) {
-    failures.push('name-h1')
-  } else {
+  if (headings.length !== 1 || !name?.textContent?.trim()) failures.push('name-h1')
+  else {
     const box = name.getBoundingClientRect()
     if (box.left > vw / 2 || box.top > vh / 2) failures.push('name-position')
     // Hit-test with pointer events forced on, so layers that ignore the pointer
-    // (the chrome, the scrims) still count as covering. Through the CSSOM, not
-    // an injected <style>: the content security policy blocks inline styles.
+    // (the stage, the veils) still count as covering. Through the CSSOM, not an
+    // injected <style>: the content security policy blocks inline styles.
     const elements = [...document.querySelectorAll('*')]
     const saved = elements.map((element) => [element.style.getPropertyValue('pointer-events'), element.style.getPropertyPriority('pointer-events')])
     for (const element of elements) element.style.setProperty('pointer-events', 'auto', 'important')
@@ -200,86 +238,92 @@ function measureFace({ queries }) {
     if (!hit || !name.contains(hit)) failures.push('name-covered')
   }
 
-  // Fixed chrome never overlaps (audit-2 B-23): the identity block, the
-  // language toggle and the strip, against each other and against every
-  // visible leaf of the rails.
-  const visible = (element) => {
-    const style = getComputedStyle(element)
-    const box = element.getBoundingClientRect()
-    return style.visibility !== 'hidden' && Number(style.opacity) > 0 && box.width > 0 && box.height > 0
-  }
-  const overlaps = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
-  // Containers may span the screen; what paints is their visible leaves.
-  const leaves = (selector) =>
-    [...document.querySelectorAll(`${selector} *`)].filter((element) => element.children.length === 0 && visible(element)).map((element) => element.getBoundingClientRect())
-  const collide = (a, b) => a.some((boxA) => b.some((boxB) => overlaps(boxA, boxB)))
-  const chrome = [
-    ['identity', leaves('.identity-chrome')],
-    ['language', leaves('.language-toggle')],
-    ['strip', leaves('.face-strip')],
-  ]
-  for (const [index, [nameA, a]] of chrome.entries()) {
-    for (const [nameB, b] of chrome.slice(index + 1)) if (collide(a, b)) failures.push(`chrome-${nameA}-over-${nameB}`)
-  }
-  // Stacked pages scroll under the fixed strip by design; their CTAs are
-  // checked against it after scrolling (below).
-  const rails = leaves('.face-rails__rail')
-  for (const [name, boxes] of chrome) {
-    if (mode === 'stacked' && name === 'strip') continue
-    if (collide(boxes, rails)) failures.push(`chrome-${name}-over-rail`)
+  const content = leaves('.stage-content')
+  const top = leaves('.stage-top')
+  const dock = leaves('.stage-dock')
+  if (collide(top, dock)) failures.push('chrome-top-over-dock')
+  if (collide(top, content)) failures.push('chrome-top-over-content')
+  // Stacked pages scroll under the fixed dock by design; checked below.
+  if (!stacked && collide(dock, content)) failures.push('chrome-dock-over-content')
+  if (document.documentElement.scrollWidth > vw + 1) failures.push('page-scrolls-sideways')
+
+  const blocks = [...document.querySelectorAll('.stage-content > *')].filter(visible)
+  for (const [index, block] of blocks.entries()) {
+    const box = block.getBoundingClientRect()
+    const outside = stacked ? box.left < 0 || box.right > vw : box.top < 0 || box.left < 0 || box.bottom > vh || box.right > vw
+    if (outside) failures.push(`block-${index}-outside`)
+    // A block holds its content: no scroll inside, no descendant painting past it.
+    if (block.scrollHeight > block.clientHeight + 1) failures.push(`block-${index}-overflows`)
+    else {
+      for (const leaf of leafElements(block)) {
+        const leafBox = leaf.getBoundingClientRect()
+        if (leafBox.bottom > box.bottom + 1 || leafBox.right > box.right + 1) {
+          failures.push(`block-${index}-spills`)
+          break
+        }
+      }
+    }
+    for (const [other, otherBlock] of blocks.entries()) {
+      if (other > index && overlaps(box, otherBlock.getBoundingClientRect())) failures.push(`block-${index}-over-block-${other}`)
+    }
+    // Inside a block, no text or image is painted over another.
+    const own = leafElements(block)
+      .filter((element) => !element.closest('svg') && getComputedStyle(element).position !== 'absolute')
+      .map((element) => ({ element, box: element.getBoundingClientRect() }))
+    search: for (const [a, first] of own.entries()) {
+      for (const second of own.slice(a + 1)) {
+        if (first.element.contains(second.element) || second.element.contains(first.element)) continue
+        if (overlaps(first.box, second.box)) {
+          failures.push(`block-${index}-overlapping-content`)
+          break search
+        }
+      }
+    }
   }
 
-  const ctas = [...document.querySelectorAll('.face-rails__cta')]
-
-  if (mode === 'stacked') {
+  const ctas = [...document.querySelectorAll('.stage-content .st-button')]
+  if (stacked) {
+    // The cube is the hero: the composition begins below its box.
+    const hero = document.querySelector('.cube-canvas')?.getBoundingClientRect()
+    if (hero && content.some((box) => box.top < hero.bottom - 1)) failures.push('cube-covered')
     for (const [index, cta] of ctas.entries()) {
       cta.scrollIntoView({ block: 'center' })
       const box = cta.getBoundingClientRect()
-      const stripNow = document.querySelector('.face-strip')?.getBoundingClientRect()
-      if (stripNow && box.bottom > stripNow.top + 1) failures.push(`cta-${index}-under-strip`)
+      const dockNow = document.querySelector('.stage-dock')?.getBoundingClientRect()
+      if (dockNow && box.bottom > dockNow.top + 1) failures.push(`cta-${index}-under-dock`)
     }
+    // The end of the page can be scrolled clear of the dock.
+    window.scrollTo(0, document.documentElement.scrollHeight)
+    const last = Math.max(...leaves('.stage-content').map((box) => box.bottom))
+    const dockNow = document.querySelector('.stage-dock')?.getBoundingClientRect()
+    if (dockNow && last > dockNow.top + 1) failures.push('content-end-under-dock')
+    window.scrollTo(0, 0)
     return { mode, failures }
   }
 
-  const warnings = []
-  for (const [index, rail] of document.querySelectorAll('.face-rails__rail').entries()) {
-    const side = index === 0 ? 'left' : 'right'
-    const clips = getComputedStyle(rail).overflowY !== 'visible'
-    // A clipping rail (the safety net) shows only its own box; otherwise any
-    // descendant may paint past it.
-    let bottom = rail.getBoundingClientRect().bottom - (clips ? parseFloat(getComputedStyle(rail).paddingBottom) : 0)
-    if (!clips) {
-      for (const element of rail.querySelectorAll('*')) {
-        const box = element.getBoundingClientRect()
-        if (box.width > 0 && box.height > 0) bottom = Math.max(bottom, box.bottom)
-      }
-    }
-    if (strip && bottom > strip.top + 1) failures.push(`rail-${side}-over-strip`)
-    if (rail.scrollHeight > rail.clientHeight + 1) warnings.push(`rail-${side}-scrolls`)
-  }
+  // The cube waits at the centre of the screen (E-3: it never disappears).
+  const centre = { left: vw * 0.44, right: vw * 0.56, top: vh * 0.36, bottom: vh * 0.6 }
+  if (content.some((box) => overlaps(box, centre))) failures.push('cube-covered')
 
   for (const [index, cta] of ctas.entries()) {
     const box = cta.getBoundingClientRect()
     if (box.top < 0 || box.left < 0 || box.bottom > vh || box.right > vw) failures.push(`cta-${index}-outside`)
-    // Inside the viewport but scrolled out of its rail still means unseen.
-    const rail = cta.closest('.face-rails__rail')
-    const railBox = rail?.getBoundingClientRect()
-    if (railBox && (box.bottom > railBox.bottom + 1 || box.top < railBox.top - 1)) failures.push(`cta-${index}-hidden-in-rail`)
+    const holder = cta.closest('.stage-content > *')?.getBoundingClientRect()
+    if (holder && (box.bottom > holder.bottom + 1 || box.top < holder.top - 1)) failures.push(`cta-${index}-hidden-in-block`)
   }
-
-  return { mode, failures, warnings }
+  return { mode, failures }
 }
 
 // On an unexpected error the page's own errors and a screenshot go to
 // layout-report/ (uploaded by CI), so a failure there can be read, not guessed.
 const REPORT_DIR = fileURLToPath(new URL('../layout-report/', import.meta.url))
 
-async function checkPage(browser, viewport, locale) {
+async function checkPage(browser, viewport, locale, variant = '') {
   const [width, height] = viewport.split('x').map(Number)
   const context = await browser.newContext({ viewport: { width, height } })
   await serveContent(context)
   const page = await context.newPage()
-  watchCsp(page, `${viewport} ${locale}`)
+  watchCsp(page, [viewport, locale, variant].filter(Boolean).join(' '))
   const pageErrors = []
   page.on('pageerror', (error) => pageErrors.push(`pageerror: ${error.message}`))
   page.on('crash', () => pageErrors.push('crash: the page process crashed'))
@@ -287,10 +331,10 @@ async function checkPage(browser, viewport, locale) {
     if (message.type() === 'error' || message.type() === 'warning') pageErrors.push(`${message.type()}: ${message.text().slice(0, 300)}`)
   })
   try {
-    return await measurePage(page, viewport, locale)
+    return await measurePage(page, viewport, locale, variant)
   } catch (error) {
     mkdirSync(REPORT_DIR, { recursive: true })
-    const name = `${viewport}-${locale}`
+    const name = [viewport, locale, variant].filter(Boolean).join('-')
     await page.screenshot({ path: `${REPORT_DIR}${name}.png` }).catch(() => undefined)
     writeFileSync(`${REPORT_DIR}${name}.log`, [String(error), '', ...pageErrors].join('\n'))
     console.log(`  ${viewport} ${locale}: unexpected error, see layout-report/${name}.log`)
@@ -301,38 +345,42 @@ async function checkPage(browser, viewport, locale) {
   }
 }
 
-async function measurePage(page, viewport, locale) {
+async function measurePage(page, viewport, locale, variant = '') {
   const results = { layout: [], axe: [] }
+  // Failure ids start with the viewport (the known list is keyed by it); a
+  // stress variant is named after the locale.
+  const where = [viewport, locale, variant].filter(Boolean).join(' ')
   await page.goto(`${BASE}/?intro=0&lang=${locale}`)
-  await page.waitForSelector('.face-rails[data-transition="idle"]', { timeout: 60000 })
+  await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
   await page.evaluate(() => document.fonts.ready)
   // The layout is measured with the served font (ADR 006, AD-10).
   if (!(await page.evaluate(() => document.fonts.check('16px "Inter Variable"')))) {
-    results.layout.push(`${viewport} ${locale} font-not-loaded`)
+    results.layout.push(`${where} font-not-loaded`)
   }
 
-  for (const failure of await identityContrast(page)) results.layout.push(`${viewport} ${locale} ${failure}`)
+  for (const failure of await identityContrast(page)) results.layout.push(`${where} ${failure}`)
 
   // Accessibility of the landing face (the dialog and other faces share markup).
   const axe = await new AxeBuilder({ page }).analyze()
-  for (const violation of axe.violations) results.axe.push(`${viewport} ${locale} ${violation.id}`)
+  for (const violation of axe.violations) results.axe.push(`${where} ${violation.id}`)
 
   let mode = ''
   for (const face of FACES) {
-    const current = await page.getAttribute('.face-rails', 'data-section')
-    if (current !== face) {
-      await page.click(`.face-strip a[data-section-id="${face}"]`)
-      await page.waitForSelector(`.face-rails[data-transition="idle"][data-section="${face}"]`, { timeout: 15000 })
+    if ((await page.getAttribute('.stage', 'data-face')) !== face) {
+      await page.click(`.stage-dock a[data-section-id="${face}"]`)
+      await page.waitForSelector(`.stage[data-transition="idle"][data-face="${face}"]`, { timeout: 15000 })
     }
-    const measured = await page.evaluate(measureFace, { queries: MODE_QUERIES })
+    // The blocks rise in order; measure them where they rest.
+    await page.evaluate(() => Promise.race([Promise.all(document.getAnimations().map((animation) => animation.finished)), new Promise((resolve) => setTimeout(resolve, 3000))]))
+    const measured = await page.evaluate(measureStage, { queries: MODE_QUERIES })
     mode = measured.mode
-    for (const failure of measured.failures) results.layout.push(`${viewport} ${locale} ${face} ${failure}`)
-    for (const warning of measured.warnings ?? []) console.log(`  warning: ${viewport} ${locale} ${face} ${warning}`)
+    for (const failure of measured.failures) results.layout.push(`${where} ${face} ${failure}`)
+    for (const warning of measured.warnings ?? []) console.log(`  warning: ${where} ${face} ${warning}`)
     await page.evaluate(() => window.scrollTo(0, 0))
   }
 
-  console.log(`  ${viewport} ${locale} (${mode}): ${results.layout.length} layout, ${results.axe.length} axe`)
-  return results
+  console.log(`  ${where} (${mode}): ${results.layout.length} layout, ${results.axe.length} axe`)
+  return { ...results, mode }
 }
 
 const launch = (args) => chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH || undefined, args })
@@ -351,7 +399,7 @@ async function checkDegradation(noWebglBrowser) {
     watchCsp(page, 'degradation no-webgl')
     page.on('pageerror', (error) => errors.push(`no-webgl: ${error.message}`))
     await page.goto(`${BASE}/?intro=1&lang=en`)
-    await page.waitForSelector('.face-rails[data-transition="idle"]', { timeout: 60000 })
+    await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
     const state = await page.evaluate(() => {
       const poster = document.querySelector('.cube-canvas__poster')
       const visible = (selector) => {
@@ -362,8 +410,8 @@ async function checkDegradation(noWebglBrowser) {
       return {
         poster: Boolean(poster?.complete && poster.naturalWidth > 0),
         name: visible('h1'),
-        rails: document.querySelectorAll('.face-rails__rail').length === 2 && visible('.face-rails__rail'),
-        strip: visible('.face-strip'),
+        content: visible('.stage-content > *'),
+        dock: visible('.stage-dock'),
         introDone: !document.querySelector('[data-intro]'),
       }
     })
@@ -390,9 +438,9 @@ async function checkDegradation(noWebglBrowser) {
     })
     await page.route('**/assets/productsWorld-*.js', (route) => route.abort())
     await page.goto(`${BASE}/?intro=0&lang=en`)
-    await page.waitForSelector('.face-rails[data-transition="idle"]')
-    await page.click('.face-strip a[data-section-id="products"]')
-    await page.waitForSelector('.face-rails[data-transition="idle"][data-section="products"]')
+    await page.waitForSelector('.stage[data-transition="idle"]')
+    await page.click('.stage-dock a[data-section-id="products"]')
+    await page.waitForSelector('.stage[data-transition="idle"][data-face="products"]')
     await page.waitForTimeout(1500)
     const state = await page.evaluate(() => ({
       canvas: Boolean(document.querySelector('.cube-canvas canvas')),
@@ -411,6 +459,55 @@ async function checkDegradation(noWebglBrowser) {
   return failures
 }
 
+// Contrast over the worlds (spec 011, S5). The layout pages run without WebGL,
+// so their contrast is measured over the still image. Here the scene runs
+// (software WebGL) and the name and the role are measured over every face's
+// world, on the stage and on the phone's hero, in three frames: the worlds
+// move, and the worst frame counts. Only with --worlds.
+const WORLD_VIEWPORTS = ['1366x768', '390x844']
+async function checkWorldContrast() {
+  const failures = []
+  const browser = await launch(SOFTWARE_WEBGL)
+  try {
+    for (const viewport of WORLD_VIEWPORTS) {
+      const [width, height] = viewport.split('x').map(Number)
+      for (const locale of LOCALES) {
+        const context = await browser.newContext({ viewport: { width, height } })
+        context.setDefaultTimeout(120000)
+        try {
+          const page = await context.newPage()
+          watchCsp(page, `worlds ${viewport} ${locale}`)
+          await page.goto(`${BASE}/?intro=0&lang=${locale}`)
+          await page.waitForSelector('.stage[data-transition="idle"]')
+          for (const face of FACES) {
+            if ((await page.getAttribute('.stage', 'data-face')) !== face) {
+              await page.click(`.stage-dock a[data-section-id="${face}"]`)
+              await page.waitForSelector(`.stage[data-transition="idle"][data-face="${face}"]`)
+            }
+            // The hero scrolls the composition into view; the world is behind the top.
+            await page.evaluate(() => window.scrollTo(0, 0))
+            const worst = {}
+            for (let frame = 0; frame < 3; frame += 1) {
+              // The first wait lets the face's world compile and appear.
+              await page.waitForTimeout(frame === 0 ? 3000 : 800)
+              for (const [part, ratio] of Object.entries(await identityRatios(page))) {
+                worst[part] = ratio === null || worst[part] === null ? null : Math.min(ratio, worst[part] ?? Infinity)
+              }
+            }
+            for (const failure of contrastFailures(worst)) failures.push(`worlds ${viewport} ${locale} ${face} ${failure}`)
+          }
+        } finally {
+          await context.close()
+        }
+      }
+    }
+  } finally {
+    await browser.close()
+  }
+  console.log(`  worlds: ${failures.length} failures`)
+  return failures
+}
+
 // Behaviour (spec 010, P3 exit criteria): the detail dialog's keyboard and
 // focus contract, and the first-visit intro handing over to the interface.
 // Run without WebGL except the intro, which needs the scene to land.
@@ -423,8 +520,9 @@ async function checkBehaviour(noWebglBrowser) {
     const page = await context.newPage()
     watchCsp(page, 'behaviour dialog')
     await page.goto(`${BASE}/?intro=0&lang=en&section=agentic`)
-    await page.waitForSelector('.face-rails[data-transition="idle"]', { timeout: 60000 })
-    const trigger = page.locator('.face-rails__rail').first().locator('button.face-rails__cta')
+    await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
+    // A call to action without a target opens the face's detail.
+    const trigger = page.locator('.stage-content button.st-button').first()
     await trigger.focus()
     await page.keyboard.press('Enter')
     await page.waitForSelector('dialog[open]', { timeout: 5000 })
@@ -432,7 +530,7 @@ async function checkBehaviour(noWebglBrowser) {
     const opened = await page.evaluate(() => {
       const dialog = document.querySelector('dialog[open]')
       // The page behind a modal dialog is inert: a control there cannot take focus.
-      const behind = document.querySelector('.face-strip a')
+      const behind = document.querySelector('.stage-dock a')
       behind?.focus()
       const backgroundInert = Boolean(behind) && document.activeElement !== behind
       dialog?.querySelector('h2')?.focus()
@@ -458,7 +556,7 @@ async function checkBehaviour(noWebglBrowser) {
     await page.keyboard.press('Escape')
     await page.waitForSelector('dialog[open]', { state: 'detached', timeout: 5000 }).catch(() => fail('dialog-escape'))
     const closed = await page.evaluate(() => ({
-      focusReturned: document.activeElement?.classList.contains('face-rails__cta') ?? false,
+      focusReturned: document.activeElement?.classList.contains('st-button') ?? false,
       backgroundRestored: !document.querySelector('main [inert]'),
       scrollRestored: document.documentElement.style.overflow !== 'hidden',
     }))
@@ -480,7 +578,7 @@ async function checkBehaviour(noWebglBrowser) {
     if (!pending) fail('intro-not-pending')
     // The choreography hooks (intro.css) must reach every piece it hides.
     const shown = await page.evaluate(() =>
-      ['.identity-chrome', '.face-rails', '.face-strip', '.language-toggle'].filter((selector) => {
+      ['.stage-top', '.stage-content', '.stage-dock'].filter((selector) => {
         const element = document.querySelector(selector)
         return !element || getComputedStyle(element).visibility !== 'hidden'
       }),
@@ -489,8 +587,8 @@ async function checkBehaviour(noWebglBrowser) {
     await page.keyboard.press('Space')
     const skipped = await page.waitForFunction(() => !document.querySelector('[data-intro]'), null, { timeout: 8000 }).then(() => true).catch(() => false)
     if (!skipped) fail('intro-skip')
-    const visible = await page.evaluate(() => getComputedStyle(document.querySelector('.face-rails')).visibility !== 'hidden')
-    if (!visible) fail('intro-rails-hidden-after-skip')
+    const visible = await page.evaluate(() => getComputedStyle(document.querySelector('.stage-content')).visibility !== 'hidden')
+    if (!visible) fail('intro-content-hidden-after-skip')
   } finally {
     await webglBrowser.close()
   }
@@ -506,19 +604,35 @@ async function main() {
   try {
     await waitForServer()
     browser = await launch(NO_WEBGL)
-    console.log(`Layout check on ${viewports.length} viewports × ${LOCALES.length} locales, content: ${contentMode}`)
+    // Stress content twice: every slot at its budget, then without the
+    // optional blocks (audit-3 F-6).
+    const variants = contentMode === 'stress' ? [['', false], ['bare', true]] : [['', false]]
+    console.log(`Layout check on ${viewports.length} viewports × ${LOCALES.length} locales, content: ${contentMode}${variants.length > 1 ? ' (full, then without the optional blocks)' : ''}`)
     const found = { layout: [], axe: [] }
+    const modes = new Set()
     for (const viewport of viewports) {
       for (const locale of LOCALES) {
-        const results = await checkPage(browser, viewport, locale)
-        found.layout.push(...results.layout)
-        found.axe.push(...results.axe)
+        for (const [variant, bare] of variants) {
+          stressBare = bare
+          const results = await checkPage(browser, viewport, locale, variant)
+          found.layout.push(...results.layout)
+          found.axe.push(...results.axe)
+          modes.add(results.mode)
+        }
       }
+    }
+    // A matrix that never renders a mode proves nothing about it: a rule under
+    // that mode's variant could push a block off-screen unseen (audit-3 F-2).
+    for (const mode of LAYOUT_MODES) {
+      if (!modes.has(mode)) found.layout.push(`matrix ${mode} never rendered`)
     }
 
     if (contentMode === 'built') {
       found.layout.push(...(await checkDegradation(browser)))
       found.layout.push(...(await checkBehaviour(browser)))
+      if (args.has('--worlds')) found.layout.push(...(await checkWorldContrast()))
+    } else if (args.has('--worlds')) {
+      console.log('  worlds: not run, the contrast over the worlds is measured on the built content')
     }
     found.layout.push(...cspViolations)
 
@@ -530,10 +644,10 @@ async function main() {
 
     if (args.has('--update-known')) {
       // A blank page is never accepted as known debt.
-      const degradation = found.layout.filter((id) => /^(degradation|behaviour|csp) /.test(id))
+      const degradation = found.layout.filter((id) => /^(degradation|behaviour|worlds|csp|matrix) /.test(id))
       if (degradation.length > 0) {
         for (const id of degradation) console.log(`FAIL ${id}`)
-        console.log('Degradation and behaviour failures cannot be recorded as known.')
+        console.log('Degradation, behaviour, world contrast and matrix failures cannot be recorded as known.')
         process.exitCode = 1
         return
       }

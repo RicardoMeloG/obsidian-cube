@@ -24,9 +24,9 @@ describe('normalizeSections', () => {
     const exampleAgentic = spanish.find((section) => section.id === 'agentic')!
 
     expect(agentic.title).toBe('Mi título')
-    expect(agentic.features).toEqual(exampleAgentic.features)
+    expect(agentic.composition).toEqual(exampleAgentic.composition)
     expect(agentic.eyebrow).toBe(exampleAgentic.eyebrow)
-    expect(agentic.features).not.toEqual(english.find((section) => section.id === 'agentic')!.features)
+    expect(agentic.composition).not.toEqual(english.find((section) => section.id === 'agentic')!.composition)
   })
 
   it('uses the eyebrow the content provides, in either locale (E-09)', () => {

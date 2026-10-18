@@ -1,0 +1,183 @@
+/* Stage template `ledger` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
+@reference "../../../index.css";
+
+@layer components {
+  .le-left {
+    display: grid;
+    align-content: start;
+    gap: 1.1em;
+
+    @variant desktop {
+      grid-column: 1 / span 4;
+    }
+  }
+
+  .le-callout {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.9em;
+    padding: 0.95em 1.05em;
+    border: 1px solid var(--hair);
+    border-radius: 0.85em;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+  }
+
+  .le-callout > div {
+    display: grid;
+    gap: 0.3em;
+  }
+
+  .le-callout small {
+    font-size: 0.62em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .le-callout strong {
+    font-size: 0.95em;
+  }
+
+  .le-callout p {
+    font-size: 0.82em;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .le-console {
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--color-obsidian-950) 84%, transparent);
+
+    @variant desktop {
+      grid-column: 8 / span 5;
+      align-self: center;
+    }
+  }
+
+  .le-console__bar {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    padding: 0.75em 1.1em;
+    border-bottom: 1px solid var(--hair);
+    font-size: 0.66em;
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .le-console__dots {
+    display: inline-flex;
+    gap: 0.45em;
+  }
+
+  .le-console__dots i {
+    width: 0.75em;
+    height: 0.75em;
+    border-radius: 999px;
+    background: var(--hair);
+  }
+
+  .le-console__dots i:first-child {
+    background: var(--accent);
+  }
+
+  .le-console__body {
+    display: grid;
+    gap: 0.75em;
+    padding: 1.1em 1.2em 1.2em;
+    font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  }
+
+  .le-console__command {
+    font-size: 0.8em;
+    color: var(--ink-2);
+  }
+
+  .le-console__command span {
+    color: var(--accent);
+  }
+
+  .le-console__body ul {
+    display: grid;
+    gap: 0.15em;
+  }
+
+  .le-console__body ul > li {
+    display: grid;
+    grid-template-columns: 8.4em 8.6em 1fr;
+    align-items: baseline;
+    gap: 0.9em;
+    padding: 0.5em 0;
+    border-bottom: 1px dashed var(--hair);
+    font-size: 0.78em;
+
+    /* Phones: status and id on one line, the text under them. */
+    @variant phone {
+      grid-template-columns: auto minmax(0, 1fr);
+      row-gap: 0.3em;
+    }
+  }
+
+  .le-text {
+    @variant phone {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .le-status {
+    justify-self: start;
+    padding: 0.15em 0.55em;
+    border: 1px solid var(--hair-accent);
+    border-radius: 0.3em;
+    font-size: 0.82em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  li[data-status='verified'] .le-status {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+
+  li[data-status='implemented'] .le-status {
+    color: var(--ink);
+    border-color: var(--hair);
+  }
+
+  li[data-status='planned'] .le-status {
+    border-style: dashed;
+    color: var(--ink-3);
+    border-color: var(--hair);
+  }
+
+  .le-console__body code {
+    font: inherit;
+    color: var(--ink);
+  }
+
+  .le-text {
+    font-family: var(--font-sans);
+    color: var(--ink-2);
+  }
+
+  .le-console__tally {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    font-size: 0.74em;
+    color: var(--accent);
+  }
+
+  .le-console .st-actions {
+    padding: 0 1.2em 1.2em;
+  }
+}

@@ -24,13 +24,21 @@ const READY_TIMEOUT_MS = 3000
 // The 3D scene, wired to the experience: it reports where the cube lands and
 // what the visitor does with it, and turns the cube when a face is requested.
 // Without WebGL, or if the scene fails, a still of the cube takes its place;
-// the name, rails and strip are DOM and stay (ADR 006).
+// the name, the composition and the dock are DOM and stay (ADR 006).
 export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) {
   const store = useExperienceStore()
   const activeFace = useExperience((state) => state.activeFace)
   const requestedFace = useExperience((state) => state.requestedFace)
   const introSkipped = useExperience((state) => state.introSkipped)
+  // Stage layout: the cube recedes while the visitor reads, and comes forward
+  // during the intro, a face change, or when the visitor takes it.
+  const recede = useExperience(
+    (state) => state.layout === 'stage' && !state.explore && state.intro !== 'pending' && state.transition !== 'exiting',
+  )
   const handleRef = useRef<CubeSceneHandle | null>(null)
+  // Stage layout: a press that brings the receded cube forward only starts
+  // exploring; it does not also pick the face under the pointer.
+  const grabStartedExploreRef = useRef(false)
   const [effects] = useState(() => readDiagnosticFx())
   const intro = useMemo<CubeIntroConfig>(
     () => ({
@@ -45,6 +53,7 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   // the scene is not there to turn it, the face changes at once.
   useEffect(() => {
     if (!requestedFace) return
+    grabStartedExploreRef.current = false
     if (handleRef.current) handleRef.current.enterSection(requestedFace)
     else store.dispatch({ type: 'faceEntered', face: requestedFace })
   }, [requestedFace, store])
@@ -89,13 +98,24 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
           <CubeScene
             activeSectionId={activeFace}
             effects={effects}
-            onCursorModeChange={(cursor) => store.dispatch({ type: 'cursorChanged', cursor })}
-            onSectionEnter={(face) => store.dispatch({ type: 'faceEntered', face })}
+            onCursorModeChange={(cursor) => {
+              store.dispatch({ type: 'cursorChanged', cursor })
+              if (cursor !== 'grabbing') return
+              const state = store.getState()
+              grabStartedExploreRef.current = state.layout === 'stage' && !state.explore
+              store.dispatch({ type: 'exploreStarted' })
+            }}
+            onSectionEnter={(face) => {
+              const startedExplore = grabStartedExploreRef.current
+              grabStartedExploreRef.current = false
+              if (!startedExplore) store.dispatch({ type: 'faceEntered', face })
+            }}
             sections={sections}
             handleRef={handleRef}
             intro={intro}
             onIntroPhase={handleIntroPhase}
             onEngaged={handleEngaged}
+            recede={recede}
             onReady={handleReady}
           />
         </Suspense>

@@ -2,6 +2,8 @@ import { z } from 'zod'
 import visualExample from '../../public/content/visual.example.json'
 import { FACE_ORDER } from './faces'
 import type { FaceId } from './faces'
+import { ICON_IDS } from './icons'
+import type { IconId } from './icons'
 import { FaceIdSchema } from './siteContent'
 import type { FaceContent } from './siteContent'
 import { WORLD_IDS } from './worlds'
@@ -16,26 +18,32 @@ const WorldIdSchema = z.enum(WORLD_IDS as [WorldId, ...WorldId[]])
 const HexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'accent must be a 6-digit hex color')
 
 // A world in the catalog: it can be enabled or disabled whether or not a face
-// points at it.
+// points at it. Its name is code (`WORLD_LABELS`, shown by the dev showcase);
+// the editable `label` was retired on 2026-10-16 (audit-3 F-7) because
+// nothing rendered it. Older documents that still have it parse.
 const WorldCatalogEntrySchema = z.object({
-  id: WorldIdSchema,
-  label: z.string().min(1),
-  enabled: z.boolean(),
+  id: WorldIdSchema.meta({ title: 'Mundo', widget: 'fixed' }),
+  enabled: z.boolean().meta({ title: 'Activo' }),
 })
 
-// Per-face presentation: which world backs it (or none) and its accent hue.
+// Per-face presentation: which world backs it (or none), its accent hue and
+// its icon in the stage's dock (spec 011, AD-02).
 const FaceVisualSchema = z.object({
-  worldId: WorldIdSchema.nullable(),
-  accent: HexColorSchema,
+  worldId: WorldIdSchema.nullable().meta({ title: 'Mundo de fondo' }),
+  accent: HexColorSchema.meta({ title: 'Color de acento', widget: 'color' }),
+  icon: z
+    .enum(ICON_IDS as unknown as [IconId, ...IconId[]])
+    .optional()
+    .meta({ title: 'Icono en el dock' }),
 })
 
 export const VisualContentSchema = z.object({
-  worlds: z.array(WorldCatalogEntrySchema),
-  faces: z.record(FaceIdSchema, FaceVisualSchema),
+  worlds: z.array(WorldCatalogEntrySchema).meta({ title: 'Mundos' }),
+  faces: z.record(FaceIdSchema, FaceVisualSchema).meta({ title: 'Caras' }),
 })
 
 export type WorldCatalogEntry = z.infer<typeof WorldCatalogEntrySchema>
-export type FaceVisual = z.infer<typeof FaceVisualSchema>
+export type FaceVisual = z.infer<typeof FaceVisualSchema> & { icon: IconId }
 export type VisualContent = {
   worlds: WorldCatalogEntry[]
   faces: Record<FaceId, FaceVisual>
@@ -45,6 +53,7 @@ export type VisualContent = {
 // `face.accent` and `face.worldId` without touching the visual document.
 export type ResolvedFace = FaceContent & {
   accent: string
+  icon: IconId
   worldId: WorldId | null
 }
 
@@ -59,7 +68,8 @@ export function getDefaultVisualContent(): VisualContent {
 export function normalizeVisual(parsed: z.infer<typeof VisualContentSchema>): VisualContent {
   const faces = {} as Record<FaceId, FaceVisual>
   for (const id of FACE_ORDER) {
-    faces[id] = parsed.faces[id] ?? DEFAULT_VISUAL.faces[id]
+    const face = parsed.faces[id]
+    faces[id] = face ? { ...face, icon: face.icon ?? DEFAULT_VISUAL.faces[id].icon } : DEFAULT_VISUAL.faces[id]
   }
 
   return {
@@ -79,9 +89,8 @@ export function resolveWorldId(visual: VisualContent, faceId: FaceId): WorldId |
 }
 
 export function resolveSections(sections: FaceContent[], visual: VisualContent): ResolvedFace[] {
-  return sections.map((section) => ({
-    ...section,
-    accent: (visual.faces[section.id] ?? DEFAULT_VISUAL.faces[section.id]).accent,
-    worldId: resolveWorldId(visual, section.id),
-  }))
+  return sections.map((section) => {
+    const face = visual.faces[section.id] ?? DEFAULT_VISUAL.faces[section.id]
+    return { ...section, accent: face.accent, icon: face.icon, worldId: resolveWorldId(visual, section.id) }
+  })
 }

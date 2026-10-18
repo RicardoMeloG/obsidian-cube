@@ -9,7 +9,7 @@ const PUBLIC = 'public'
 
 // Licences still to be confirmed. Resolving one removes it from here; a new
 // asset cannot join without a recorded licence.
-const KNOWN_PENDING = ['favicon.svg']
+const KNOWN_PENDING: string[] = []
 
 function publicFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((name) => {

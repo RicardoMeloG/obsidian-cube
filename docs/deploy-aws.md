@@ -21,10 +21,10 @@ GitHub Actions ──(OIDC)──> AWS
   `infra/security-headers.json` (content security policy report-only until it
   has run clean in production; set `reportOnly` to `false` to enforce it).
 - **CI/CD**: `.github/workflows/ci.yml` (every gate listed in
-  `docs/architecture.md`, plus `cdk synth`) and `deploy.yml` (on demand, or
-  after a green CI run on main: build → `aws s3 sync` → CloudFront
-  invalidation), authenticating with a short-lived **OIDC role**, with no
-  long-lived AWS keys in GitHub.
+  `docs/architecture.md`), `infra.yml` (`cdk synth`, when `infra/` changes)
+  and `deploy.yml` (on demand only since 2026-10-16: build → `aws s3 sync` →
+  CloudFront invalidation), authenticating with a short-lived **OIDC role**,
+  with no long-lived AWS keys in GitHub.
 
 Defined in `infra/` with the **AWS CDK (TypeScript)**.
 

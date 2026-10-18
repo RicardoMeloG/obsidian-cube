@@ -2,7 +2,7 @@
 
 Future product milestones should be described here before implementation.
 
-The path to publishing runs in three stages, each closed before the next starts (ADR 007): normalization (spec 010, closed), content, release. Specs not yet written, numbered when they start (001–003 are taken by the rescued drafts below):
+The path to publishing runs in five stages, each closed before the next starts (ADR 007, ADR 008): normalization (spec 010, closed), compositions (spec 011), content, security, release. Specs not yet written, numbered when they start (001–003 are taken by the rescued drafts below):
 
 1. Content stage: `evidence-per-face` — one inspectable artifact per face and the rewrite of the generic copy (the publish rules already require an artifact link per face).
 2. Release stage: `publish-real-content` — the first deploy with the real identity, the publish step to S3 and the invalidation.
@@ -14,6 +14,7 @@ The hardening of the local admin is not a spec: the admin stays on 127.0.0.1, an
 Written outside that sequence:
 
 - `009-cube-intro/` — first-visit intro (the cube falls through the beam shedding sparks and lands) and the rotate invitation asked for by ADR 002, point 4.
+- `011-stage-compositions/` — accepted (2026-10-15): the stage layout and per-face compositions as templates the owner edits from the admin (content in the kernel documents, owner images, forms generated from the schemas). Runs before the content stage (ADR 008); includes the CONTACT world.
 - `010-architecture/` — architecture and harness (system, repository, site modules, styling, layout modes, degradation, gates); built in P0–P4 and closed after two independent audits (`audit-1.md`, `audit-2.md`).
 
 Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). The Spec Kit tooling tried in June 2026 now lives in its own repository, `RicardoMeloG/spec-kit-study` (see `docs/roadmap.md`, Phase 2).

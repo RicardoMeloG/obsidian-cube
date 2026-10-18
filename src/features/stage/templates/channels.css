@@ -1,0 +1,81 @@
+/* Stage template `channels` (spec 011, AD-01): its placement on the
+   desktop stage's 12-column grid, and the blocks particular to it. Stacked
+   screens read its blocks in order, one column (stage.css). */
+@reference "../../../index.css";
+
+@layer components {
+  .ch-left {
+    display: grid;
+    align-content: start;
+    gap: 1.1em;
+
+    @variant desktop {
+      grid-column: 1 / span 5;
+      align-self: center;
+    }
+  }
+
+  .ch-availability {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    font-size: 0.84em;
+    color: var(--ink-2);
+  }
+
+  .ch-availability span {
+    width: 0.6em;
+    height: 0.6em;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 0.25em color-mix(in srgb, var(--accent) 18%, transparent), 0 0 1em var(--accent);
+  }
+
+  .ch-channels {
+    display: grid;
+    gap: 0.55em;
+  }
+
+  .ch-channels a {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1em;
+    padding: 0.75em 1em;
+    border: 1px solid var(--hair);
+    border-radius: 0.85em;
+    background: var(--glass);
+    color: var(--ink);
+    text-decoration: none;
+    backdrop-filter: blur(12px);
+    transition: border-color 180ms, transform 180ms;
+  }
+
+  .ch-channels a:hover {
+    border-color: var(--hair-accent);
+    transform: translateX(0.2em);
+  }
+
+  .ch-channels .st-tile {
+    width: 2.7em;
+    height: 2.7em;
+  }
+
+  .ch-channels a > span:nth-child(2) {
+    display: grid;
+    gap: 0.15em;
+  }
+
+  .ch-channels strong {
+    font-size: 1em;
+  }
+
+  .ch-channels small {
+    font-size: 0.8em;
+    color: var(--ink-3);
+  }
+
+  .ch-channels a > svg {
+    color: var(--ink-3);
+  }
+}

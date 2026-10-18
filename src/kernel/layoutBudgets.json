@@ -4,27 +4,166 @@
     "eyebrow": 24,
     "title": 28,
     "summary": 112,
-    "featureLabel": 24,
-    "featureDescription": 72,
-    "flowTitle": 20,
-    "flowLabel": 12,
-    "flowDescription": 68,
     "ctaLabel": 20,
-    "conceptAxis": 16,
-    "conceptLabel": 18,
-    "conceptSummary": 60
+    "tagline": 28,
+    "name": 24,
+    "role": 36,
+    "keywords": 48
   },
-  "counts": {
-    "features": {
-      "min": 3,
-      "max": 4
+  "templates": {
+    "_note": "Measured 2026-10-15 (spec 011 S2): the stress content at these limits passes the layout check on the full matrix, both languages.",
+    "showcase": {
+      "chars": {
+        "featured.label": 24,
+        "featured.title": 44,
+        "featured.text": 90,
+        "featured.chips[]": 14,
+        "stepsTitle": 28,
+        "steps[].label": 12,
+        "steps[].text": 48,
+        "proofsTitle": 32,
+        "proofsTrail": 24,
+        "proofs[].kind": 24,
+        "proofs[].title": 32,
+        "proofs[].text": 64,
+        "proofs[].chips[]": 14
+      },
+      "counts": {
+        "featured.chips": {
+          "max": 3
+        },
+        "steps": {
+          "min": 3,
+          "max": 4
+        },
+        "proofs": {
+          "min": 2,
+          "max": 3
+        },
+        "proofs[].chips": {
+          "max": 2
+        }
+      }
     },
-    "flow": {
-      "min": 3,
-      "max": 4
+    "catalog": {
+      "chars": {
+        "listTitle": 24,
+        "items[].name": 28,
+        "items[].meta": 16,
+        "items[].status": 20,
+        "items[].text": 80,
+        "items[].chips[]": 14,
+        "items[].image.alt": 140,
+        "items[].facts[].label": 16,
+        "items[].facts[].text": 64,
+        "items[].links[].label": 20
+      },
+      "counts": {
+        "items": {
+          "min": 1,
+          "max": 4
+        },
+        "items[].chips": {
+          "max": 3
+        },
+        "items[].facts": {
+          "max": 3
+        },
+        "items[].links": {
+          "max": 2
+        }
+      }
     },
-    "researchConcepts": {
-      "max": 4
+    "case": {
+      "chars": {
+        "caseLabel": 24,
+        "caseName": 36,
+        "before.title": 16,
+        "before.items[]": 28,
+        "after.title": 16,
+        "after.items[]": 28,
+        "map.title": 28,
+        "map.note": 24,
+        "map.legend.*": 16,
+        "steps[].label": 16,
+        "steps[].text": 64
+      },
+      "counts": {
+        "before.items": {
+          "min": 1,
+          "max": 2
+        },
+        "after.items": {
+          "min": 1,
+          "max": 2
+        },
+        "map.cells": {
+          "min": 1,
+          "max": 24
+        },
+        "steps": {
+          "min": 3,
+          "max": 4
+        }
+      }
+    },
+    "ledger": {
+      "chars": {
+        "callouts[].label": 28,
+        "callouts[].title": 44,
+        "callouts[].text": 96,
+        "console.title": 28,
+        "console.command": 32,
+        "console.rows[].id": 20,
+        "console.rows[].text": 56,
+        "console.statusLabels.*": 16
+      },
+      "counts": {
+        "callouts": {
+          "min": 1,
+          "max": 2
+        },
+        "console.rows": {
+          "min": 1,
+          "max": 6
+        }
+      }
+    },
+    "reading": {
+      "chars": {
+        "questionLabel": 24,
+        "question": 120,
+        "chain[].label": 24,
+        "chain[].text": 96,
+        "distinctionsTitle": 24,
+        "distinctions[].term": 24,
+        "distinctions[].text": 64,
+        "document.label": 24,
+        "document.title": 40,
+        "document.meta": 24
+      },
+      "counts": {
+        "chain": {
+          "min": 2,
+          "max": 3
+        },
+        "distinctions": {
+          "max": 3
+        }
+      }
+    },
+    "channels": {
+      "chars": {
+        "availability": 80,
+        "channels[].label": 16,
+        "channels[].text": 40
+      },
+      "counts": {
+        "channels": {
+          "min": 1,
+          "max": 4
+        }
+      }
     }
   }
 }

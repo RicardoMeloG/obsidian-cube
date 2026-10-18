@@ -1,6 +1,5 @@
 import { createContext, useContext, useSyncExternalStore } from 'react'
 import type { FaceId } from '@/kernel/faces'
-import type { FaceDetail } from '@/kernel/siteContent'
 
 // State of the experience and the events that change it (ADR 006, spec 010
 // AD-04). The scene and the DOM never talk to each other: both read this state
@@ -12,9 +11,14 @@ export type PanelTransition = 'idle' | 'exiting' | 'entering'
 // after the landing · done: no intro styling at all.
 export type IntroStage = 'pending' | 'reveal' | 'done'
 export type CursorMode = 'default' | 'grab' | 'grabbing'
+// stage (desktop, spec 011): the cube waits small behind the face's
+// composition and comes to the front only to change face or to be explored.
+// hero (stacked screens): the cube on top, the composition below it, the page
+// scrolls.
+export type ExperienceLayout = 'hero' | 'stage'
 
 export type ExperienceState = {
-  // The face the cube shows; `displayedFace` is the one the rails show, which
+  // The face the cube shows; `displayedFace` is the one the content shows, which
   // follows it after the exit half of the transition.
   activeFace: FaceId
   displayedFace: FaceId
@@ -26,8 +30,11 @@ export type ExperienceState = {
   intro: IntroStage
   introSkipped: boolean
   hintVisible: boolean
-  detail: { open: boolean; focused: FaceDetail | null }
+  detail: { open: boolean }
   cursor: CursorMode
+  layout: ExperienceLayout
+  // Stage layout: the visitor took the cube; the content steps aside.
+  explore: boolean
 }
 
 export type ExperienceEvent =
@@ -41,11 +48,19 @@ export type ExperienceEvent =
   | { type: 'introSettled' }
   | { type: 'introSkipped' }
   | { type: 'visitorEngaged' }
-  | { type: 'detailOpened'; detail: FaceDetail | null }
+  | { type: 'detailOpened' }
   | { type: 'detailClosed' }
   | { type: 'cursorChanged'; cursor: CursorMode }
+  | { type: 'layoutChanged'; layout: ExperienceLayout }
+  | { type: 'exploreStarted' }
+  | { type: 'exploreEnded' }
 
-export function initialExperience(options: { face: FaceId; introPlays: boolean; hintVisible: boolean }): ExperienceState {
+export function initialExperience(options: {
+  face: FaceId
+  introPlays: boolean
+  hintVisible: boolean
+  layout?: ExperienceLayout
+}): ExperienceState {
   return {
     activeFace: options.face,
     displayedFace: options.face,
@@ -55,18 +70,20 @@ export function initialExperience(options: { face: FaceId; introPlays: boolean; 
     intro: options.introPlays ? 'pending' : 'done',
     introSkipped: false,
     hintVisible: options.hintVisible,
-    detail: { open: false, focused: null },
+    detail: { open: false },
     cursor: 'default',
+    layout: options.layout ?? 'hero',
+    explore: false,
   }
 }
 
-const CLOSED_DETAIL: ExperienceState['detail'] = { open: false, focused: null }
+const CLOSED_DETAIL: ExperienceState['detail'] = { open: false }
 
 function enterFace(state: ExperienceState, face: FaceId): ExperienceState {
-  // Back on the face the rails already show (a quick change and return):
-  // cancel the transition instead of leaving the rails faded out.
+  // Back on the face the content already shows (a quick change and return):
+  // cancel the transition instead of leaving the content faded out.
   const transition = face === state.displayedFace ? 'idle' : 'exiting'
-  return { ...state, activeFace: face, requestedFace: null, transition, detail: CLOSED_DETAIL }
+  return { ...state, activeFace: face, requestedFace: null, transition, detail: CLOSED_DETAIL, explore: false }
 }
 
 export function experienceReducer(state: ExperienceState, event: ExperienceEvent): ExperienceState {
@@ -99,11 +116,17 @@ export function experienceReducer(state: ExperienceState, event: ExperienceEvent
     case 'visitorEngaged':
       return state.hintVisible ? { ...state, hintVisible: false } : state
     case 'detailOpened':
-      return { ...state, detail: { open: true, focused: event.detail } }
+      return { ...state, detail: { open: true } }
     case 'detailClosed':
       return state.detail.open ? { ...state, detail: CLOSED_DETAIL } : state
     case 'cursorChanged':
       return state.cursor === event.cursor ? state : { ...state, cursor: event.cursor }
+    case 'layoutChanged':
+      return state.layout === event.layout ? state : { ...state, layout: event.layout, explore: false }
+    case 'exploreStarted':
+      return state.layout === 'stage' && !state.explore ? { ...state, explore: true, detail: CLOSED_DETAIL } : state
+    case 'exploreEnded':
+      return state.explore ? { ...state, explore: false } : state
   }
 }
 
