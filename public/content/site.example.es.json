@@ -228,7 +228,7 @@
           { "icon": "factory", "label": "Contexto", "text": "Una operación que corre cada día sobre el sistema." },
           { "icon": "alert", "label": "Restricción", "text": "No se puede detener: cada cambio convive con el sistema en uso." },
           { "icon": "branch", "label": "Decisión", "text": "Migración incremental, un módulo a la vez." },
-          { "icon": "trend", "label": "Resultado", "text": "Módulos nuevos con pruebas; el sistema antiguo se retira por partes." }
+          { "icon": "trend", "label": "Resultado", "text": "Módulos nuevos con pruebas; lo antiguo se retira por partes." }
         ]
       }
     },

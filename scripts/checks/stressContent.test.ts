@@ -68,9 +68,11 @@ describe('stress content', () => {
 describe('publish rules', () => {
   const example = SiteContentSchema.parse(exampleEn)
 
-  it('keep the example content within every layout budget', () => {
-    const budgetIssues = publishIssues(example).filter((issue) => /caracteres|elementos/.test(issue.message))
-    expect(budgetIssues).toEqual([])
+  it('keep the example content within every layout budget, in both languages (spec 012: the Spanish one was not checked)', () => {
+    for (const content of [example, SiteContentSchema.parse(exampleEs)]) {
+      const budgetIssues = publishIssues(content).filter((issue) => /caracteres|elementos/.test(issue.message))
+      expect(budgetIssues).toEqual([])
+    }
   })
 
   it('refuse to publish the example as is: placeholders and faces without an artifact link', () => {
