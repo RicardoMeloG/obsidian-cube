@@ -2,7 +2,9 @@
 // admin publishes it. Kept apart from SiteContentSchema on purpose: the site
 // loads with the tolerant render contract, so content published under older
 // rules keeps rendering instead of silently falling back to the example. The
-// admin validates with PublishableSiteContentSchema and refuses to publish.
+// admin checks them with publishRuleIssues: they block the publish only in the
+// production environment, and are warnings while the project is in
+// development (APP_ENV, server/appEnv.ts, owner 2026-10-18).
 import { EXAMPLE_MEDIA_PREFIX } from './compositions'
 import type { Composition, TemplateId } from './compositions'
 import { normalizeSections, SiteContentSchema } from './siteContent'
@@ -72,7 +74,7 @@ function isArtifactLink(href: string): boolean {
   return /^https:/i.test(href)
 }
 
-type Issue = { path: (string | number)[]; message: string }
+export type Issue = { path: (string | number)[]; message: string }
 
 export function publishIssues(content: SiteContent): Issue[] {
   const issues: Issue[] = []
@@ -180,16 +182,22 @@ export function templateMismatches(content: SiteContent, other: SiteContent): Is
   })
 }
 
-export const PublishableSiteContentSchema = SiteContentSchema.superRefine((content, context) => {
+// The publish rules over what a visitor will see, with each path pointing at
+// the face in the document as written, not its place in the face order.
+export function publishRuleIssues(content: SiteContent): Issue[] {
   const visible = visibleContent(content)
-  for (const issue of publishIssues(visible)) {
-    // Point at the face in the document as written, not its place in the face order.
+  return publishIssues(visible).map((issue) => {
     const path = [...issue.path]
     if (path[0] === 'sections' && typeof path[1] === 'number') {
       const id = visible.sections[path[1]]?.id
       const index = content.sections.findIndex((section) => section.id === id)
       path[1] = index === -1 ? id ?? path[1] : index
     }
-    context.addIssue({ code: 'custom', path, message: issue.message })
-  }
+    return { path, message: issue.message }
+  })
+}
+
+// The shape and the publish rules together, as production requires them.
+export const PublishableSiteContentSchema = SiteContentSchema.superRefine((content, context) => {
+  for (const issue of publishRuleIssues(content)) context.addIssue({ code: 'custom', path: issue.path, message: issue.message })
 })

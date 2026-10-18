@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Post, Req, UnauthorizedException } from '@nestjs/common'
 import { AuthService } from './auth.service'
+import { BYPASS_USER, bypasses } from './devBypass'
+import type { LocalRequest } from './devBypass'
 import type { SessionUser } from './auth.service'
 
 // The part of an express-session request this controller touches.
-type SessionRequest = {
+type SessionRequest = LocalRequest & {
   session?: { user?: SessionUser; destroy?: (callback: () => void) => void }
 }
 
@@ -13,6 +15,7 @@ export class AuthController {
 
   @Get('me')
   me(@Req() req: SessionRequest) {
+    if (bypasses(req)) return { authenticated: true, stage: 'full', username: BYPASS_USER, bypass: true }
     const user = req.session?.user
     return {
       authenticated: user?.stage === 'full',

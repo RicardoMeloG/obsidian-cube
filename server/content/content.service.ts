@@ -8,7 +8,10 @@ import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import type { ZodError } from 'zod'
 import { templateMismatches } from '../../src/kernel/publishRules'
+import type { Issue } from '../../src/kernel/publishRules'
 import { SiteContentSchema } from '../../src/kernel/siteContent'
+import type { SiteContent } from '../../src/kernel/siteContent'
+import { publishRulesBlock } from '../appEnv'
 import { ContentRepository } from './content.repository'
 import type { VersionSummary } from './content.repository'
 import { DOCS, formSchema, otherLanguage } from './docs'
@@ -63,7 +66,11 @@ export class ContentService {
     if (!result.success) {
       return { ok: false, errors: formatIssues(result.error) }
     }
-    const warnings = await this.languageWarnings(docId, data)
+    // The publish rules block only in production; in development the owner
+    // publishes work in progress and reads them as warnings (APP_ENV, appEnv.ts).
+    const rules = (DOCS[docId].rules?.(result.data as SiteContent) ?? []).map(formatIssue)
+    if (rules.length > 0 && publishRulesBlock()) return { ok: false, errors: rules }
+    const warnings = [...rules, ...(await this.languageWarnings(docId, data))]
     return warnings.length > 0 ? { ok: true, warnings } : { ok: true }
   }
 
@@ -75,7 +82,7 @@ export class ContentService {
     const mine = SiteContentSchema.safeParse(data)
     const theirs = SiteContentSchema.safeParse((await this.read(other).catch(() => ({ data: null }))).data)
     if (!mine.success || !theirs.success) return []
-    return templateMismatches(mine.data, theirs.data).map((issue) => ({ path: issue.path.join('.') || '(root)', message: issue.message }))
+    return templateMismatches(mine.data, theirs.data).map(formatIssue)
   }
 
   // Persist a work-in-progress draft (no schema enforcement — drafts may be
@@ -132,8 +139,9 @@ export class ContentService {
 }
 
 function formatIssues(error: ZodError): ValidationError[] {
-  return error.issues.map((issue) => ({
-    path: issue.path.join('.') || '(root)',
-    message: issue.message,
-  }))
+  return error.issues.map((issue) => formatIssue({ path: issue.path as Issue['path'], message: issue.message }))
+}
+
+function formatIssue(issue: Issue): ValidationError {
+  return { path: issue.path.join('.') || '(root)', message: issue.message }
 }

@@ -3,13 +3,10 @@ import { existsSync, readFileSync } from 'node:fs'
 import session from 'express-session'
 import { NestFactory } from '@nestjs/core'
 import type { NestExpressApplication } from '@nestjs/platform-express'
+import { HOST, PORT } from './address'
 import { AppModule } from './app.module'
-
-const PORT = 5182
-// Localhost-only on purpose. Password + TOTP MFA are enforced, but there is no
-// login rate limiting, the cookie is not `secure` and sessions are in-memory.
-// Never bind to 0.0.0.0 until those land (see AGENTS.md, admin rules).
-const HOST = '127.0.0.1'
+import { appEnv, publishRulesBlock } from './appEnv'
+import { adminAuthOff } from './auth/devBypass'
 
 // Minimal .env loader (no dependency): populate process.env before Nest builds
 // the DB pool. Existing env vars win.
@@ -25,6 +22,8 @@ function loadEnv() {
 
 async function bootstrap() {
   loadEnv()
+  appEnv() // a wrong APP_ENV stops the server before it listens
+  const authOff = adminAuthOff() // and so does ADMIN_AUTH=off in production
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] })
   // Uploaded images arrive as raw WebP (spec 011, AD-03); the media store
   // checks them. A site document with its compositions fits well under 1 MB.
@@ -45,6 +44,8 @@ async function bootstrap() {
 
   await app.listen(PORT, HOST)
   console.log(`Obsidian Cube admin → http://${HOST}:${PORT}`)
+  console.log(`APP_ENV=${appEnv()}: las reglas de publicación ${publishRulesBlock() ? 'bloquean' : 'avisan'}.`)
+  if (authOff) console.warn('ADMIN_AUTH=off: el admin no pide login a las peticiones locales (solo desarrollo).')
 }
 
 void bootstrap()

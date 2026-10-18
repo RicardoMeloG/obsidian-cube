@@ -1,11 +1,15 @@
 import { z } from 'zod'
 import type { ZodType } from 'zod'
-import { PublishableSiteContentSchema } from '../../src/kernel/publishRules'
+import { publishRuleIssues } from '../../src/kernel/publishRules'
+import type { Issue } from '../../src/kernel/publishRules'
+import { SiteContentSchema } from '../../src/kernel/siteContent'
+import type { SiteContent } from '../../src/kernel/siteContent'
 import { VisualContentSchema } from '../../src/kernel/visualContent'
 
 // The three editable documents. Each maps to the kernel schema the frontend
-// renders with — for the site documents, plus the publish rules (layout budgets,
-// links, no placeholders) — its published file and a committed example used as
+// renders with, the publish rules for the site documents (layout budgets,
+// links, no placeholders; blocking or warning by APP_ENV), its
+// published file and a committed example used as
 // the first-load fallback. This whitelist is also the path-traversal guard: only
 // these ids ever reach the filesystem.
 export type DocId = 'site.en' | 'site.es' | 'visual'
@@ -16,6 +20,7 @@ export type DocDescriptor = {
   file: string
   example: string
   schema: ZodType
+  rules?: (data: SiteContent) => Issue[]
 }
 
 export const DOCS: Record<DocId, DocDescriptor> = {
@@ -24,14 +29,16 @@ export const DOCS: Record<DocId, DocDescriptor> = {
     label: 'Contenido — Inglés (EN)',
     file: 'site.en.json',
     example: 'site.example.en.json',
-    schema: PublishableSiteContentSchema,
+    schema: SiteContentSchema,
+    rules: publishRuleIssues,
   },
   'site.es': {
     id: 'site.es',
     label: 'Contenido — Español (ES)',
     file: 'site.es.json',
     example: 'site.example.es.json',
-    schema: PublishableSiteContentSchema,
+    schema: SiteContentSchema,
+    rules: publishRuleIssues,
   },
   visual: {
     id: 'visual',
@@ -43,8 +50,8 @@ export const DOCS: Record<DocId, DocDescriptor> = {
 }
 
 // The document's schema as JSON Schema, from which the admin page generates
-// its form (spec 011, AD-04). The publish rules' refinements do not travel:
-// the server still validates with the Zod schema.
+// its form (spec 011, AD-04). The publish rules do not travel: the server
+// applies them when validating.
 export function formSchema(id: DocId) {
   return z.toJSONSchema(DOCS[id].schema)
 }

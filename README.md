@@ -56,7 +56,7 @@ npm run dev
 Admin (optional, local only):
 
 ```bash
-cp .env.example .env        # set SESSION_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD
+cp .env.example .env        # set SESSION_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD; APP_ENV and ADMIN_AUTH set the mode
 docker compose up -d        # Postgres on 5433
 npm run server              # http://127.0.0.1:5182 — first login enrolls TOTP MFA
 ```

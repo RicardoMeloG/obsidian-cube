@@ -2,8 +2,8 @@
 // form generated from the kernel's schemas, round-trips every example
 // document unchanged, and its editing controls (lists, template switch, image
 // upload, field errors) write what they show. The page runs in Chromium
-// against a stand-in API answered here: the real server needs the owner's
-// login, which a check must never bypass. The schemas come from the server's
+// against a stand-in API answered here, so the check needs neither Postgres
+// nor the server, and runs the same in CI. The schemas come from the server's
 // own `formSchema`, loaded through Vite so the TypeScript runs as is.
 //
 //   node scripts/check-admin.mjs
