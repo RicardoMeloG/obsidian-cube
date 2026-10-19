@@ -125,7 +125,9 @@ export function DetailDialog({ detail, faceLabel, closeLabel, onClose, restoreFo
           </ul>
         )}
         {detail.links && detail.links.length > 0 && (
-          <div className="mt-[1.4rem] grid grid-cols-2 gap-px border border-violet-500/18 bg-violet-500/18 narrow:grid-cols-1">
+          // An odd last tile spans the row: the 1px gaps are the grid's own
+          // background, so an empty cell would show as a violet block.
+          <div className="mt-[1.4rem] grid grid-cols-2 gap-px border border-violet-500/18 bg-violet-500/18 narrow:grid-cols-1 [&>*:last-child:nth-child(odd)]:col-span-full">
             {detail.links.map((link) =>
               link.href ? (
                 <a className={cx(LINK_TILE, 'focus-ring')} href={link.href} key={link.label} rel="noreferrer" target="_blank">
