@@ -1,0 +1,44 @@
+{
+  "locale": "es",
+  "about": "Ejemplo del perfil largo que leen las máquinas: un ingeniero de software senior que pasa a la ingeniería de producto agéntica, y que construye productos con agentes de IA sobre años de sistemas en producción. Reemplázalo por el tuyo en el admin.",
+  "titles": [
+    "Agentic Product Engineer",
+    "AI Engineer",
+    "Senior Software Engineer",
+    "Desarrollador full stack"
+  ],
+  "skills": [
+    "Flujos agénticos",
+    "TypeScript",
+    "React",
+    "Python",
+    "PostgreSQL",
+    "AWS",
+    "Modernización de sistemas legados",
+    "Seguridad de aplicaciones"
+  ],
+  "roles": [
+    {
+      "title": "Desarrollador full stack",
+      "years": "10 años",
+      "text": "Sistemas web de punta a punta, del modelo de datos a la interfaz."
+    },
+    {
+      "title": "Líder técnico",
+      "years": "3 años",
+      "text": "Coordinación técnica y decisiones de arquitectura en el equipo."
+    }
+  ],
+  "research": "Investigación independiente sobre pensamiento, verdad y representación, y lo que dice sobre cómo evaluar lo que produce la IA.",
+  "location": "Ciudad, País · remoto",
+  "languages": [
+    "Español",
+    "Inglés"
+  ],
+  "education": [
+    {
+      "name": "Ingeniería en computación",
+      "institution": "Universidad de ejemplo"
+    }
+  ]
+}

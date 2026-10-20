@@ -10,7 +10,6 @@ import type { ZodError } from 'zod'
 import { templateMismatches } from '../../src/kernel/publishRules'
 import type { Issue } from '../../src/kernel/publishRules'
 import { SiteContentSchema } from '../../src/kernel/siteContent'
-import type { SiteContent } from '../../src/kernel/siteContent'
 import { publishRulesBlock } from '../appEnv'
 import { ContentRepository } from './content.repository'
 import type { VersionSummary } from './content.repository'
@@ -68,7 +67,7 @@ export class ContentService {
     }
     // The publish rules block only in production; in development the owner
     // publishes work in progress and reads them as warnings (APP_ENV, appEnv.ts).
-    const rules = (DOCS[docId].rules?.(result.data as SiteContent) ?? []).map(formatIssue)
+    const rules = (DOCS[docId].rules?.(result.data) ?? []).map(formatIssue)
     if (rules.length > 0 && publishRulesBlock()) return { ok: false, errors: rules }
     const warnings = [...rules, ...(await this.languageWarnings(docId, data))]
     return warnings.length > 0 ? { ok: true, warnings } : { ok: true }

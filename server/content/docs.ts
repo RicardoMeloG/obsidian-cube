@@ -1,18 +1,20 @@
 import { z } from 'zod'
 import type { ZodType } from 'zod'
+import { ProfileContentSchema, profileRuleIssues } from '../../src/kernel/profileContent'
+import type { ProfileContent } from '../../src/kernel/profileContent'
 import { publishRuleIssues } from '../../src/kernel/publishRules'
 import type { Issue } from '../../src/kernel/publishRules'
 import { SiteContentSchema } from '../../src/kernel/siteContent'
 import type { SiteContent } from '../../src/kernel/siteContent'
 import { VisualContentSchema } from '../../src/kernel/visualContent'
 
-// The three editable documents. Each maps to the kernel schema the frontend
-// renders with, the publish rules for the site documents (layout budgets,
-// links, no placeholders; blocking or warning by APP_ENV), its
-// published file and a committed example used as
+// The editable documents. Each maps to the kernel schema the frontend
+// renders with (the profile: the build, for the layer for machines; spec 012,
+// AD-07), its publish rules (layout budgets, links, no placeholders; blocking
+// or warning by APP_ENV), its published file and a committed example used as
 // the first-load fallback. This whitelist is also the path-traversal guard: only
 // these ids ever reach the filesystem.
-export type DocId = 'site.en' | 'site.es' | 'visual'
+export type DocId = 'site.en' | 'site.es' | 'visual' | 'profile.en' | 'profile.es'
 
 export type DocDescriptor = {
   id: DocId
@@ -20,8 +22,12 @@ export type DocDescriptor = {
   file: string
   example: string
   schema: ZodType
-  rules?: (data: SiteContent) => Issue[]
+  // Called with data the schema accepted.
+  rules?: (data: unknown) => Issue[]
 }
+
+const siteRules = (data: unknown) => publishRuleIssues(data as SiteContent)
+const profileRules = (data: unknown) => profileRuleIssues(data as ProfileContent)
 
 export const DOCS: Record<DocId, DocDescriptor> = {
   'site.en': {
@@ -30,7 +36,7 @@ export const DOCS: Record<DocId, DocDescriptor> = {
     file: 'site.en.json',
     example: 'site.example.en.json',
     schema: SiteContentSchema,
-    rules: publishRuleIssues,
+    rules: siteRules,
   },
   'site.es': {
     id: 'site.es',
@@ -38,7 +44,7 @@ export const DOCS: Record<DocId, DocDescriptor> = {
     file: 'site.es.json',
     example: 'site.example.es.json',
     schema: SiteContentSchema,
-    rules: publishRuleIssues,
+    rules: siteRules,
   },
   visual: {
     id: 'visual',
@@ -46,6 +52,22 @@ export const DOCS: Record<DocId, DocDescriptor> = {
     file: 'visual.json',
     example: 'visual.example.json',
     schema: VisualContentSchema,
+  },
+  'profile.en': {
+    id: 'profile.en',
+    label: 'Perfil para máquinas — Inglés (EN)',
+    file: 'profile.en.json',
+    example: 'profile.example.en.json',
+    schema: ProfileContentSchema,
+    rules: profileRules,
+  },
+  'profile.es': {
+    id: 'profile.es',
+    label: 'Perfil para máquinas — Español (ES)',
+    file: 'profile.es.json',
+    example: 'profile.example.es.json',
+    schema: ProfileContentSchema,
+    rules: profileRules,
   },
 }
 

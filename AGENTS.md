@@ -173,6 +173,7 @@ Content files (paths):
 - Public examples (committed): `public/content/site.example.en.json`, `public/content/site.example.es.json`
 - Private deploy (gitignored): `public/content/site.en.json`, `public/content/site.es.json`
 - Visual layer, world and accent per face: `public/content/visual.example.json` (committed) / `public/content/visual.json` (gitignored)
+- Profile for machines, one per language (`llms.txt` and the profile pages, built from it; spec 012, AD-07): `public/content/profile.example.{en,es}.json` (committed) / `public/content/profile.{en,es}.json` (gitignored). It may say more than the faces, never anything else.
 
 Loading order: the private document if present and valid, otherwise the example, which is bundled as the defaults; a field a published face leaves empty comes from the example in the same language. Validate shape (Zod) before rendering. Prose fields accept inline HTML only, sanitized at render time by `sanitizeRichText` (no block tags, no Markdown).
 
@@ -225,7 +226,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a composition CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
-- [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`. CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
+- [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (spec 012, AD-07). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [ ] Real identity and at least one real artifact per face, live at a public URL.
 - [x] The CI gates pass (build, lint, types, tests, budget, privacy, docs, layout).

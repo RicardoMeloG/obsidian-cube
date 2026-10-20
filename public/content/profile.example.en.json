@@ -1,0 +1,44 @@
+{
+  "locale": "en",
+  "about": "Example of the longer profile that machines read: a senior software engineer moving into agentic product engineering, who builds products with AI agents on top of years of production systems. Replace it with your own in the admin.",
+  "titles": [
+    "Agentic Product Engineer",
+    "AI Engineer",
+    "Senior Software Engineer",
+    "Full Stack Developer"
+  ],
+  "skills": [
+    "Agentic workflows",
+    "TypeScript",
+    "React",
+    "Python",
+    "PostgreSQL",
+    "AWS",
+    "Legacy modernization",
+    "Application security"
+  ],
+  "roles": [
+    {
+      "title": "Full stack developer",
+      "years": "10 years",
+      "text": "Web systems end to end, from the data model to the interface."
+    },
+    {
+      "title": "Technical lead",
+      "years": "3 years",
+      "text": "Technical coordination and architecture decisions in the team."
+    }
+  ],
+  "research": "Independent research on thought, truth and representation, and what it says about evaluating AI outputs.",
+  "location": "City, Country · remote",
+  "languages": [
+    "Spanish",
+    "English"
+  ],
+  "education": [
+    {
+      "name": "Degree in computer engineering",
+      "institution": "Example University"
+    }
+  ]
+}

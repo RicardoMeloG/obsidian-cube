@@ -239,7 +239,7 @@
     ];
 
     // ---- Editing state ----
-    let currentTarget = null;  // { kind: 'face'|'general'|'visual', id? }
+    let currentTarget = null;  // { kind: 'face'|'general'|'visual'|'profile', id? }
     let currentLang = 'en';
     let heldDoc = null;        // whole site.{lang} doc backing a face/general edit
     let view = 'form';         // 'form' (generated from the schema) | 'json' (advanced)
@@ -251,7 +251,7 @@
       return schemas[docId];
     }
     // The part of the document's schema the editor shows: one face, the
-    // site-wide block, or the whole visual document.
+    // site-wide block, or a whole document (visual, profile).
     function sliceSchema(schema) {
       if (currentTarget.kind === 'face') return schema.properties.sections.items;
       if (currentTarget.kind === 'general') {
@@ -314,12 +314,16 @@
       form.markErrors(errors.map((e) => e.path).filter((path) => path.startsWith(prefix)).map((path) => path.slice(prefix.length)));
     }
 
-    const underlyingDocId = () => currentTarget.kind === 'visual' ? 'visual' : 'site.' + currentLang;
+    // The visual document and the profile for machines are edited whole; the
+    // profile has a language, like the site (spec 012, AD-07).
+    const wholeDoc = () => currentTarget.kind === 'visual' || currentTarget.kind === 'profile';
+    const underlyingDocId = () => currentTarget.kind === 'visual' ? 'visual' : (currentTarget.kind === 'profile' ? 'profile.' : 'site.') + currentLang;
     const faceSlice = (doc, id) => (doc.sections || []).find((s) => s.id === id) || { id };
     const generalSlice = (doc) => { const { sections, ...rest } = doc; return rest; };
 
     function targetTitle() {
       if (currentTarget.kind === 'visual') return 'Presentación — fondos y acentos';
+      if (currentTarget.kind === 'profile') return 'Perfil para máquinas (llms.txt y página de perfil)';
       if (currentTarget.kind === 'general') return 'General del sitio (hero · SEO · identidad)';
       return (FACES.find((f) => f.id === currentTarget.id) || {}).label || currentTarget.id;
     }
@@ -329,6 +333,7 @@
       html += FACES.map((f) => `<button class="nav-item" data-kind="face" data-id="${f.id}"><span class="badge">${f.n}</span><span>${f.label}</span></button>`).join('');
       html += '<div class="nav-group">Sitio</div>';
       html += `<button class="nav-item" data-kind="general">${ICONS.doc}<span>General</span></button>`;
+      html += `<button class="nav-item" data-kind="profile">${ICONS.doc}<span>Perfil para máquinas</span></button>`;
       html += '<div class="nav-group">Presentación</div>';
       html += `<button class="nav-item" data-kind="visual">${ICONS.layers}<span>Fondos y acentos</span></button>`;
       $('nav').innerHTML = html;
@@ -348,10 +353,10 @@
     async function loadTarget() {
       const res = await fetch('/api/content/' + underlyingDocId());
       const body = await res.json();
-      if (currentTarget.kind === 'visual') {
+      if (wholeDoc()) {
         heldDoc = null;
         await showSlice(body.data);
-        source.textContent = 'origen: ' + body.source;
+        source.textContent = 'origen: ' + body.source + (currentTarget.kind === 'profile' ? ' · ' + currentLang.toUpperCase() : '');
       } else {
         heldDoc = body.data;
         await showSlice(currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id));
@@ -365,7 +370,7 @@
     function reconstructDoc() {
       const parsed = currentSlice();
       if (!parsed.ok) return parsed;
-      if (currentTarget.kind === 'visual') return { ok: true, data: parsed.data };
+      if (wholeDoc()) return { ok: true, data: parsed.data };
       if (currentTarget.kind === 'general') return { ok: true, data: Object.assign({}, parsed.data, { sections: heldDoc.sections }) };
       const doc = JSON.parse(JSON.stringify(heldDoc));
       const idx = (doc.sections || []).findIndex((s) => s.id === currentTarget.id);
@@ -374,7 +379,7 @@
     }
 
     async function applyLoadedDoc(data) {
-      if (currentTarget.kind === 'visual') return showSlice(data);
+      if (wholeDoc()) return showSlice(data);
       heldDoc = data;
       await showSlice(currentTarget.kind === 'general' ? generalSlice(heldDoc) : faceSlice(heldDoc, currentTarget.id));
     }
@@ -403,7 +408,7 @@
       if (!rec.ok) return setStatus(malformed(rec.error), '');
       const res = await fetch('/api/content/' + underlyingDocId() + '/draft', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec.data) });
       const out = await res.json();
-      if (res.ok && out.ok) { if (currentTarget.kind !== 'visual') heldDoc = rec.data; return setStatus('<span class="ok">✓ Borrador guardado en la BD.</span>', ''); }
+      if (res.ok && out.ok) { if (!wholeDoc()) heldDoc = rec.data; return setStatus('<span class="ok">✓ Borrador guardado en la BD.</span>', ''); }
       setStatus(`<span class="err">✗ ${out.message || 'No se pudo guardar'}</span>`, '');
     }
 
@@ -413,7 +418,7 @@
       const res = await fetch('/api/content/' + underlyingDocId() + '/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec.data) });
       const out = await res.json();
       if (res.ok && out.ok) {
-        if (currentTarget.kind !== 'visual') heldDoc = rec.data;
+        if (!wholeDoc()) heldDoc = rec.data;
         const v = out.version ? ` · versión #${out.version.id}` : ' · (sin BD: sin versión)';
         markFormErrors([]);
         setStatus(`<span class="ok">✓ Publicado en ${out.file}${v}.</span>` + warningsHtml(out.warnings), '');

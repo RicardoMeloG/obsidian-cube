@@ -326,7 +326,8 @@
         ],
         "links": [
           { "label": "GitHub", "description": "Reemplaza este enlace con tu perfil público.", "href": "https://github.com/your-handle" },
-          { "label": "Formulario", "description": "Ruta futura para contacto estructurado.", "href": "/contact" }
+          { "label": "Formulario", "description": "Ruta futura para contacto estructurado.", "href": "/contact" },
+          { "label": "Perfil completo", "description": "Los mismos datos en texto plano, para personas y máquinas.", "href": "/profile.es.html" }
         ]
       },
       "tagline": "Hablemos",

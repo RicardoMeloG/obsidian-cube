@@ -8,6 +8,7 @@
 // config (Node) and in Vitest. The input is the content document the schema
 // validated (vite.config.ts parses it first).
 import type { SiteContent } from '../siteContent'
+import { LLMS_FILE, PROFILE_PAGES } from './machineFiles'
 
 export type SeoInput = SiteContent
 
@@ -41,7 +42,7 @@ export function toPlainText(richText: string): string {
     .trim()
 }
 
-function absoluteUrl(pathOrUrl: string, siteUrl?: string): string {
+export function absoluteUrl(pathOrUrl: string, siteUrl?: string): string {
   if (/^https?:\/\//i.test(pathOrUrl) || !siteUrl) return pathOrUrl
   return `${siteUrl.replace(/\/+$/, '')}/${pathOrUrl.replace(/^\/+/, '')}`
 }
@@ -80,7 +81,7 @@ export function isProfileUrl(href: string): boolean {
   return false
 }
 
-function keywordList(keywords?: string): string[] {
+export function keywordList(keywords?: string): string[] {
   return (keywords ?? '')
     .split('·')
     .map((keyword) => keyword.trim())
@@ -107,7 +108,7 @@ export function buildPersonJsonLd(content: SeoInput): Record<string, unknown> {
 }
 
 // JSON inside <script> must not be able to close the tag.
-function jsonForScript(value: unknown): string {
+export function jsonForScript(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c')
 }
 
@@ -172,12 +173,15 @@ export function renderStaticBody(content: SeoInput): string {
     content.locale === 'es'
       ? 'Este portafolio es una experiencia 3D interactiva; activa JavaScript para verla completa.'
       : 'This portfolio is an interactive 3D experience; enable JavaScript to see it in full.'
+  // The layer for machines, in full (spec 012, AD-07).
+  const profile = content.locale === 'es' ? 'Perfil completo' : 'Full profile'
 
   return `<main class="seo-fallback">
         <h1>${escapeHtml(identity.fullName)}</h1>
         <p>${escapeHtml(identity.role)}</p>${keywords}
         <p>${escapeHtml(toPlainText(hero.headline))}</p>
         <p>${escapeHtml(toPlainText(hero.summary))}</p>${sections}${linkList}
+        <p><a href="/${PROFILE_PAGES[content.locale]}">${profile}</a> · <a href="/${LLMS_FILE}">${LLMS_FILE}</a></p>
         <p>${escapeHtml(note)}</p>
       </main>`
 }

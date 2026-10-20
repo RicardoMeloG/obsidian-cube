@@ -19,6 +19,8 @@ dist-ssr
 public/content/site.en.json
 public/content/site.es.json
 public/content/visual.json
+public/content/profile.en.json
+public/content/profile.es.json
 
 # Editor directories and files
 .vscode/*

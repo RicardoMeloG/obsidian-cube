@@ -21,6 +21,8 @@ const examples = {
   'site.en': JSON.parse(read('public/content/site.example.en.json')),
   'site.es': JSON.parse(read('public/content/site.example.es.json')),
   visual: JSON.parse(read('public/content/visual.example.json')),
+  'profile.en': JSON.parse(read('public/content/profile.example.en.json')),
+  'profile.es': JSON.parse(read('public/content/profile.example.es.json')),
 }
 const IMAGE = read('public/examples/project-2.webp')
 const UPLOADED = { hash: 'b'.repeat(64), src: `/content/media/${'b'.repeat(64)}.webp`, width: 1600, height: 1000 }
@@ -92,8 +94,9 @@ async function save() {
 await page.goto(`${ORIGIN}/`)
 await page.waitForSelector('#form[data-ready="true"]')
 
-// 1. Round trip: every face in both languages, the site-wide block and the
-// visual document come back exactly as they were loaded.
+// 1. Round trip: every face in both languages, the site-wide block, the
+// profile for machines and the visual document come back exactly as they were
+// loaded, each to its own document.
 const FACES = examples['site.en'].sections.map((section) => section.id)
 for (const lang of ['en', 'es']) {
   for (const face of FACES) {
@@ -103,6 +106,8 @@ for (const lang of ['en', 'es']) {
   }
   await open('general', null, lang)
   if (canonical(await save()) !== canonical(examples[`site.${lang}`])) fail('round-trip', `general ${lang}`)
+  await open('profile', null, lang)
+  if (canonical(await save()) !== canonical(examples[`profile.${lang}`]) || saved.at(-1).doc !== `profile.${lang}`) fail('round-trip', `profile ${lang}`)
 }
 await open('visual')
 if (canonical(await save()) !== canonical(examples.visual)) fail('round-trip', 'visual')
@@ -138,7 +143,7 @@ if (canonical(image) !== canonical(expected)) fail('image-upload', JSON.stringif
 
 if (process.argv.includes('--screenshots')) {
   mkdirSync('walkthrough', { recursive: true })
-  for (const [kind, id] of [['face', 'agentic'], ['face', 'products'], ['face', 'contact'], ['general', null], ['visual', null]]) {
+  for (const [kind, id] of [['face', 'agentic'], ['face', 'products'], ['face', 'contact'], ['general', null], ['profile', null], ['visual', null]]) {
     await open(kind, id)
     await page.screenshot({ path: `walkthrough/admin-${id ?? kind}.png` })
     // The composition's first list item unfolded, as the owner edits it.
@@ -163,5 +168,5 @@ if (failures.length) {
   console.log(`Admin check failed:\n${failures.map((line) => `  ${line}`).join('\n')}`)
   process.exitCode = 1
 } else {
-  console.log(`Admin check passed: ${FACES.length * 2 + 3} documents round-trip, lists, template switch, text, image upload, error marking.`)
+  console.log(`Admin check passed: ${FACES.length * 2 + 5} documents round-trip, lists, template switch, text, image upload, error marking.`)
 }
