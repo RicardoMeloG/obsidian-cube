@@ -16,6 +16,7 @@
     "check:privacy": "node scripts/check-privacy.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "check:tokens": "node scripts/check-tokens.mjs",
+    "report:objective": "node scripts/report-objective.mjs",
     "server": "ts-node --project server/tsconfig.json server/main.ts"
   },
   "dependencies": {
