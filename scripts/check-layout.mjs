@@ -270,6 +270,12 @@ function measureStage({ queries }) {
     const own = leafElements(block)
       .filter((element) => !element.closest('svg') && getComputedStyle(element).position !== 'absolute')
       .map((element) => ({ element, box: element.getBoundingClientRect() }))
+    // A word too long for its box is painted past it, though the box does
+    // not grow: no overlap of boxes shows it (a control's id, 2026-10-20).
+    // Text cut on purpose, with an ellipsis, is not counted.
+    if (own.some(({ element }) => element.scrollWidth > element.clientWidth + 1 && element.clientWidth > 0 && getComputedStyle(element).textOverflow !== 'ellipsis')) {
+      failures.push(`block-${index}-text-past-its-box`)
+    }
     search: for (const [a, first] of own.entries()) {
       for (const second of own.slice(a + 1)) {
         if (first.element.contains(second.element) || second.element.contains(first.element)) continue

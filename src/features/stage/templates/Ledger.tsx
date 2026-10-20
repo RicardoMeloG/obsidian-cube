@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import { Fragment } from 'react'
 import { CONTROL_STATES } from '@/kernel/compositions'
 import { RichText } from '@/features/content/RichText'
 import { FaceActions, Heading } from '../blocks'
@@ -51,7 +52,7 @@ export function Ledger({ composition, face, counter, onOpenDetail }: TemplatePro
             {register.rows.map((row, index) => (
               <li key={`${row.id}-${index}`} data-status={row.status}>
                 <span className="le-status">{register.statusLabels[row.status]}</span>
-                <code>{row.id}</code>
+                <code>{breakAfterDots(row.id)}</code>
                 <span className="le-text">{row.text}</span>
               </li>
             ))}
@@ -65,4 +66,19 @@ export function Ledger({ composition, face, counter, onOpenDetail }: TemplatePro
       </article>
     </>
   )
+}
+
+// A control's id (`content.sanitize`) may wrap after each dot, not inside a word.
+function breakAfterDots(id: string) {
+  const parts = id.split('.')
+  return parts.map((part, index) => (
+    <Fragment key={index}>
+      {part}
+      {index < parts.length - 1 && (
+        <>
+          .<wbr />
+        </>
+      )}
+    </Fragment>
+  ))
 }

@@ -162,6 +162,9 @@
   .le-console__body code {
     font: inherit;
     color: var(--ink);
+    /* An id has no spaces: it breaks after its dots (Ledger.tsx), and an id
+       without dots breaks anywhere rather than paint over the text beside it. */
+    overflow-wrap: anywhere;
   }
 
   .le-text {

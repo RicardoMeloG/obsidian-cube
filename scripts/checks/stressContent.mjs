@@ -73,8 +73,14 @@ export function fillComposition(composition, budget) {
     }
   }
   for (const [slot, max] of Object.entries(budget.chars)) {
+    // An id is one token, with no space or hyphen to break at: the hardest
+    // case to fit (a control's id painted past its column, 2026-10-20).
+    const token = /\.id$/.test(slot)
     for (const { parent, key } of slotRefs(filled, slot, true)) {
-      if (parent[key] === undefined || typeof parent[key] === 'string') parent[key] = fillTo(parent[key] ?? '', max)
+      if (parent[key] === undefined || typeof parent[key] === 'string') {
+        const text = fillTo(parent[key] ?? '', max)
+        parent[key] = token ? text.replace(/[^\p{L}\p{N}.]/gu, '').padEnd(max, 'x') : text
+      }
     }
   }
   return filled
