@@ -567,6 +567,42 @@ async function checkBehaviour(noWebglBrowser) {
       scrollRestored: document.documentElement.style.overflow !== 'hidden',
     }))
     for (const [check, ok] of Object.entries(closed)) if (!ok) fail(`dialog-close ${check}`)
+
+    // Cube mode: the content and the dock leave, hidden so neither takes the
+    // keyboard; the way back shows only to the keyboard, and the hint is read,
+    // not shown. The way back and Esc bring everything back.
+    await page.click('.stage-explore')
+    await page.waitForSelector('.stage[data-explore]', { timeout: 5000 })
+    await page.waitForTimeout(700)
+    const opacity = (selector) => page.evaluate((s) => Number(getComputedStyle(document.querySelector(s)).opacity), selector)
+    const exploring = await page.evaluate(() => {
+      const hidden = (selector) => getComputedStyle(document.querySelector(selector)).visibility === 'hidden'
+      const hint = document.querySelector('.stage-hint')
+      const box = hint?.getBoundingClientRect()
+      return {
+        contentHidden: hidden('.stage-content'),
+        dockHidden: hidden('.stage-dock'),
+        hintReadNotShown: Boolean(hint?.textContent) && Boolean(box && box.width <= 1 && box.height <= 1),
+      }
+    })
+    exploring.wayBackOutOfSight = (await opacity('.stage-explore')) === 0
+    for (const [check, ok] of Object.entries(exploring)) if (!ok) fail(`explore ${check}`)
+    // From the next control, back to the way back with the keyboard: it shows.
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Shift+Tab')
+    await page.waitForTimeout(600)
+    const focused = await page.evaluate(() => document.activeElement?.classList.contains('stage-explore'))
+    if (!focused || (await opacity('.stage-explore')) !== 1) fail('explore way-back-hidden-from-keyboard')
+    await page.keyboard.press('Enter')
+    await page.waitForSelector('.stage:not([data-explore])', { timeout: 5000 }).catch(() => fail('explore-way-back'))
+    await page.click('.stage-explore')
+    await page.waitForSelector('.stage[data-explore]', { timeout: 5000 })
+    await page.keyboard.press('Escape')
+    await page.waitForSelector('.stage:not([data-explore])', { timeout: 5000 }).catch(() => fail('explore-escape'))
+    const back = await page.evaluate(() =>
+      ['.stage-content', '.stage-dock'].every((selector) => getComputedStyle(document.querySelector(selector)).visibility !== 'hidden'),
+    )
+    if (!back) fail('explore-return')
   } finally {
     await context.close()
   }

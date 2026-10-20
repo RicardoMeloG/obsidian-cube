@@ -106,7 +106,15 @@
     text-transform: uppercase;
     cursor: pointer;
     backdrop-filter: blur(8px);
-    transition: color 180ms, border-color 180ms, background 180ms;
+    transition: color 180ms, border-color 180ms, background 180ms, opacity 420ms var(--ease-obsidian);
+  }
+
+  /* Cube mode: only the cube, its world and the identity show. The way back
+     stays for the keyboard, showing only while focused, beside Esc and a
+     click on a face. */
+  .stage[data-explore] .stage-explore:not(:focus-visible) {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .stage-explore:hover,
@@ -165,7 +173,8 @@
     transition:
       opacity 420ms var(--ease-obsidian),
       filter 420ms var(--ease-obsidian),
-      scale 520ms var(--ease-obsidian);
+      scale 520ms var(--ease-obsidian),
+      visibility 0s linear;
   }
 
   .stage-content > * {
@@ -185,6 +194,17 @@
 
   .stage[data-explore] .stage-content > * {
     pointer-events: none;
+  }
+
+  /* Exploring, the content (and the dock, below) leaves for good once faded:
+     hidden, so neither takes the keyboard while the visitor holds the cube. */
+  .stage[data-explore] .stage-content {
+    visibility: hidden;
+    transition:
+      opacity 420ms var(--ease-obsidian),
+      filter 420ms var(--ease-obsidian),
+      scale 520ms var(--ease-obsidian),
+      visibility 0s linear 420ms;
   }
 
   .stage[data-transition='entering'] .stage-content > * {
@@ -418,16 +438,14 @@
   }
 
   /* ── Explore hint ────────────────────────────────────────── */
+  /* Read, not shown: cube mode keeps the art clear of instructions. */
   .stage-hint {
     position: absolute;
-    right: 0;
-    bottom: 6.6em;
-    left: 0;
-    font-size: 0.72em;
-    letter-spacing: 0.24em;
-    text-align: center;
-    text-transform: uppercase;
-    color: var(--ink-3);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   /* ── Dock ────────────────────────────────────────────────── */
@@ -442,6 +460,23 @@
     border-radius: 1em;
     background: var(--glass-strong);
     backdrop-filter: blur(16px) saturate(130%);
+    transition:
+      opacity 420ms var(--ease-obsidian),
+      translate 520ms var(--ease-obsidian),
+      visibility 0s linear;
+  }
+
+  /* The dock leaves with the content while exploring; the way back stays on
+     the top bar (and Esc). */
+  .stage[data-explore] .stage-dock {
+    opacity: 0;
+    translate: 0 0.8em;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 420ms var(--ease-obsidian),
+      translate 520ms var(--ease-obsidian),
+      visibility 0s linear 420ms;
   }
 
   .stage-dock ul {
