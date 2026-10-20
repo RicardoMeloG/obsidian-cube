@@ -197,3 +197,23 @@ export async function playCubeTransitionSound() {
     playGlassResonance(GLASS_FUNDAMENTAL * 1.31, 0.56, 0.86)
   }, 180)
 }
+
+// The cube's call when it invites a first click: two soft, rising glass notes.
+// Only for a visitor who has already acted on the page; until then a browser
+// keeps the page silent, and the bubble shows alone.
+export async function playCubeNudgeSound() {
+  if (!navigator.userActivation?.hasBeenActive) {
+    return
+  }
+
+  const context = await unlockAudio()
+
+  if (!context || !masterGain) {
+    return
+  }
+
+  playGlassResonance(GLASS_FUNDAMENTAL * 1.5, 0.34, 0.7)
+  window.setTimeout(() => {
+    playGlassResonance(GLASS_FUNDAMENTAL * 2, 0.24, 0.62)
+  }, 150)
+}

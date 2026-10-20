@@ -4,8 +4,9 @@
     "environments/obsidian-hall.cubeuv.webp",
     "assets/inter-latin-wght-normal-*.woff2"
   ],
-  "limitBytes": 466179,
+  "limitBytes": 467203,
   "raises": [
-    "2026-10-12: +47 KB for the self-hosted Inter font (spec 010, AD-10)."
+    "2026-10-12: +47 KB for the self-hosted Inter font (spec 010, AD-10).",
+    "2026-10-20: +1 KB for the nudge that invites the first click on the cube (spec 011, section 7, owner)."
   ]
 }

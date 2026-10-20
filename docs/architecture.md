@@ -40,15 +40,18 @@ src/
   app/               composition: App (home or dev showcase), Experience (store + page), IdentityChrome
   features/
     experience/      the experience store: state, typed events, reducer (experienceStore.ts);
-                     face transition, intro lifecycle, face in the URL, intro planning
+                     face transition, intro lifecycle, face in the URL, intro planning,
+                     the cube nudge's clock (useCubeNudge)
     scene/           R3F: SceneLayer (canvas, still-image fallback, wiring to the store),
                      CubeScene, PremiumCube, environment, intro timeline, vector worlds
     stage/           the desktop layout (spec 011): StageView (top bar, content, dock), StageComposition
                      and one component per template in templates/, each with its stylesheet
     faces/           DetailDialog (a face's long form, opened from its calls to action)
-    navigation/      RotateHint (the invitation to drag the cube in the hero)
+    navigation/      RotateHint (the invitation to drag the cube in the hero), CubeNudge (the
+                     bubble that invites the first click on the stage, once per visitor)
     content/         loaders, locale, sanitizer, RichText, interface copy dictionary
-    audio/           the gesture-driven cube sounds (no autoplay), used by the scene
+    audio/           the cube sounds, used by the scene; none before the visitor has acted on the
+                     page (no autoplay): the drag and the turn, and the nudge's call
     dev/             world showcase and its shortcut (development only)
   ui/                Tailwind primitives: SegmentedControl, Eyebrow, GlyphTile, NumberBadge, PillButton, cx
   styles/            tokens.css (tokens, layout-mode variants), layoutModes.ts (their single source)
@@ -60,7 +63,7 @@ Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's 
 
 **Layout modes.** Three modes decide the composition: `desktop` (the stage: the face's composition around the cube, the dock at the bottom), `desktop-short` (the same on a short screen) and `stacked` (the hero: the cube on top, the composition in one column below it, the page scrolls). Six width refinements adjust inside them: `stacked-wide` (tablet landscape), `tight` (≤ 1100px), `narrow` (≤ 720px), `phone` (≤ 680px: the dock takes two rows, the top bar shows icons), `phone-small` (≤ 389px) and `tiny` (≤ 340px). The stage uses `stacked`, `desktop`, `desktop-short` and `phone`; the others are kept from the migration and are candidates for removal when nothing uses them. All nine queries live in `src/styles/layoutModes.ts`; Tailwind's own breakpoints are removed, so there is no other way to write one.
 
-**How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the dock dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the composition follows `displayedFace` through the transition; the store's `layout` is `stage` on desktop (the cube recedes while the visitor reads) and `hero` on stacked screens; the intro's landing, settling and skipping are events too. The reducer is pure and unit-tested (`experienceStore.test.ts`).
+**How the scene and the interface meet.** Neither imports the other. Both read the experience store and dispatch its events: the dock dispatches `faceRequested`; the scene turns the cube and dispatches `faceEntered` when it lands (without a scene the store changes the face at once); the composition follows `displayedFace` through the transition; the store's `layout` is `stage` on desktop (the cube recedes while the visitor reads) and `hero` on stacked screens; the intro's landing, settling and skipping are events too, and so is the nudge (`nudgeShown`, `nudgeEnded`): the DOM draws the bubble, the scene plays its call. The reducer is pure and unit-tested (`experienceStore.test.ts`).
 
 **Dependency rules** (in force, `eslint.config.js`, tested by `scripts/checks/boundaries.test.ts`):
 

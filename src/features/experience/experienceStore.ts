@@ -16,6 +16,9 @@ export type CursorMode = 'default' | 'grab' | 'grabbing'
 // hero (stacked screens): the cube on top, the composition below it, the page
 // scrolls.
 export type ExperienceLayout = 'hero' | 'stage'
+// The invitation to click the cube, once per visitor: waiting for the cube to
+// wait untouched, shown, or over (seen before, or shown already).
+export type NudgeStage = 'waiting' | 'shown' | 'done'
 
 export type ExperienceState = {
   // The face the cube shows; `displayedFace` is the one the content shows, which
@@ -35,6 +38,7 @@ export type ExperienceState = {
   layout: ExperienceLayout
   // Stage layout: the visitor took the cube; the content steps aside.
   explore: boolean
+  nudge: NudgeStage
 }
 
 export type ExperienceEvent =
@@ -54,12 +58,15 @@ export type ExperienceEvent =
   | { type: 'layoutChanged'; layout: ExperienceLayout }
   | { type: 'exploreStarted' }
   | { type: 'exploreEnded' }
+  | { type: 'nudgeShown' }
+  | { type: 'nudgeEnded' }
 
 export function initialExperience(options: {
   face: FaceId
   introPlays: boolean
   hintVisible: boolean
   layout?: ExperienceLayout
+  nudge?: boolean
 }): ExperienceState {
   return {
     activeFace: options.face,
@@ -74,6 +81,7 @@ export function initialExperience(options: {
     cursor: 'default',
     layout: options.layout ?? 'hero',
     explore: false,
+    nudge: options.nudge ? 'waiting' : 'done',
   }
 }
 
@@ -127,6 +135,10 @@ export function experienceReducer(state: ExperienceState, event: ExperienceEvent
       return state.layout === 'stage' && !state.explore ? { ...state, explore: true, detail: CLOSED_DETAIL } : state
     case 'exploreEnded':
       return state.explore ? { ...state, explore: false } : state
+    case 'nudgeShown':
+      return state.nudge === 'waiting' ? { ...state, nudge: 'shown' } : state
+    case 'nudgeEnded':
+      return state.nudge === 'done' ? state : { ...state, nudge: 'done' }
   }
 }
 

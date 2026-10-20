@@ -16,6 +16,8 @@ export type InterfaceCopy = {
   explore: string
   exploreBack: string
   exploreHint: string
+  // The bubble that invites the first click on the cube, once per visitor.
+  nudge: string
   contactLink: string
   githubLink: string
   linkedinLink: string
@@ -32,6 +34,7 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     explore: 'Explore the cube',
     exploreBack: 'Back to the content',
     exploreHint: 'Drag to rotate · click a face to open it · Esc to go back',
+    nudge: 'Click me!',
     contactLink: 'Email',
     githubLink: 'GitHub',
     linkedinLink: 'LinkedIn',
@@ -46,6 +49,7 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     explore: 'Explorar el cubo',
     exploreBack: 'Volver al contenido',
     exploreHint: 'Arrastra para girar · haz clic en una cara para abrirla · Esc para volver',
+    nudge: '¡Haz clic!',
     contactLink: 'Correo',
     githubLink: 'GitHub',
     linkedinLink: 'LinkedIn',

@@ -11,8 +11,10 @@ import { readInitialFace, useFaceUrl } from '@/features/experience/faceUrl'
 import { readIntroPlan } from '@/features/experience/introPlan'
 import type { IntroPlan } from '@/features/experience/introPlan'
 import { useFaceTransition } from '@/features/experience/useFaceTransition'
+import { useCubeNudge } from '@/features/experience/useCubeNudge'
 import { useIntroLifecycle } from '@/features/experience/useIntroLifecycle'
 import { DetailDialog } from '@/features/faces/DetailDialog'
+import { CubeNudge } from '@/features/navigation/CubeNudge'
 import { RotateHint } from '@/features/navigation/RotateHint'
 import { SceneLayer } from '@/features/scene/SceneLayer'
 import { StageView } from '@/features/stage/StageView'
@@ -49,6 +51,7 @@ export function Experience() {
         introPlays: plan.play && webglAvailable,
         hintVisible: plan.showHint && hero,
         layout: hero ? 'hero' : 'stage',
+        nudge: plan.showNudge,
       }),
     )
   })
@@ -70,6 +73,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const detail = useExperience((state) => state.detail)
   const cursor = useExperience((state) => state.cursor)
   const explore = useExperience((state) => state.explore)
+  const nudge = useExperience((state) => state.nudge)
   const { content, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
   const copy = interfaceCopy(locale)
@@ -85,6 +89,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
 
   useFaceTransition()
   useIntroLifecycle(plan)
+  useCubeNudge()
   useFaceUrl(activeFace, locale)
 
   const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
@@ -135,6 +140,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
       >
         <SceneLayer sections={resolvedSections} plan={plan} webglAvailable={webglAvailable} />
         {plan.showHint && webglAvailable && <RotateHint visible={hintVisible} label={isTouch ? copy.hintTouch : copy.hintPointer} />}
+        {plan.showNudge && webglAvailable && !stacked && <CubeNudge visible={nudge === 'shown'} explore={explore} label={copy.nudge} />}
       </div>
 
       {displayedSection && (

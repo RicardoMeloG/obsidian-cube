@@ -632,6 +632,38 @@ async function checkBehaviour(noWebglBrowser) {
     const visible = await page.evaluate(() => getComputedStyle(document.querySelector('.stage-content')).visibility !== 'hidden')
     if (!visible) fail('intro-content-hidden-after-skip')
   } finally {
+    await webglContext.close()
+  }
+
+  // The nudge: a first visitor gets the bubble over the waiting cube, clear of
+  // the content, once; a later visit does not.
+  const nudgeContext = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
+  nudgeContext.setDefaultTimeout(120000)
+  try {
+    const page = await nudgeContext.newPage()
+    watchCsp(page, 'behaviour nudge')
+    await page.goto(`${BASE}/?intro=0&lang=en`)
+    await page.waitForSelector('.stage[data-transition="idle"]')
+    const shown = await page.waitForSelector('.cube-nudge[data-visible="true"]', { timeout: 20000 }).then(() => true).catch(() => false)
+    if (!shown) fail('nudge-not-shown')
+    else {
+      await page.waitForTimeout(800)
+      const placed = await page.evaluate(() => {
+        const bubble = document.querySelector('.cube-nudge__bubble').getBoundingClientRect()
+        const overlaps = (box) => bubble.left < box.right && box.left < bubble.right && bubble.top < box.bottom && box.top < bubble.bottom
+        return {
+          inView: bubble.top >= 0 && bubble.left >= 0 && bubble.right <= innerWidth,
+          clearOfContent: ![...document.querySelectorAll('.stage-content > *, .stage-top > *')].some((element) => overlaps(element.getBoundingClientRect())),
+          remembered: localStorage.getItem('obsidian-cube:nudge-seen') === '1',
+        }
+      })
+      for (const [check, ok] of Object.entries(placed)) if (!ok) fail(`nudge ${check}`)
+    }
+    await page.reload()
+    await page.waitForSelector('.stage[data-transition="idle"]')
+    await page.waitForTimeout(4500)
+    if (await page.evaluate(() => Boolean(document.querySelector('.cube-nudge')))) fail('nudge-shown-twice')
+  } finally {
     await webglBrowser.close()
   }
 

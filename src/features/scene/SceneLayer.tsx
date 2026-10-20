@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import type { ResolvedFace } from '@/kernel/visualContent'
+import { playCubeNudgeSound } from '@/features/audio/cubeAudio'
 import { useExperience, useExperienceStore } from '@/features/experience/experienceStore'
 import { CUBE_ENGAGED_KEY, readFreezeAt, rememberInSession } from '@/features/experience/introPlan'
 import type { IntroPlan } from '@/features/experience/introPlan'
@@ -30,6 +31,7 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   const activeFace = useExperience((state) => state.activeFace)
   const requestedFace = useExperience((state) => state.requestedFace)
   const introSkipped = useExperience((state) => state.introSkipped)
+  const nudged = useExperience((state) => state.nudge === 'shown')
   // Stage layout: the cube recedes while the visitor reads, and comes forward
   // during the intro, a face change, or when the visitor takes it.
   const recede = useExperience(
@@ -61,6 +63,11 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   useEffect(() => {
     if (introSkipped) handleRef.current?.skipIntro()
   }, [introSkipped])
+
+  // The cube's call, with the bubble that invites the first click.
+  useEffect(() => {
+    if (nudged) void playCubeNudgeSound()
+  }, [nudged])
 
   // The landing starts the staged reveal of the interface.
   const handleIntroPhase = useCallback(

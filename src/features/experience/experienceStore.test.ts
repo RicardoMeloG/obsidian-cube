@@ -68,6 +68,19 @@ describe('intro', () => {
   })
 })
 
+describe('nudge', () => {
+  it('waits only for a visitor who has not seen it', () => {
+    expect(initialExperience({ face: 'agentic', introPlays: false, hintVisible: false, nudge: true }).nudge).toBe('waiting')
+    expect(start().nudge).toBe('done')
+  })
+
+  it('shows once, then is over for good', () => {
+    const waiting = start({ nudge: 'waiting' })
+    expect(run(waiting, { type: 'nudgeShown' }).nudge).toBe('shown')
+    expect(run(waiting, { type: 'nudgeShown' }, { type: 'nudgeEnded' }, { type: 'nudgeShown' }).nudge).toBe('done')
+  })
+})
+
 describe('store', () => {
   it('notifies only on a real change', () => {
     const store = createExperienceStore(start())
