@@ -174,7 +174,8 @@ function markdownFace(face: FaceText, siteUrl?: string): string[] {
   lines.push(face.summary)
   for (const group of face.groups) {
     lines.push('')
-    if (group.heading) lines.push(`### ${group.heading}`, '')
+    if (group.heading) lines.push(`### ${group.heading}`)
+    if (group.heading && group.entries.length > 0) lines.push('')
     for (const entry of group.entries) lines.push(markdownEntry(entry, siteUrl))
   }
   const links = face.links.map((item) => markdownLink(item, siteUrl)).filter(Boolean)
@@ -187,7 +188,9 @@ export function renderLlmsTxt(content: MachineInput): string {
   const label = LABELS[locale]
   const faces = content.sections.map(faceText)
   const page = (target: SiteLocale) => absoluteUrl(`/${PROFILE_PAGES[target]}`, seo.siteUrl)
-  const lines = [`# ${identity.fullName}`, '', `> ${identity.role}. ${seo.description}`, '']
+  // The search description usually names the role already.
+  const summary = seo.description.includes(identity.role) ? seo.description : `${identity.role}. ${seo.description}`
+  const lines = [`# ${identity.fullName}`, '', `> ${summary}`, '']
   if (profile) lines.push(toPlainText(profile.about), '')
   if (identity.keywords) lines.push(`- ${label.keywords}: ${keywordList(identity.keywords).join(', ')}`)
   if (profile?.location) lines.push(`- ${label.location}: ${profile.location}`)

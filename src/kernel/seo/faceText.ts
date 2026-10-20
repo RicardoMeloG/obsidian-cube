@@ -71,12 +71,13 @@ function compositionGroups(composition: Composition): TextGroup[] {
       const counts = map
         ? (['done', 'active', 'pending'] as const).map((state) => `${map.legend[state]}: ${map.cells.filter((cell) => cell === state).length}`).join(' · ')
         : undefined
+      // The steps have no title of their own: they go under the case's name,
+      // which they describe, rather than under the last column's title.
       return [
-        { heading: `${composition.caseLabel} — ${composition.caseName}`, entries: [] },
+        { heading: `${composition.caseLabel} — ${composition.caseName}`, entries: composition.steps.map(iconItem) },
         { heading: composition.before.title, entries: composition.before.items.map((text) => ({ text })) },
         { heading: composition.after.title, entries: composition.after.items.map((text) => ({ text })) },
         ...(map ? [{ heading: map.title, entries: [{ text: [map.note, counts].filter(Boolean).join(' · ') }] }] : []),
-        { entries: composition.steps.map(iconItem) },
       ]
     }
     case 'ledger':

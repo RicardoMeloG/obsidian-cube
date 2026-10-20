@@ -22,7 +22,9 @@ describe('llms.txt', () => {
 
   it('names the owner, the role, every title and skill once, and every face', () => {
     expect(text.startsWith(`# ${en.identity.fullName}\n`)).toBe(true)
-    expect(text).toContain(`> ${en.identity.role}.`)
+    expect(text).toContain(`> ${en.identity.role}. ${en.seo.description}`)
+    const named = renderLlmsTxt({ ...en, seo: { ...en.seo, description: `Ada, ${en.identity.role}: builds with agents.` } })
+    expect(named).toContain(`> Ada, ${en.identity.role}: builds with agents.\n`)
     for (const item of [...en.profile!.titles, ...en.profile!.skills]) {
       expect(text.split('\n').filter((line) => line === `- ${item}`)).toHaveLength(1)
     }
@@ -52,6 +54,16 @@ describe('llms.txt', () => {
     expect(text).toContain(`## ${agentic.label}: ${agentic.title}`)
     expect(agentic.composition?.template).toBe('showcase')
     if (agentic.composition?.template === 'showcase') expect(text).not.toContain(agentic.composition.featured.title)
+  })
+
+  it('puts a case’s steps under the case’s name, and leaves no empty line under a bare heading', () => {
+    const systems = en.sections.find((section) => section.id === 'systems')!
+    expect(systems.composition?.template).toBe('case')
+    if (systems.composition?.template !== 'case') return
+    const { caseLabel, caseName, steps, before } = systems.composition
+    expect(text).toContain(`### ${caseLabel} — ${caseName}\n\n- **${steps[0].label}**`)
+    expect(text.indexOf(`**${steps[0].label}**`)).toBeLessThan(text.indexOf(`### ${before.title}`))
+    expect(text).not.toMatch(/\n\n\n/)
   })
 
   it('without a profile, renders the identity and the faces only', () => {
