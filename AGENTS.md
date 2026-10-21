@@ -166,7 +166,7 @@ Language behavior and addresses (owner, 2026-10-20; spec 012, AD-08):
 
 - Every language and face has a clean address of its own, served as its own static HTML page: English at the root (`/` for the cube, `/security` for a face), Spanish under `/es` (`/es`, `/es/seguridad`). The slugs live in `src/kernel/sitePaths.ts` and never follow the content's labels: shared links point at them.
 - The bare `/` opens in the language the visitor last chose (remembered in the browser), otherwise in `navigator.language` (Spanish if it starts with `es`, English otherwise); the address then names the language shown.
-- Query parameters are for review and development only (`?intro=`, `?nudge=`; `?bg=`, `?tune=`, `?fx=`, `?introAt=` and `?cube=solo` exist only in development). The site never writes one.
+- The address bar never shows a query (owner, 2026-10-20). Query parameters are for review and development only: the review's (`?intro=`, `?nudge=`) are read on arrival and then removed from the bar, as is any other; the development tools' (`?bg=`, `?tune=`, `?fx=`, `?introAt=`, `?cube=solo`) exist and stay only in development.
 
 Content files (paths):
 

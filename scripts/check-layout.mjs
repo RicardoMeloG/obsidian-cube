@@ -630,7 +630,8 @@ async function checkBehaviour(noWebglBrowser) {
 
   // Addresses (spec 012, AD-08): each language and face has a page of its own,
   // served in its language and under its title before any script runs; the
-  // address bar follows what the visitor sees and adds no query of its own;
+  // address bar follows what the visitor sees and shows no query (the
+  // review's is read on arrival, then leaves the bar);
   // the bare address opens in the browser's language and then in the
   // visitor's last choice.
   const addressContext = await noWebglBrowser.newContext({ viewport: { width: 1440, height: 900 }, locale: BROWSER_LOCALE.es })
@@ -655,13 +656,14 @@ async function checkBehaviour(noWebglBrowser) {
     const titled = await page.waitForFunction((expected) => document.title === expected, title, { timeout: 5000 }).then(() => true).catch(() => false)
     const opened = await page.evaluate(() => ({
       language: document.documentElement.lang === 'es',
+      queryRead: location.search === '',
       dockLinks: [...document.querySelectorAll('.stage-dock a')].every((link) => /^\/es\/[a-z]+$/.test(link.getAttribute('href') ?? '')),
     }))
     for (const [check, ok] of Object.entries({ ...opened, title: titled })) if (!ok) fail(`address-face ${check}`)
 
     await page.click('.stage-dock a[data-section-id="products"]')
     await page.waitForSelector('.stage[data-transition="idle"][data-face="products"]', { timeout: 15000 })
-    if ((await where()) !== '/es/productos?intro=0') fail(`address-follows-face ${await where()}`)
+    if ((await where()) !== '/es/productos') fail(`address-follows-face ${await where()}`)
     await page.click('.stage-locale button:text-is("EN")')
     const switched = await page
       .waitForFunction(() => location.pathname === '/products' && document.documentElement.lang === 'en', null, { timeout: 10000 })
@@ -672,7 +674,7 @@ async function checkBehaviour(noWebglBrowser) {
     await page.goto(`${BASE}/?intro=0`)
     await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
     await page.waitForTimeout(500)
-    const remembered = (await where()) === '/?intro=0' && (await page.evaluate(() => document.documentElement.lang)) === 'en'
+    const remembered = (await where()) === '/' && (await page.evaluate(() => document.documentElement.lang)) === 'en'
     if (!remembered) fail(`address-remembers-language ${await where()}`)
   } finally {
     await addressContext.close()
@@ -755,7 +757,8 @@ async function checkBehaviour(noWebglBrowser) {
       })
       for (const [check, ok] of Object.entries(placed)) if (!ok) fail(`nudge ${check}`)
     }
-    await page.reload()
+    // A later visit (the address no longer carries the review's query).
+    await page.goto(`${BASE}/?intro=0`)
     await page.waitForSelector('.stage[data-transition="idle"]')
     await page.waitForTimeout(4500)
     if (await page.evaluate(() => Boolean(document.querySelector('.cube-nudge')))) fail('nudge-shown-twice')
