@@ -34,15 +34,26 @@
   }
 
   /* A soft vignette so the text never fights the scene; lighter in the middle,
-     where the cube waits. Gone while exploring. */
-  .stage::before {
+     where the cube waits. Cube mode lets the world show and keeps only the top
+     band (::after), behind the identity and the links: they stay legible over
+     every world (the layout check's --worlds measures it). */
+  .stage::before,
+  .stage::after {
     position: absolute;
     inset: 0;
     content: '';
+  }
+
+  .stage::before {
     background:
       radial-gradient(ellipse 34% 42% at 50% 50%, transparent 0%, color-mix(in srgb, var(--color-night-950) 35%, transparent) 100%),
-      linear-gradient(180deg, color-mix(in srgb, var(--color-night-950) 70%, transparent), transparent 18%, transparent 80%, color-mix(in srgb, var(--color-night-950) 80%, transparent));
+      linear-gradient(0deg, color-mix(in srgb, var(--color-night-950) 80%, transparent), transparent 20%);
     transition: opacity 600ms var(--ease-obsidian);
+  }
+
+  .stage::after {
+    z-index: -1;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-night-950) 70%, transparent), transparent 18%);
   }
 
   .stage[data-explore]::before {

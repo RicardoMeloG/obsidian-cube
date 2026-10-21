@@ -7,7 +7,7 @@ import { useSiteContent } from '@/features/content/useSiteContent'
 import { useVisualContent } from '@/features/content/useVisualContent'
 import { openWorldShowcase } from '@/features/dev/openWorldShowcase'
 import { createExperienceStore, ExperienceProvider, initialExperience, useExperience, useExperienceStore } from '@/features/experience/experienceStore'
-import { readInitialFace, useFaceUrl } from '@/features/experience/faceUrl'
+import { readInitialFace, urlNamesFace, useFaceUrl } from '@/features/experience/faceUrl'
 import { readIntroPlan } from '@/features/experience/introPlan'
 import type { IntroPlan } from '@/features/experience/introPlan'
 import { useFaceTransition } from '@/features/experience/useFaceTransition'
@@ -52,6 +52,10 @@ export function Experience() {
         hintVisible: plan.showHint && hero,
         layout: hero ? 'hero' : 'stage',
         nudge: plan.showNudge,
+        // The desktop opens in cube mode until the visitor picks a face
+        // (owner, 2026-10-20); a link to a face opens on its content, and
+        // without WebGL there is no cube to pick from.
+        explore: webglAvailable && !urlNamesFace(),
       }),
     )
   })

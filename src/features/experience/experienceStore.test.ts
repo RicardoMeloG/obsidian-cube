@@ -66,6 +66,22 @@ describe('intro', () => {
     const state = run(playing(), { type: 'faceRequested', face: 'products' }, { type: 'sceneFailed' })
     expect(state).toMatchObject({ intro: 'done', sceneReady: false, requestedFace: null })
   })
+
+  it('leaves cube mode when the scene fails: there is no cube to pick from', () => {
+    expect(run(start({ explore: true, layout: 'stage' }), { type: 'sceneFailed' }).explore).toBe(false)
+  })
+})
+
+describe('cube mode', () => {
+  it('opens the stage in cube mode when asked, never the hero', () => {
+    expect(initialExperience({ face: 'agentic', introPlays: false, hintVisible: false, layout: 'stage', explore: true }).explore).toBe(true)
+    expect(initialExperience({ face: 'agentic', introPlays: false, hintVisible: false, layout: 'hero', explore: true }).explore).toBe(false)
+  })
+
+  it('ends when the visitor picks a face from the cube', () => {
+    const state = run(start({ explore: true, layout: 'stage', sceneReady: true }), { type: 'faceEntered', face: 'agentic' })
+    expect(state.explore).toBe(false)
+  })
 })
 
 describe('nudge', () => {

@@ -11,8 +11,10 @@ export type PanelTransition = 'idle' | 'exiting' | 'entering'
 // after the landing · done: no intro styling at all.
 export type IntroStage = 'pending' | 'reveal' | 'done'
 export type CursorMode = 'default' | 'grab' | 'grabbing'
-// stage (desktop, spec 011): the cube waits small behind the face's
-// composition and comes to the front only to change face or to be explored.
+// stage (desktop, spec 011): the page opens in cube mode (the cube, its world
+// and the identity) until the visitor picks a face; then the cube waits small
+// behind the face's composition and comes to the front only to change face or
+// to be explored.
 // hero (stacked screens): the cube on top, the composition below it, the page
 // scrolls.
 export type ExperienceLayout = 'hero' | 'stage'
@@ -67,6 +69,8 @@ export function initialExperience(options: {
   hintVisible: boolean
   layout?: ExperienceLayout
   nudge?: boolean
+  // Open in cube mode (stage layout only).
+  explore?: boolean
 }): ExperienceState {
   return {
     activeFace: options.face,
@@ -80,7 +84,7 @@ export function initialExperience(options: {
     detail: { open: false },
     cursor: 'default',
     layout: options.layout ?? 'hero',
-    explore: false,
+    explore: Boolean(options.explore) && options.layout === 'stage',
     nudge: options.nudge ? 'waiting' : 'done',
   }
 }
@@ -101,7 +105,7 @@ export function experienceReducer(state: ExperienceState, event: ExperienceEvent
     case 'sceneFailed':
       // The still image replaces the scene: nothing will land, so the
       // interface shows and faces change without turning.
-      return { ...state, sceneReady: false, requestedFace: null, intro: 'done' }
+      return { ...state, sceneReady: false, requestedFace: null, intro: 'done', explore: false }
     case 'faceRequested':
       if (event.face === state.activeFace) return state
       // The scene turns the cube and reports the face once it lands; without a

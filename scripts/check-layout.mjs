@@ -443,7 +443,7 @@ async function checkDegradation(noWebglBrowser) {
       if (message.text().startsWith('World "products" failed')) caught = true
     })
     await page.route('**/assets/productsWorld-*.js', (route) => route.abort())
-    await page.goto(`${BASE}/?intro=0&lang=en`)
+    await page.goto(`${BASE}/?intro=0&lang=en&section=agentic`)
     await page.waitForSelector('.stage[data-transition="idle"]')
     await page.click('.stage-dock a[data-section-id="products"]')
     await page.waitForSelector('.stage[data-transition="idle"][data-face="products"]')
@@ -469,7 +469,8 @@ async function checkDegradation(noWebglBrowser) {
 // so their contrast is measured over the still image. Here the scene runs
 // (software WebGL) and the name and the role are measured over every face's
 // world, on the stage and on the phone's hero, in three frames: the worlds
-// move, and the worst frame counts. Only with --worlds.
+// move, and the worst frame counts. On the stage, again in cube mode, where
+// the veil is gone. Only with --worlds.
 const WORLD_VIEWPORTS = ['1366x768', '390x844']
 async function checkWorldContrast() {
   const failures = []
@@ -483,8 +484,18 @@ async function checkWorldContrast() {
         try {
           const page = await context.newPage()
           watchCsp(page, `worlds ${viewport} ${locale}`)
-          await page.goto(`${BASE}/?intro=0&lang=${locale}`)
+          await page.goto(`${BASE}/?intro=0&lang=${locale}&section=agentic`)
           await page.waitForSelector('.stage[data-transition="idle"]')
+          const measure = async (where, firstWait) => {
+            const worst = {}
+            for (let frame = 0; frame < 3; frame += 1) {
+              await page.waitForTimeout(frame === 0 ? firstWait : 800)
+              for (const [part, ratio] of Object.entries(await identityRatios(page))) {
+                worst[part] = ratio === null || worst[part] === null ? null : Math.min(ratio, worst[part] ?? Infinity)
+              }
+            }
+            for (const failure of contrastFailures(worst)) failures.push(`worlds ${viewport} ${locale} ${where} ${failure}`)
+          }
           for (const face of FACES) {
             if ((await page.getAttribute('.stage', 'data-face')) !== face) {
               await page.click(`.stage-dock a[data-section-id="${face}"]`)
@@ -492,15 +503,15 @@ async function checkWorldContrast() {
             }
             // The hero scrolls the composition into view; the world is behind the top.
             await page.evaluate(() => window.scrollTo(0, 0))
-            const worst = {}
-            for (let frame = 0; frame < 3; frame += 1) {
-              // The first wait lets the face's world compile and appear.
-              await page.waitForTimeout(frame === 0 ? 3000 : 800)
-              for (const [part, ratio] of Object.entries(await identityRatios(page))) {
-                worst[part] = ratio === null || worst[part] === null ? null : Math.min(ratio, worst[part] ?? Infinity)
-              }
+            // The first wait lets the face's world compile and appear.
+            await measure(face, 3000)
+            if (width >= 720) {
+              await page.click('.stage-explore')
+              await page.waitForSelector('.stage[data-explore]')
+              await measure(`${face} cube-mode`, 1200)
+              await page.keyboard.press('Escape')
+              await page.waitForSelector('.stage:not([data-explore])')
             }
-            for (const failure of contrastFailures(worst)) failures.push(`worlds ${viewport} ${locale} ${face} ${failure}`)
           }
         } finally {
           await context.close()
@@ -629,14 +640,37 @@ async function checkBehaviour(noWebglBrowser) {
     await page.keyboard.press('Space')
     const skipped = await page.waitForFunction(() => !document.querySelector('[data-intro]'), null, { timeout: 8000 }).then(() => true).catch(() => false)
     if (!skipped) fail('intro-skip')
-    const visible = await page.evaluate(() => getComputedStyle(document.querySelector('.stage-content')).visibility !== 'hidden')
-    if (!visible) fail('intro-content-hidden-after-skip')
+    // The desktop opens in cube mode: after the intro only the top shows,
+    // until the visitor picks a face from the cube.
+    const hidden = (selector) => page.evaluate((s) => getComputedStyle(document.querySelector(s)).visibility === 'hidden', selector)
+    const landing = {
+      topShown: !(await hidden('.stage-top')),
+      cubeMode: Boolean(await page.$('.stage[data-explore]')),
+      contentHidden: await hidden('.stage-content'),
+      dockHidden: await hidden('.stage-dock'),
+    }
+    for (const [check, ok] of Object.entries(landing)) if (!ok) fail(`intro-landing ${check}`)
+    // A click on the cube, at the centre of the screen, opens the face under it.
+    // Software WebGL may still be compiling the scene (nothing drawn, nothing to
+    // hit): click again, as a visitor would once the cube shows.
+    let picked = false
+    for (let attempt = 0; attempt < 6 && !picked; attempt += 1) {
+      await page.waitForTimeout(1500)
+      await page.mouse.click(683, Math.round(768 * 0.45))
+      picked = await page.waitForSelector('.stage:not([data-explore])', { timeout: 2500 }).then(() => true).catch(() => false)
+    }
+    if (!picked) fail('cube-click-picks-no-face')
+    else {
+      await page.waitForSelector('.stage[data-transition="idle"]')
+      await page.waitForTimeout(800)
+      if ((await hidden('.stage-content')) || (await hidden('.stage-dock'))) fail('cube-click-content-hidden')
+    }
   } finally {
     await webglContext.close()
   }
 
-  // The nudge: a first visitor gets the bubble over the waiting cube, clear of
-  // the content, once; a later visit does not.
+  // The nudge: a first visitor gets the bubble over the waiting cube (cube
+  // mode, on landing), clear of what shows, once; a later visit does not.
   const nudgeContext = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
   nudgeContext.setDefaultTimeout(120000)
   try {
@@ -653,7 +687,9 @@ async function checkBehaviour(noWebglBrowser) {
         const overlaps = (box) => bubble.left < box.right && box.left < bubble.right && bubble.top < box.bottom && box.top < bubble.bottom
         return {
           inView: bubble.top >= 0 && bubble.left >= 0 && bubble.right <= innerWidth,
-          clearOfContent: ![...document.querySelectorAll('.stage-content > *, .stage-top > *')].some((element) => overlaps(element.getBoundingClientRect())),
+          clearOfContent: ![...document.querySelectorAll('.stage-content > *, .stage-top > *')]
+            .filter((element) => getComputedStyle(element).visibility !== 'hidden')
+            .some((element) => overlaps(element.getBoundingClientRect())),
           remembered: localStorage.getItem('obsidian-cube:nudge-seen') === '1',
         }
       })

@@ -65,6 +65,12 @@ try {
           if (content === 'example' && message.text().includes('status of 404')) return
           if (message.type() === 'error') errors.push(`${layout} ${viewport} ${locale}: ${message.text().slice(0, 160)}`)
         })
+        // The desktop's first screen: cube mode, until a face is picked.
+        if (width >= 720) {
+          await page.goto(`${BASE}/?intro=0&lang=${locale}`)
+          await page.waitForTimeout(2500)
+          await page.screenshot({ path: `${OUT}/${layout}-${viewport}-${locale}-landing.png` })
+        }
         for (const face of FACES) {
           await page.goto(`${BASE}/?intro=0&lang=${locale}&section=${face}`)
           await page.waitForTimeout(2500)
