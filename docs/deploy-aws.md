@@ -17,7 +17,9 @@ GitHub Actions ──(OIDC)──> AWS
   served directly.
 - **CloudFront**: fronts the bucket via Origin Access Control; redirects to HTTPS;
   serves `index.html` for 403/404 so client-side routing works (to be removed in
-  the release stage, spec 010 AD-09); adds the security headers of
+  the release stage, spec 010 AD-09, when a viewer-request function starts
+  serving each clean path from its page, `/es/seguridad` from
+  `es/seguridad.html`, spec 012 AD-08); adds the security headers of
   `infra/security-headers.json` (content security policy report-only until it
   has run clean in production; set `reportOnly` to `false` to enforce it).
 - **CI/CD**: `.github/workflows/ci.yml` (every gate listed in

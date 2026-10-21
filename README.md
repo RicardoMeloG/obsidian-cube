@@ -99,7 +99,7 @@ Personal deploy content (gitignored):
 
 Loading order: the private file if present, otherwise the example, which is bundled as the defaults (`src/kernel/siteContent.ts`); a face that leaves a field empty takes it from the example in the same language. The admin edits and publishes these same files.
 
-Language behavior: `?lang=en` or `?lang=es` to force; otherwise inferred from `navigator.language`.
+Addresses and language: one page per language and face, English at the root (`/`, `/security`) and Spanish under `/es` (`/es`, `/es/seguridad`), each built as its own static HTML with its title and share preview (`src/kernel/sitePaths.ts`). The bare `/` opens in the visitor's last choice, otherwise in `navigator.language`.
 
 ## Visual Direction
 

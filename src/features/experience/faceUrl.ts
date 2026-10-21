@@ -1,14 +1,15 @@
 import { useEffect, useRef } from 'react'
-import { FACE_ORDER } from '@/kernel/faces'
 import type { FaceId } from '@/kernel/faces'
-import type { SiteLocale } from '@/kernel/siteContent'
+import { pageTitle } from '@/kernel/seo/renderSeo'
+import type { SiteContent } from '@/kernel/siteContent'
+import { pagePath, readPagePath } from '@/kernel/sitePaths'
 
-// The face in the address bar: `?section=<face>&lang=<locale>`, so a link opens
-// on the face it was copied from.
+// The page in the address bar (src/kernel/sitePaths.ts): `/security` or
+// `/es/seguridad` names a face, so a link opens on the face it was copied
+// from; the bare `/` or `/es` opens on the cube.
 function faceInUrl(): FaceId | null {
   if (typeof window === 'undefined') return null
-  const requested = new URLSearchParams(window.location.search).get('section')
-  return FACE_ORDER.includes(requested as FaceId) ? (requested as FaceId) : null
+  return readPagePath(window.location.pathname)?.face ?? null
 }
 
 export function readInitialFace(): FaceId {
@@ -20,18 +21,23 @@ export function urlNamesFace(): boolean {
   return faceInUrl() !== null
 }
 
-// Keeps the address in step with the face once the visitor changes it; until
-// then the URL stays as it arrived, so the bare address keeps opening on the
-// cube. Compared with what was shown, not counted by renders: development runs
-// each effect twice.
-export function useFaceUrl(face: FaceId, locale: SiteLocale) {
-  const shown = useRef({ face, locale })
+// Keeps the address and the title on the page the visitor sees: its language
+// always, its face once the visitor has picked one (or arrived on it), so the
+// bare address keeps opening on the cube. Both follow the content, not the
+// request, so they never name a language the page does not show yet; the
+// title waits for the published content (`ready`), since the bundled example
+// names someone else. Compared with what was shown, not counted by renders:
+// development runs each effect twice. Query parameters (the review's
+// `?intro=0`) are kept.
+export function useFaceUrl(face: FaceId, explore: boolean, content: SiteContent, ready: boolean) {
+  const shown = useRef({ face, explore, named: urlNamesFace() })
   useEffect(() => {
-    if (shown.current.face === face && shown.current.locale === locale) return
-    shown.current = { face, locale }
-    const url = new URL(window.location.href)
-    url.searchParams.set('section', face)
-    url.searchParams.set('lang', locale)
-    window.history.replaceState({}, '', url)
-  }, [face, locale])
+    const was = shown.current
+    const named = was.named || was.face !== face || (was.explore && !explore)
+    shown.current = { face, explore, named }
+    const page = { locale: content.locale, face: named ? face : null }
+    if (ready) document.title = pageTitle(content, page.face)
+    const path = pagePath(page)
+    if (window.location.pathname !== path) window.history.replaceState(window.history.state, '', `${path}${window.location.search}${window.location.hash}`)
+  }, [face, explore, content, ready])
 }

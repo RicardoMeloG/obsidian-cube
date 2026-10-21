@@ -8,6 +8,7 @@
 // Pure and DOM-free, like renderSeo.ts.
 import type { ProfileContent } from '../profileContent'
 import type { SiteContent, SiteLocale } from '../siteContent'
+import { pagePath } from '../sitePaths'
 import { faceLinks, faceText } from './faceText'
 import type { FaceLink, FaceText, TextEntry } from './faceText'
 import { LLMS_FILE, PROFILE_PAGES } from './machineFiles'
@@ -257,7 +258,7 @@ export function renderProfilePage(content: MachineInput): string {
     profile?.languages?.length ? `${label.languages}: ${escapeHtml(profile.languages.join(', '))}` : '',
   ].filter(Boolean)
   const body = [
-    `<p><a href="/?lang=${locale}">${escapeHtml(label.site)}</a> · <a href="/${PROFILE_PAGES[other]}" hreflang="${other}" lang="${other}">${escapeHtml(label.other)}</a></p>`,
+    `<p><a href="${pagePath({ locale, face: null })}">${escapeHtml(label.site)}</a> · <a href="/${PROFILE_PAGES[other]}" hreflang="${other}" lang="${other}">${escapeHtml(label.other)}</a></p>`,
     `<h1>${escapeHtml(identity.fullName)}</h1>`,
     `<p>${escapeHtml(identity.role)}</p>`,
     `<p>${escapeHtml(profile ? toPlainText(profile.about) : seo.description)}</p>`,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import exampleEn from '../../../public/content/site.example.en.json'
-import { buildPersonJsonLd, escapeHtml, isProfileUrl, renderHeadTags, renderStaticBody, toPlainText } from './renderSeo'
+import { buildPersonJsonLd, escapeHtml, isProfileUrl, pageTitle, renderHeadTags, renderStaticBody, toPlainText } from './renderSeo'
 import type { SeoInput } from './renderSeo'
 import { SiteContentSchema } from '../siteContent'
 
@@ -101,6 +101,26 @@ describe('renderHeadTags', () => {
     expect(head).toContain('<meta property="og:image" content="https://ada.example/share.png" />')
   })
 
+  it('titles and describes a face page by its face, and the cube page by the site', () => {
+    expect(pageTitle(base, null)).toBe('Ada Example — Agentic Product Engineer')
+    expect(pageTitle(base, 'products')).toBe('Public Products | Ada Example')
+    const head = renderHeadTags(base, 'products')
+    expect(head).toContain('<title>Public Products | Ada Example</title>')
+    expect(head).toContain('<meta property="og:title" content="Public Products | Ada Example" />')
+    expect(head).toContain('<meta name="description" content="Tools &amp; experiments." />')
+  })
+
+  it('gives a page its own address and its other language once the site URL is set', () => {
+    const spanish = { ...base, locale: 'es' as const, seo: { ...base.seo, siteUrl: 'https://ada.example' } }
+    const head = renderHeadTags(spanish, 'products')
+    expect(head).toContain('<link rel="canonical" href="https://ada.example/es/productos" />')
+    expect(head).toContain('<meta property="og:url" content="https://ada.example/es/productos" />')
+    expect(head).toContain('<link rel="alternate" hreflang="en" href="https://ada.example/products" />')
+    expect(head).toContain('<link rel="alternate" hreflang="es" href="https://ada.example/es/productos" />')
+    expect(head).toContain('<link rel="alternate" hreflang="x-default" href="https://ada.example/products" />')
+    expect(renderHeadTags(base, 'products')).not.toContain('hreflang')
+  })
+
   it('escapes content so it cannot break out of attributes or the JSON-LD script', () => {
     const hostile = { ...base, seo: { ...base.seo, title: '"><script>x</script>', description: '</script><b>' } }
     const head = renderHeadTags(hostile)
@@ -115,10 +135,15 @@ describe('renderStaticBody', () => {
     expect(body).toContain('<h1>Ada Example</h1>')
     expect(body).toContain('<p>AI Engineer · LLM agents · Python · AWS</p>')
     expect(body).toContain('<p>Summary with emphasis.</p>')
-    expect(body).toContain('<h2>PRODUCTS — Public Products</h2>')
+    expect(body).toContain('<h2><a href="/products">PRODUCTS — Public Products</a></h2>')
     expect(body).toContain('<p>Tools &amp; experiments.</p>')
     expect(body.match(/href="https:\/\/github.com\/ada"/g)).toHaveLength(1)
     expect(body).not.toContain('#products')
+  })
+
+  it('links the same page in the other language', () => {
+    expect(renderStaticBody(base, 'products')).toContain('<a href="/es/productos" hreflang="es" lang="es">Español</a>')
+    expect(renderStaticBody({ ...base, locale: 'es' }, null)).toContain('<a href="/" hreflang="en" lang="en">English</a>')
   })
 
   it('lists the primary call to action, the one every face shows (audit-2 B-03)', () => {

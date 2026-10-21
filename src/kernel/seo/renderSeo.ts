@@ -1,13 +1,16 @@
-// Static SEO for index.html, rendered at build time from the site content
-// (vite.config.ts → seoFromContent). Crawlers that do not run JavaScript
-// (GPTBot, ClaudeBot, Perplexity, link-preview scrapers; see
-// docs/visitor-profile.md) only ever see this HTML, so it carries the identity,
-// the share preview and a plain-text version of every face.
+// Static SEO for every page of the site (one per language and face,
+// sitePaths.ts), rendered at build time from the site content (vite.config.ts
+// → seoPages). Crawlers that do not run JavaScript (GPTBot, ClaudeBot,
+// Perplexity, link-preview scrapers; see docs/visitor-profile.md) only ever see
+// this HTML, so it carries the identity, the page's share preview and a
+// plain-text version of every face.
 //
 // Pure and DOM-free, like the rest of the kernel: it runs inside the Vite
 // config (Node) and in Vitest. The input is the content document the schema
 // validated (vite.config.ts parses it first).
-import type { SiteContent } from '../siteContent'
+import type { FaceId } from '../faces'
+import type { SiteContent, SiteLocale } from '../siteContent'
+import { pagePath } from '../sitePaths'
 import { LLMS_FILE, PROFILE_PAGES } from './machineFiles'
 
 export type SeoInput = SiteContent
@@ -112,24 +115,50 @@ export function jsonForScript(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c')
 }
 
-export function renderHeadTags(content: SeoInput): string {
-  const { identity, seo } = content
+const OTHER_LOCALE: Record<SiteLocale, SiteLocale> = { en: 'es', es: 'en' }
+const LANGUAGE_NAME: Record<SiteLocale, string> = { en: 'English', es: 'Español' }
+
+const faceSection = (content: SeoInput, face: FaceId | null) => (face ? content.sections.find((section) => section.id === face) : undefined)
+
+// A face's page is titled and described by the face, so a link to it
+// previews that face; the cube's page (face null) by the site.
+export function pageTitle(content: SeoInput, face: FaceId | null): string {
+  const section = faceSection(content, face)
+  return section ? `${section.title} | ${content.identity.displayName}` : content.seo.title
+}
+
+function pageDescription(content: SeoInput, face: FaceId | null): string {
+  const section = faceSection(content, face)
+  return section ? toPlainText(section.summary) : content.seo.description
+}
+
+export function renderHeadTags(content: SeoInput, face: FaceId | null = null): string {
+  const { identity, seo, locale } = content
+  const title = pageTitle(content, face)
+  const description = pageDescription(content, face)
   const image = absoluteUrl(seo.image ?? DEFAULT_SHARE_IMAGE, seo.siteUrl)
   const ogLocale = content.locale === 'es' ? 'es_CL' : 'en_US'
   const ogAlternate = content.locale === 'es' ? 'en_US' : 'es_CL'
   const meta = (attr: 'name' | 'property', key: string, value: string) =>
     `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`
+  // Search engines want this page's address, and its other language's, in
+  // full: they wait for the site URL, like the canonical.
+  const url = (target: SiteLocale) => absoluteUrl(pagePath({ locale: target, face }), seo.siteUrl)
+  const alternate = (hreflang: string, target: SiteLocale) => `<link rel="alternate" hreflang="${hreflang}" href="${escapeHtml(url(target))}" />`
+  const addresses = seo.siteUrl
+    ? [`<link rel="canonical" href="${escapeHtml(url(locale))}" />`, alternate('en', 'en'), alternate('es', 'es'), alternate('x-default', 'en')]
+    : []
 
   const tags = [
-    `<title>${escapeHtml(seo.title)}</title>`,
-    meta('name', 'description', seo.description),
+    `<title>${escapeHtml(title)}</title>`,
+    meta('name', 'description', description),
     meta('name', 'author', identity.fullName),
     meta('name', 'theme-color', '#08050d'),
-    seo.siteUrl ? `<link rel="canonical" href="${escapeHtml(seo.siteUrl)}" />` : '',
+    ...addresses,
     meta('property', 'og:type', 'website'),
-    meta('property', 'og:title', seo.title),
-    meta('property', 'og:description', seo.description),
-    seo.siteUrl ? meta('property', 'og:url', seo.siteUrl) : '',
+    meta('property', 'og:title', title),
+    meta('property', 'og:description', description),
+    seo.siteUrl ? meta('property', 'og:url', url(locale)) : '',
     meta('property', 'og:image', image),
     meta('property', 'og:image:width', String(SHARE_IMAGE_SIZE.width)),
     meta('property', 'og:image:height', String(SHARE_IMAGE_SIZE.height)),
@@ -137,8 +166,8 @@ export function renderHeadTags(content: SeoInput): string {
     meta('property', 'og:locale', ogLocale),
     meta('property', 'og:locale:alternate', ogAlternate),
     meta('name', 'twitter:card', 'summary_large_image'),
-    meta('name', 'twitter:title', seo.title),
-    meta('name', 'twitter:description', seo.description),
+    meta('name', 'twitter:title', title),
+    meta('name', 'twitter:description', description),
     meta('name', 'twitter:image', image),
     `<script type="application/ld+json">${jsonForScript(buildPersonJsonLd(content))}</script>`,
   ]
@@ -147,15 +176,17 @@ export function renderHeadTags(content: SeoInput): string {
 
 // Plain HTML version of the page for clients without JavaScript. Hidden for
 // JavaScript visitors (the `js` class that /js-flag.js sets) and replaced by React
-// on mount, so people never see it flash.
-export function renderStaticBody(content: SeoInput): string {
-  const { identity, hero } = content
+// on mount, so people never see it flash. Each face heading links its page and
+// the page links its other language, so a crawler reaches every page.
+export function renderStaticBody(content: SeoInput, face: FaceId | null = null): string {
+  const { identity, hero, locale } = content
+  const other = OTHER_LOCALE[locale]
   const keywords = identity.keywords ? `\n        <p>${escapeHtml(identity.keywords)}</p>` : ''
   const sections = content.sections
     .map(
       (section) => `
         <section>
-          <h2>${escapeHtml(section.label)} — ${escapeHtml(toPlainText(section.title))}</h2>
+          <h2><a href="${pagePath({ locale, face: section.id })}">${escapeHtml(section.label)} — ${escapeHtml(toPlainText(section.title))}</a></h2>
           <p>${escapeHtml(toPlainText(section.summary))}</p>
         </section>`,
     )
@@ -181,7 +212,7 @@ export function renderStaticBody(content: SeoInput): string {
         <p>${escapeHtml(identity.role)}</p>${keywords}
         <p>${escapeHtml(toPlainText(hero.headline))}</p>
         <p>${escapeHtml(toPlainText(hero.summary))}</p>${sections}${linkList}
-        <p><a href="/${PROFILE_PAGES[content.locale]}">${profile}</a> · <a href="/${LLMS_FILE}">${LLMS_FILE}</a></p>
+        <p><a href="/${PROFILE_PAGES[locale]}">${profile}</a> · <a href="/${LLMS_FILE}">${LLMS_FILE}</a> · <a href="${pagePath({ locale: other, face })}" hreflang="${other}" lang="${other}">${LANGUAGE_NAME[other]}</a></p>
         <p>${escapeHtml(note)}</p>
       </main>`
 }

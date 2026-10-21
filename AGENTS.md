@@ -49,7 +49,7 @@ Long form:
 The site is a **single-screen experience** built around a persistent obsidian cube.
 
 - The cube stays visible at the center of the screen at all times on desktop. It is **not** a one-shot portal.
-- Selecting a face does **not** navigate to a separate page or full-screen overlay. Instead, the composition around the cube updates in place to reveal that face's minimal content.
+- Selecting a face does **not** navigate to a separate page or full-screen overlay. Instead, the composition around the cube updates in place to reveal that face's minimal content. The address bar follows in place (`/security`, `/es/seguridad`), so a copied link opens on that face; the page never reloads.
 - Desktop layout: cube center, the face's composition around it (one template per face, chosen and filled from the admin; spec 011, E-1), face navigation on the bottom dock.
 - Content per face is intentionally minimal: it must fit a single viewport without scroll on a standard 1440-1920px desktop. **No long-form essays inside the cube experience.**
 - Responsive: on stacked screens the cube is the hero on top, the face's composition follows in reading order in one column, and the dock stays fixed at the bottom.
@@ -162,11 +162,11 @@ The overview, the module map and the status of every rule (in force, or the phas
 
 The site is bilingual: English (primary), Spanish (secondary).
 
-Language behavior:
+Language behavior and addresses (owner, 2026-10-20; spec 012, AD-08):
 
-- `?lang=en` forces English.
-- `?lang=es` forces Spanish.
-- Otherwise: use `navigator.language` (Spanish if it starts with `es`, English otherwise).
+- Every language and face has a clean address of its own, served as its own static HTML page: English at the root (`/` for the cube, `/security` for a face), Spanish under `/es` (`/es`, `/es/seguridad`). The slugs live in `src/kernel/sitePaths.ts` and never follow the content's labels: shared links point at them.
+- The bare `/` opens in the language the visitor last chose (remembered in the browser), otherwise in `navigator.language` (Spanish if it starts with `es`, English otherwise); the address then names the language shown.
+- Query parameters are for review and development only (`?intro=`, `?nudge=`; `?bg=`, `?tune=`, `?fx=`, `?introAt=` and `?cube=solo` exist only in development). The site never writes one.
 
 Content files (paths):
 
@@ -226,7 +226,7 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a composition CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
-- [x] Static SEO in `index.html` (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (spec 012, AD-07). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
+- [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (spec 012, AD-07). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [ ] Real identity and at least one real artifact per face, live at a public URL.
 - [x] The CI gates pass (build, lint, types, tests, budget, privacy, docs, layout).

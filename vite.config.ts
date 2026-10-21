@@ -12,6 +12,8 @@ import { renderHeadTags, renderStaticBody } from './src/kernel/seo/renderSeo.ts'
 import type { SeoInput } from './src/kernel/seo/renderSeo.ts'
 import { SiteContentSchema } from './src/kernel/siteContent.ts'
 import type { SiteLocale } from './src/kernel/siteContent.ts'
+import { readPagePath, sitePages } from './src/kernel/sitePaths.ts'
+import type { SitePage } from './src/kernel/sitePaths.ts'
 
 // Static SEO (src/kernel/seo/renderSeo.ts) and the layer for machines
 // (renderMachine.ts): the published content of each language when it exists
@@ -65,21 +67,47 @@ function readMachineInput(locale: SiteLocale): MachineInput {
   return { ...content, profile }
 }
 
-function seoFromContent(): Plugin {
-  let announced = false
+// One page per language and face (src/kernel/sitePaths.ts; spec 012, AD-08):
+// the built index.html, with the language, the share preview and the plain
+// body of that page. Rendered last, once Vite has written the scripts and
+// preloads into the template, so every page loads exactly what index.html
+// loads. The dev server renders the page the address names.
+const SEO_HEAD = /<!-- seo:head[\s\S]*?<!-- \/seo:head -->/
+const SEO_BODY = '<!-- seo:body -->'
+const HTML_TAG = '<html lang="en">'
+
+function renderPage(template: string, page: SitePage): string {
+  const { content } = readContent(page.locale)
+  return template
+    .replace(HTML_TAG, `<html lang="${page.locale}">`)
+    .replace(SEO_HEAD, renderHeadTags(content, page.face))
+    .replace(SEO_BODY, renderStaticBody(content, page.face))
+}
+
+function seoPages(): Plugin {
+  let pages: { fileName: string; source: string }[] = []
   return {
-    name: 'seo-from-content',
-    transformIndexHtml(html) {
-      const { file, content } = readContent('en')
-      if (!announced) {
-        console.info(`[seo] index.html rendered from public/content/${file}`)
-        announced = true
-      }
-      const head = /<!-- seo:head[\s\S]*?<!-- \/seo:head -->/
-      if (!head.test(html) || !html.includes('<!-- seo:body -->')) {
-        throw new Error('[seo] index.html lost its seo:head / seo:body placeholders')
-      }
-      return html.replace(head, renderHeadTags(content)).replace('<!-- seo:body -->', renderStaticBody(content))
+    name: 'seo-pages',
+    enforce: 'post',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, context) {
+        if (!SEO_HEAD.test(html) || !html.includes(SEO_BODY) || !html.includes(HTML_TAG)) {
+          throw new Error('[seo] index.html lost its <html lang="en"> or its seo:head / seo:body placeholders')
+        }
+        if (context.server) {
+          const named = readPagePath(new URL(context.originalUrl ?? '/', 'http://localhost').pathname)
+          return renderPage(html, { locale: named?.locale ?? 'en', face: named?.face ?? null })
+        }
+        const [root, ...others] = sitePages()
+        const sources = (['en', 'es'] as const).map((locale) => `public/content/${readContent(locale).file}`)
+        console.info(`[seo] ${others.length + 1} pages rendered from ${sources.join(' and ')}`)
+        pages = others.map((page) => ({ fileName: page.file, source: renderPage(html, page) }))
+        return renderPage(html, root)
+      },
+    },
+    generateBundle() {
+      for (const page of pages) this.emitFile({ type: 'asset', ...page })
     },
   }
 }
@@ -128,7 +156,7 @@ function preloadLatinFont(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), seoFromContent(), machineLayer(), preloadLatinFont()],
+  plugins: [react(), tailwindcss(), seoPages(), machineLayer(), preloadLatinFont()],
   // `@/` is src/: imports across top-level modules use it (ADR 006).
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // A port of its own, so it does not clash with other projects on 5173;

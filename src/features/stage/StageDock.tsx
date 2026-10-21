@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { FaceId } from '@/kernel/faces'
 import type { SiteLocale } from '@/kernel/siteContent'
+import { pagePath } from '@/kernel/sitePaths'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import { cx } from '@/ui/cx'
 import { StageIcon } from './StageIcon'
@@ -27,7 +28,7 @@ export function StageDock({ sections, activeFace, locale, label, onRequestFace }
                 className={cx('stage-dock__item focus-ring', active && 'is-active')}
                 aria-current={active ? 'page' : undefined}
                 data-section-id={section.id}
-                href={`?section=${section.id}&lang=${locale}`}
+                href={pagePath({ locale, face: section.id })}
                 onClick={(event) => {
                   event.preventDefault()
                   onRequestFace(section.id)

@@ -1,18 +1,38 @@
 import { getDefaultSiteContent, SiteContentSchema } from '@/kernel/siteContent'
 import type { SiteContent, SiteLocale } from '@/kernel/siteContent'
+import { readPagePath } from '@/kernel/sitePaths'
 import { getDefaultVisualContent, normalizeVisual, VisualContentSchema } from '@/kernel/visualContent'
 import type { VisualContent } from '@/kernel/visualContent'
 
 // Browser side of the content kernel: locale detection and fetching the
 // published documents. Validation and defaults stay in src/kernel.
 
-export function resolveSiteLocale(search = window.location.search, browserLanguage = navigator.language): SiteLocale {
-  const requestedLocale = new URLSearchParams(search).get('lang')
+// The language the visitor last chose, kept on this browser only: the bare
+// address names no language, so it opens on that choice.
+const LOCALE_KEY = 'obsidian-cube:locale'
 
-  if (requestedLocale === 'en' || requestedLocale === 'es') {
-    return requestedLocale
+function rememberedLocale(): string | null {
+  try {
+    return window.localStorage.getItem(LOCALE_KEY)
+  } catch {
+    return null
   }
+}
 
+export function rememberLocale(locale: SiteLocale) {
+  try {
+    window.localStorage.setItem(LOCALE_KEY, locale)
+  } catch {
+    // Storage blocked: the address still carries the language.
+  }
+}
+
+// The language a path names (`/es/…`, or an English face), otherwise the
+// visitor's last choice, otherwise the browser's language.
+export function resolveSiteLocale(pathname = window.location.pathname, remembered = rememberedLocale(), browserLanguage = navigator.language): SiteLocale {
+  const named = readPagePath(pathname)?.locale
+  if (named) return named
+  if (remembered === 'en' || remembered === 'es') return remembered
   return browserLanguage.toLowerCase().startsWith('es') ? 'es' : 'en'
 }
 

@@ -50,7 +50,7 @@ try {
       // Desktop shows the stage, stacked screens the hero (spec 011).
       const layout = 'stage'
       for (const locale of locales) {
-        const page = await browser.newPage({ viewport: { width, height } })
+        const page = await browser.newPage({ viewport: { width, height }, locale: locale === 'es' ? 'es-CL' : 'en-US' })
         // Without the private documents the site falls back to the example.
         if (content === 'example') await page.route('**/content/{site.*,visual}.json', (route) => route.fulfill({ status: 404, body: '' }))
         if (stress) {
@@ -65,14 +65,16 @@ try {
           if (content === 'example' && message.text().includes('status of 404')) return
           if (message.type() === 'error') errors.push(`${layout} ${viewport} ${locale}: ${message.text().slice(0, 160)}`)
         })
-        // The desktop's first screen: cube mode, until a face is picked.
-        if (width >= 720) {
-          await page.goto(`${BASE}/?intro=0&lang=${locale}`)
-          await page.waitForTimeout(2500)
-          await page.screenshot({ path: `${OUT}/${layout}-${viewport}-${locale}-landing.png` })
-        }
+        // The desktop's first screen: cube mode, until a face is picked. Each
+        // face's page is taken from the dock's own link (src/kernel/sitePaths.ts).
+        await page.goto(`${BASE}${locale === 'es' ? '/es' : '/'}?intro=0`)
+        await page.waitForTimeout(2500)
+        if (width >= 720) await page.screenshot({ path: `${OUT}/${layout}-${viewport}-${locale}-landing.png` })
+        const pages = Object.fromEntries(
+          await page.$$eval('.stage-dock a[data-section-id]', (links) => links.map((link) => [link.dataset.sectionId, link.getAttribute('href')])),
+        )
         for (const face of FACES) {
-          await page.goto(`${BASE}/?intro=0&lang=${locale}&section=${face}`)
+          await page.goto(`${BASE}${pages[face]}?intro=0`)
           await page.waitForTimeout(2500)
           await page.screenshot({ path: `${OUT}/${layout}-${viewport}-${locale}-${face}.png`, fullPage: width < 720 })
         }

@@ -81,6 +81,8 @@ describe('profile pages', () => {
     expect(page).toContain(`<h1>${es.identity.fullName}</h1>`)
     expect(page).toContain(`href="/${PROFILE_PAGES.en}" hreflang="en"`)
     expect(page).toContain(`href="/${LLMS_FILE}"`)
+    // The site in the page's language, on its clean address.
+    expect(page).toContain('<a href="/es">')
   })
 
   it('carry no inline code or style beyond the JSON-LD data', () => {

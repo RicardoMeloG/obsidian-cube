@@ -54,6 +54,14 @@ const FULL_VIEWPORTS = ['2048x1152', '1920x1080', '1600x725', '1536x864', '1440x
 const LAYOUT_MODES = ['stacked', 'desktop', 'desktop-short']
 const LOCALES = ['en', 'es']
 const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contact']
+// The pages the checks open (src/kernel/sitePaths.ts): each language's cube
+// page and its AGENTIC page. The address check proves the site answers on
+// them and keeps the address bar in step with what it shows.
+const ROOT = { en: '/', es: '/es' }
+const AGENTIC = { en: '/agentic', es: '/es/agentico' }
+// The bare address follows the browser's language, so every page opens as
+// an English or a Spanish visitor's browser would, whatever the machine's.
+const BROWSER_LOCALE = { en: 'en-US', es: 'es-CL' }
 
 // The mode queries come from their single source, src/styles/layoutModes.ts.
 const modesSource = readFileSync(fileURLToPath(new URL('../src/styles/layoutModes.ts', import.meta.url)), 'utf8')
@@ -326,7 +334,7 @@ const REPORT_DIR = fileURLToPath(new URL('../layout-report/', import.meta.url))
 
 async function checkPage(browser, viewport, locale, variant = '') {
   const [width, height] = viewport.split('x').map(Number)
-  const context = await browser.newContext({ viewport: { width, height } })
+  const context = await browser.newContext({ viewport: { width, height }, locale: BROWSER_LOCALE[locale] })
   await serveContent(context)
   const page = await context.newPage()
   watchCsp(page, [viewport, locale, variant].filter(Boolean).join(' '))
@@ -356,8 +364,10 @@ async function measurePage(page, viewport, locale, variant = '') {
   // Failure ids start with the viewport (the known list is keyed by it); a
   // stress variant is named after the locale.
   const where = [viewport, locale, variant].filter(Boolean).join(' ')
-  await page.goto(`${BASE}/?intro=0&lang=${locale}`)
+  await page.goto(`${BASE}${ROOT[locale]}?intro=0`)
   await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
+  // Each language is measured in that language, never the other one twice.
+  if ((await page.evaluate(() => document.documentElement.lang)) !== locale) results.layout.push(`${where} wrong-language`)
   await page.evaluate(() => document.fonts.ready)
   // The layout is measured with the served font (ADR 006, AD-10).
   if (!(await page.evaluate(() => document.fonts.check('16px "Inter Variable"')))) {
@@ -399,12 +409,12 @@ async function checkDegradation(noWebglBrowser) {
   const errors = []
 
   // Without WebGL: the still image replaces the scene, the DOM stays.
-  const noWebglContext = await noWebglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
+  const noWebglContext = await noWebglBrowser.newContext({ viewport: { width: 1366, height: 768 }, locale: BROWSER_LOCALE.en })
   try {
     const page = await noWebglContext.newPage()
     watchCsp(page, 'degradation no-webgl')
     page.on('pageerror', (error) => errors.push(`no-webgl: ${error.message}`))
-    await page.goto(`${BASE}/?intro=1&lang=en`)
+    await page.goto(`${BASE}/?intro=1`)
     await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
     const state = await page.evaluate(() => {
       const poster = document.querySelector('.cube-canvas__poster')
@@ -430,7 +440,7 @@ async function checkDegradation(noWebglBrowser) {
   // face without background while the cube and the page stay. Software WebGL
   // is slow on a CI runner, hence the generous timeouts.
   const webglBrowser = await launch(SOFTWARE_WEBGL)
-  const context = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
+  const context = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 }, locale: BROWSER_LOCALE.en })
   context.setDefaultTimeout(120000)
   try {
     const page = await context.newPage()
@@ -443,7 +453,7 @@ async function checkDegradation(noWebglBrowser) {
       if (message.text().startsWith('World "products" failed')) caught = true
     })
     await page.route('**/assets/productsWorld-*.js', (route) => route.abort())
-    await page.goto(`${BASE}/?intro=0&lang=en&section=agentic`)
+    await page.goto(`${BASE}${AGENTIC.en}?intro=0`)
     await page.waitForSelector('.stage[data-transition="idle"]')
     await page.click('.stage-dock a[data-section-id="products"]')
     await page.waitForSelector('.stage[data-transition="idle"][data-face="products"]')
@@ -479,12 +489,12 @@ async function checkWorldContrast() {
     for (const viewport of WORLD_VIEWPORTS) {
       const [width, height] = viewport.split('x').map(Number)
       for (const locale of LOCALES) {
-        const context = await browser.newContext({ viewport: { width, height } })
+        const context = await browser.newContext({ viewport: { width, height }, locale: BROWSER_LOCALE[locale] })
         context.setDefaultTimeout(120000)
         try {
           const page = await context.newPage()
           watchCsp(page, `worlds ${viewport} ${locale}`)
-          await page.goto(`${BASE}/?intro=0&lang=${locale}&section=agentic`)
+          await page.goto(`${BASE}${AGENTIC[locale]}?intro=0`)
           await page.waitForSelector('.stage[data-transition="idle"]')
           const measure = async (where, firstWait) => {
             const worst = {}
@@ -532,11 +542,11 @@ async function checkBehaviour(noWebglBrowser) {
   const failures = []
   const fail = (id) => failures.push(`behaviour ${id}`)
 
-  const context = await noWebglBrowser.newContext({ viewport: { width: 1440, height: 900 } })
+  const context = await noWebglBrowser.newContext({ viewport: { width: 1440, height: 900 }, locale: BROWSER_LOCALE.en })
   try {
     const page = await context.newPage()
     watchCsp(page, 'behaviour dialog')
-    await page.goto(`${BASE}/?intro=0&lang=en&section=agentic`)
+    await page.goto(`${BASE}${AGENTIC.en}?intro=0`)
     await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
     // A call to action without a target opens the face's detail.
     const trigger = page.locator('.stage-content button.st-button').first()
@@ -618,15 +628,65 @@ async function checkBehaviour(noWebglBrowser) {
     await context.close()
   }
 
+  // Addresses (spec 012, AD-08): each language and face has a page of its own,
+  // served in its language and under its title before any script runs; the
+  // address bar follows what the visitor sees and adds no query of its own;
+  // the bare address opens in the browser's language and then in the
+  // visitor's last choice.
+  const addressContext = await noWebglBrowser.newContext({ viewport: { width: 1440, height: 900 }, locale: BROWSER_LOCALE.es })
+  try {
+    const page = await addressContext.newPage()
+    watchCsp(page, 'behaviour addresses')
+    const served = await (await fetch(`${BASE}/es/seguridad`, { headers: { accept: 'text/html' } })).text()
+    const servedRoot = await (await fetch(`${BASE}/`, { headers: { accept: 'text/html' } })).text()
+    const titleOf = (html) => page.evaluate((source) => new DOMParser().parseFromString(source, 'text/html').title, html)
+    const title = await titleOf(served)
+    if (!served.includes('<html lang="es">')) fail('address-page-language')
+    if (!title || title === (await titleOf(servedRoot))) fail('address-page-title')
+    const where = () => page.evaluate(() => location.pathname + location.search)
+
+    await page.goto(`${BASE}/?intro=0`)
+    await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
+    await page.waitForFunction(() => location.pathname === '/es', null, { timeout: 5000 }).catch(() => fail('address-root-language'))
+
+    await page.goto(`${BASE}/es/seguridad?intro=0`)
+    const onFace = await page.waitForSelector('.stage[data-transition="idle"][data-face="security"]', { timeout: 60000 }).then(() => true).catch(() => false)
+    if (!onFace) fail('address-opens-face')
+    const titled = await page.waitForFunction((expected) => document.title === expected, title, { timeout: 5000 }).then(() => true).catch(() => false)
+    const opened = await page.evaluate(() => ({
+      language: document.documentElement.lang === 'es',
+      dockLinks: [...document.querySelectorAll('.stage-dock a')].every((link) => /^\/es\/[a-z]+$/.test(link.getAttribute('href') ?? '')),
+    }))
+    for (const [check, ok] of Object.entries({ ...opened, title: titled })) if (!ok) fail(`address-face ${check}`)
+
+    await page.click('.stage-dock a[data-section-id="products"]')
+    await page.waitForSelector('.stage[data-transition="idle"][data-face="products"]', { timeout: 15000 })
+    if ((await where()) !== '/es/productos?intro=0') fail(`address-follows-face ${await where()}`)
+    await page.click('.stage-locale button:text-is("EN")')
+    const switched = await page
+      .waitForFunction(() => location.pathname === '/products' && document.documentElement.lang === 'en', null, { timeout: 10000 })
+      .then(() => true)
+      .catch(() => false)
+    if (!switched) fail(`address-follows-language ${await where()}`)
+
+    await page.goto(`${BASE}/?intro=0`)
+    await page.waitForSelector('.stage[data-transition="idle"]', { timeout: 60000 })
+    await page.waitForTimeout(500)
+    const remembered = (await where()) === '/?intro=0' && (await page.evaluate(() => document.documentElement.lang)) === 'en'
+    if (!remembered) fail(`address-remembers-language ${await where()}`)
+  } finally {
+    await addressContext.close()
+  }
+
   // The intro hides the interface while the cube falls, then hands over; any
   // key skips it at once.
   const webglBrowser = await launch(SOFTWARE_WEBGL)
-  const webglContext = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
+  const webglContext = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 }, locale: BROWSER_LOCALE.en })
   webglContext.setDefaultTimeout(120000)
   try {
     const page = await webglContext.newPage()
     watchCsp(page, 'behaviour intro')
-    await page.goto(`${BASE}/?intro=1&lang=en`)
+    await page.goto(`${BASE}/?intro=1`)
     const pending = await page.waitForSelector('[data-intro="pending"]', { timeout: 30000 }).then(() => true).catch(() => false)
     if (!pending) fail('intro-not-pending')
     // The choreography hooks (intro.css) must reach every piece it hides.
@@ -671,12 +731,12 @@ async function checkBehaviour(noWebglBrowser) {
 
   // The nudge: a first visitor gets the bubble over the waiting cube (cube
   // mode, on landing), clear of what shows, once; a later visit does not.
-  const nudgeContext = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 } })
+  const nudgeContext = await webglBrowser.newContext({ viewport: { width: 1366, height: 768 }, locale: BROWSER_LOCALE.en })
   nudgeContext.setDefaultTimeout(120000)
   try {
     const page = await nudgeContext.newPage()
     watchCsp(page, 'behaviour nudge')
-    await page.goto(`${BASE}/?intro=0&lang=en`)
+    await page.goto(`${BASE}/?intro=0`)
     await page.waitForSelector('.stage[data-transition="idle"]')
     const shown = await page.waitForSelector('.cube-nudge[data-visible="true"]', { timeout: 20000 }).then(() => true).catch(() => false)
     if (!shown) fail('nudge-not-shown')

@@ -243,9 +243,9 @@ function hashCell(row: number, col: number, seed: number) {
 // world renders ONE big cube at the origin with no packets, no field, no
 // connections, no floor; keyboard 1/3 toggles between idle and active states.
 // Used to calibrate cube layers in isolation without fighting the rest of the
-// scene.
+// scene. Development only: the published site has no such address.
 function readSoloMode() {
-  if (typeof window === 'undefined') return false
+  if (!import.meta.env.DEV || typeof window === 'undefined') return false
   return new URLSearchParams(window.location.search).get('cube') === 'solo'
 }
 

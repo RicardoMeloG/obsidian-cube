@@ -78,7 +78,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const cursor = useExperience((state) => state.cursor)
   const explore = useExperience((state) => state.explore)
   const nudge = useExperience((state) => state.nudge)
-  const { content, locale, sections, setLocale } = useSiteContent()
+  const { content, ready, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
   const copy = interfaceCopy(locale)
   const viewport = useViewportSize()
@@ -94,7 +94,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   useFaceTransition()
   useIntroLifecycle(plan)
   useCubeNudge()
-  useFaceUrl(activeFace, locale)
+  useFaceUrl(activeFace, explore, content, ready)
 
   const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
   const activeSection = resolvedSections.find((section) => section.id === activeFace) ?? null

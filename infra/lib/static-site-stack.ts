@@ -70,8 +70,10 @@ export class StaticSiteStack extends cdk.Stack {
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         responseHeadersPolicy: headersPolicy,
       },
-      // Unknown paths answer with the page (status 200). The site has no routes,
-      // so this goes in the release stage (spec 010, AD-09): real 404s.
+      // Unknown paths answer with the page (status 200). The release stage
+      // replaces this with a viewer-request function that serves each clean
+      // path from its page (`/es/seguridad` from `es/seguridad.html`, spec 012,
+      // AD-08) and real 404s for the rest (spec 010, AD-09).
       errorResponses: [
         { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
         { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
