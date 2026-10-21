@@ -113,7 +113,8 @@
   --text-hint: 0.62rem;
   --text-hint--letter-spacing: 0.32em;
   --text-hint--font-weight: 600;
-  --text-control: 0.68rem;
+  /* In em: the language switch scales with the top bar beside it. */
+  --text-control: 0.85em;
   --text-control--letter-spacing: 0.08em;
   --text-control--font-weight: 700;
   --text-strip-name: 0.6rem;

@@ -14,7 +14,7 @@ export function SegmentedControl<Value extends string>({ label, options, value, 
   return (
     <div
       aria-label={label}
-      className={cx('inline-flex gap-1 rounded-md border border-ice-300/16 bg-night-950/48 p-[0.22rem]', className)}
+      className={cx('inline-flex gap-[0.25em] rounded-[0.75em] border border-ink-100/9 bg-night-950/48 p-[0.2em]', className)}
       role="group"
     >
       {options.map((option) => {
@@ -23,7 +23,7 @@ export function SegmentedControl<Value extends string>({ label, options, value, 
           <button
             aria-pressed={active}
             className={cx(
-              'focus-ring min-w-[2.2rem] cursor-pointer rounded-sm border-0 px-[0.48rem] py-[0.35rem] text-control',
+              'focus-ring min-w-[3em] cursor-pointer rounded-[0.65em] border-0 px-[0.5em] text-control',
               active ? 'bg-ice-300/14 text-ink-50/94' : 'bg-transparent text-ink-300/64',
             )}
             key={option.value}

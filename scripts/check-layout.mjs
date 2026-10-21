@@ -254,6 +254,18 @@ function measureStage({ queries }) {
   // Stacked pages scroll under the fixed dock by design; checked below.
   if (!stacked && collide(dock, content)) failures.push('chrome-dock-over-content')
   if (document.documentElement.scrollWidth > vw + 1) failures.push('page-scrolls-sideways')
+  // The dock names its six faces in full (design review, 2026-10-21): each
+  // label stays inside its item, the longest the admin accepts included
+  // (--content=stress). An ellipsis would hide the cut, so none is allowed.
+  for (const item of document.querySelectorAll('.stage-dock__item')) {
+    const label = item.querySelector('strong')
+    if (!label || !visible(item)) continue
+    const range = document.createRange()
+    range.selectNodeContents(label)
+    const text = range.getBoundingClientRect()
+    const edge = item.getBoundingClientRect().right - parseFloat(getComputedStyle(item).paddingRight)
+    if (text.right > edge + 1 || label.scrollWidth > label.clientWidth + 1) failures.push(`dock-label-cut-${item.dataset.sectionId}`)
+  }
 
   const blocks = [...document.querySelectorAll('.stage-content > *')].filter(visible)
   for (const [index, block] of blocks.entries()) {

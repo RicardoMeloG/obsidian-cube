@@ -105,15 +105,15 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5em;
-    margin-top: 0.4em;
-    padding: 0.55em 1em;
+    height: 2.83em;
+    padding: 0 1em;
     border: 1px solid var(--hair-accent);
     border-radius: 999px;
     background: color-mix(in srgb, var(--color-night-950) 50%, transparent);
     color: var(--ink-2);
     font-size: 0.72em;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     cursor: pointer;
     backdrop-filter: blur(8px);
@@ -149,7 +149,7 @@
     height: 2.55em;
     padding: 0 0.95em;
     border: 1px solid var(--hair);
-    border-radius: 0.6em;
+    border-radius: 0.75em;
     background: var(--glass);
     color: var(--ink-2);
     font: inherit;
@@ -167,7 +167,9 @@
   }
 
   .stage-locale {
-    margin-left: 0.6em;
+    height: 2.55em;
+    margin-left: 0.75em;
+    font-size: 0.8em;
   }
 
   /* ── Content ─────────────────────────────────────────────── */
@@ -466,7 +468,7 @@
     bottom: 1.1em;
     left: var(--edge);
     pointer-events: auto;
-    padding: 0.55em 0.6em;
+    padding: 0.5em 0.6em;
     border: 1px solid var(--hair);
     border-radius: 1em;
     background: var(--glass-strong);
@@ -503,7 +505,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 0.75em;
+    gap: 0.65em;
     padding: 0.45em 0.9em;
     border-radius: 0.7em;
     color: var(--ink-2);
@@ -520,8 +522,8 @@
     display: grid;
     flex: none;
     place-items: center;
-    width: 2.35em;
-    height: 2.35em;
+    width: 2.2em;
+    height: 2.2em;
     border: 1px solid var(--hair);
     border-radius: 999px;
     color: var(--ink-3);
@@ -535,18 +537,16 @@
   }
 
   .stage-dock__text strong {
-    overflow: hidden;
-    font-size: 0.66em;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-overflow: ellipsis;
+    font-size: 0.72em;
+    font-weight: 650;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     white-space: nowrap;
   }
 
   .stage-dock__text small {
     overflow: hidden;
-    font-size: 0.72em;
+    font-size: 0.75em;
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--ink-3);
@@ -565,9 +565,9 @@
 
   .stage-dock__item.is-active::after {
     position: absolute;
-    right: 0.9em;
-    bottom: -0.3em;
-    left: 0.9em;
+    right: 0.75em;
+    bottom: 0.2em;
+    left: 0.75em;
     height: 2px;
     border-radius: 2px;
     content: '';
@@ -584,13 +584,9 @@
       position: static;
       z-index: auto;
       display: block;
-      padding: 0 var(--edge) 6.5em;
+      padding: 0 var(--edge) 9em;
       pointer-events: auto;
       font-size: clamp(13px, 3.4vw, 16px);
-    }
-
-    @variant phone {
-      padding-bottom: 9em;
     }
   }
 
@@ -650,15 +646,24 @@
     }
   }
 
+  .stage-link,
+  .stage-locale {
+    @variant phone {
+      font-size: 0.95em;
+    }
+  }
+
   .stage-link {
     @variant phone {
-      padding: 0 0.7em;
+      justify-content: center;
+      width: 2.55em;
+      padding: 0;
     }
   }
 
   .stage-locale {
     @variant phone {
-      margin-left: 0.2em;
+      margin-left: 0.3em;
     }
   }
 
@@ -693,30 +698,59 @@
   }
 
   .stage-dock ul {
-    /* Phones: two rows of three, nothing clipped, nothing to scroll. */
-    @variant phone {
+    /* Two rows of three, every name in full, nothing to scroll; a landscape
+       tablet (stacked-wide) has room for one row. */
+    @variant stacked {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       row-gap: 0.2em;
+    }
+
+    @variant stacked-wide {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
     }
   }
 
   .stage-dock ul > li + li {
-    @variant phone {
+    @variant stacked {
       border-left: 0;
+    }
+
+    @variant stacked-wide {
+      border-left: 1px solid var(--hair);
     }
   }
 
+  /* Touch-sized targets. */
   .stage-dock__item {
     @variant stacked {
-      gap: 0.5em;
-      padding: 0.4em 0.5em;
+      gap: 0.3em;
+      min-height: 44px;
+      padding: 0.4em 4px;
     }
   }
 
   .stage-dock__icon {
     @variant stacked {
-      width: 2em;
-      height: 2em;
+      width: 1.5em;
+      height: 1.5em;
+    }
+  }
+
+  .stage-dock__icon svg {
+    @variant stacked {
+      width: 0.9em;
+      height: 0.9em;
+    }
+  }
+
+  .stage-dock__text strong {
+    @variant stacked {
+      font-size: 0.7em;
+      letter-spacing: 0.04em;
+    }
+
+    @variant phone-small {
+      font-size: 0.66em;
     }
   }
 

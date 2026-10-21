@@ -93,7 +93,7 @@ Hard constraints:
 Responsive collapse (≤900px):
 
 - Cube remains the visual anchor, scaled down.
-- The cube is the hero on top; the composition follows below in its reading order, one column; the dock is fixed at the bottom (two rows of three on phones).
+- The cube is the hero on top; the composition follows below in its reading order, one column; the dock is fixed at the bottom (two rows of three on phones and portrait tablets, one row on landscape tablets; every name in full, design review 2026-10-21).
 - Maintain the no-scroll-on-desktop rule only for desktop; mobile may scroll, but the first fold must include the cube and the face's headline.
 
 Surface rules (for the composition's panels, cards and pills):

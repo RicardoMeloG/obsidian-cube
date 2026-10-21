@@ -105,6 +105,7 @@ Design:
 - All six cube faces share the same frame; accent color and inner glyph vary per face, nothing else.
 - The owner's name and role are the first text read on every face (top-left, `h1`, not covered by any layer) and must meet AA contrast; the face title may be larger.
 - Fixed chrome (the top bar with the name and the language, the dock) never overlaps content the visitor cannot scroll clear of.
+- The dock names every face in full, at every width: no ellipsis, the longest `label` included (`check:layout --content=stress`). The top bar's controls share one height and one top edge (design review, 2026-10-21).
 - Do **not** use `Bloom` in production — it caused visible flicker.
 - Do **not** add auto-playing audio. Audio is gesture-driven and subtle.
 - Avoid design drift: no generic SaaS gradients, no decorative cards, no landing-page templates, no bokeh backgrounds.
