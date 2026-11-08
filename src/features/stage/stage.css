@@ -53,7 +53,9 @@
 
   .stage::after {
     z-index: -1;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-night-950) 70%, transparent), transparent 18%);
+    /* Hold the scrim through the role: fading from the viewport's top let
+       SECURITY's dome wash it out in cube mode (worlds check, 2026-11-08). */
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-night-950) 90%, transparent) 6em, transparent 10em);
   }
 
   .stage[data-explore]::before {
