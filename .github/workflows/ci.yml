@@ -33,7 +33,7 @@ concurrency:
 # synth runs only when infra/ changes (infra.yml).
 jobs:
   frontend:
-    name: Lint · Types · Test · Build · Budget · Privacy · Docs · Tokens
+    name: Audit · Lint · Types · Test · Build · Budget · Privacy · Docs · Tokens
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +42,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm audit --audit-level=low
       - run: npm run lint
       - run: npm run typecheck:server
       - run: npm test
@@ -56,7 +57,9 @@ jobs:
 
   layout:
     name: Layout · Accessibility
-    runs-on: ubuntu-latest
+    # Playwright 1.60 cannot install Chromium on ubuntu-26.04, which
+    # ubuntu-latest selected on 2026-11-08. Keep the browser OS explicit.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

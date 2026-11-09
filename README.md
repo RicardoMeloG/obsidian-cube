@@ -82,7 +82,7 @@ git config core.hooksPath .githooks   # once per clone: privacy check before eve
 
 Private values for the privacy check go in `.privacy-denylist` (gitignored, one per line) and, in CI, in the `PRIVACY_DENYLIST` secret.
 
-AWS: see `docs/deploy-aws.md`. Nothing is provisioned by default; `cd infra && npm run synth` validates the stack offline.
+AWS: see `docs/deploy-aws.md`. Nothing is provisioned by default; `cd infra && npm run prepare:cdk && npm ci && npm run synth` prepares the verified dependency and validates the stack; subsequent synths are offline. See `docs/dependency-security.md`.
 
 ## Content
 

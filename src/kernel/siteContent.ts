@@ -1,7 +1,7 @@
 // Content contract shared by the site, its build-time SEO and the admin.
 // Pure: no DOM, no React; loading and locale detection live in
 // src/features/content.
-import { z } from 'zod'
+import { z } from 'zod/mini'
 import exampleEn from '../../public/content/site.example.en.json'
 import exampleEs from '../../public/content/site.example.es.json'
 import { CompositionSchema } from './compositions'
@@ -13,75 +13,73 @@ export type SiteLocale = 'en' | 'es'
 
 export const FaceIdSchema = z.enum(FACE_ORDER as [FaceId, ...FaceId[]])
 
-// `meta({ title })` is the field's label in the admin's generated form
+// Metadata registered on a clone labels each field in the admin's generated form
 // (spec 011, AD-04); the admin speaks Spanish.
 const SiteSectionSchema = z.object({
-  id: FaceIdSchema.meta({ title: 'Cara', widget: 'fixed' }),
-  label: z.string().min(1).meta({ title: 'Nombre en el cubo y el dock' }),
-  title: z.string().min(1).meta({ title: 'Título' }),
-  eyebrow: z.string().min(1).optional().meta({ title: 'Antetítulo' }),
-  summary: RichTextSchema.meta({ title: 'Resumen' }),
+  id: FaceIdSchema.clone().register(z.globalRegistry, { title: 'Cara', widget: 'fixed' }),
+  label: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Nombre en el cubo y el dock' }),
+  title: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Título' }),
+  eyebrow: z.optional(z.string().check(z.minLength(1))).clone().register(z.globalRegistry, { title: 'Antetítulo' }),
+  summary: RichTextSchema.clone().register(z.globalRegistry, { title: 'Resumen' }),
   // The line under the face name in the stage's dock (spec 011, AD-02).
-  tagline: z.string().min(1).optional().meta({ title: 'Línea bajo el nombre en el dock' }),
-  ctaPrimary: CtaSchema.optional().meta({ title: 'Llamado principal' }),
-  ctaSecondary: CtaSchema.optional().meta({ title: 'Llamado secundario' }),
+  tagline: z.optional(z.string().check(z.minLength(1))).clone().register(z.globalRegistry, { title: 'Línea bajo el nombre en el dock' }),
+  ctaPrimary: z.optional(CtaSchema).clone().register(z.globalRegistry, { title: 'Llamado principal' }),
+  ctaSecondary: z.optional(CtaSchema).clone().register(z.globalRegistry, { title: 'Llamado secundario' }),
   // The face's composition in the stage layout (spec 011, AD-01).
-  composition: CompositionSchema.optional(),
-  intro: RichTextSchema.optional().meta({ title: 'Introducción (diálogo)' }),
-  highlights: z.array(RichTextSchema).optional().meta({ title: 'Destacados (diálogo)' }),
-  proofPoints: z.array(RichTextSchema).optional().meta({ title: 'Pruebas (diálogo)' }),
-  links: z.array(LinkSchema).optional().meta({ title: 'Enlaces (diálogo)' }),
-  detail: z
+  composition: z.optional(CompositionSchema),
+  intro: z.optional(RichTextSchema).clone().register(z.globalRegistry, { title: 'Introducción (diálogo)' }),
+  highlights: z.optional(z.array(RichTextSchema)).clone().register(z.globalRegistry, { title: 'Destacados (diálogo)' }),
+  proofPoints: z.optional(z.array(RichTextSchema)).clone().register(z.globalRegistry, { title: 'Pruebas (diálogo)' }),
+  links: z.optional(z.array(LinkSchema)).clone().register(z.globalRegistry, { title: 'Enlaces (diálogo)' }),
+  detail: z.optional(z
     .object({
-      title: z.string().min(1).meta({ title: 'Título' }),
-      summary: RichTextSchema.meta({ title: 'Resumen' }),
-      points: z.array(RichTextSchema).optional().meta({ title: 'Puntos' }),
-      links: z.array(LinkSchema).optional().meta({ title: 'Enlaces' }),
-    })
-    .optional()
-    .meta({ title: 'Detalle (diálogo)' }),
+      title: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Título' }),
+      summary: RichTextSchema.clone().register(z.globalRegistry, { title: 'Resumen' }),
+      points: z.optional(z.array(RichTextSchema)).clone().register(z.globalRegistry, { title: 'Puntos' }),
+      links: z.optional(z.array(LinkSchema)).clone().register(z.globalRegistry, { title: 'Enlaces' }),
+    }))
+    .clone().register(z.globalRegistry, { title: 'Detalle (diálogo)' }),
 })
 
 export const SiteContentSchema = z.object({
-  locale: z.enum(['en', 'es']).meta({ title: 'Idioma', widget: 'fixed' }),
+  locale: z.enum(['en', 'es']).clone().register(z.globalRegistry, { title: 'Idioma', widget: 'fixed' }),
   identity: z
     .object({
-      displayName: z.string().min(1).meta({ title: 'Nombre visible' }),
-      fullName: z.string().min(1).meta({ title: 'Nombre completo' }),
+      displayName: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Nombre visible' }),
+      fullName: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Nombre completo' }),
       // `handle` was retired on 2026-10-16 (audit-3 F-7): nothing rendered it;
       // the GitHub profile URL in `links` carries it. Older documents that
       // still have the key parse, and the key is dropped.
-      role: z.string().min(1).meta({ title: 'Rol' }),
+      role: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Rol' }),
       // One line under the role, e.g. "AI Engineer · LLM agents · Python · AWS".
-      keywords: z.string().min(1).optional().meta({ title: 'Palabras clave' }),
+      keywords: z.optional(z.string().check(z.minLength(1))).clone().register(z.globalRegistry, { title: 'Palabras clave' }),
       // Profiles shown in the stage's top bar; e-mail is not shown there,
       // CONTACT is the channel (spec 011, AD-02).
-      links: z
+      links: z.optional(z
         .object({
-          github: z.string().min(1).optional().meta({ title: 'GitHub' }),
-          linkedin: z.string().min(1).optional().meta({ title: 'LinkedIn' }),
-        })
-        .optional()
-        .meta({ title: 'Perfiles' }),
+          github: z.optional(z.string().check(z.minLength(1))).clone().register(z.globalRegistry, { title: 'GitHub' }),
+          linkedin: z.optional(z.string().check(z.minLength(1))).clone().register(z.globalRegistry, { title: 'LinkedIn' }),
+        }))
+        .clone().register(z.globalRegistry, { title: 'Perfiles' }),
     })
-    .meta({ title: 'Identidad' }),
+    .clone().register(z.globalRegistry, { title: 'Identidad' }),
   seo: z
     .object({
-      title: z.string().min(1).meta({ title: 'Título de la página' }),
-      description: z.string().min(1).meta({ title: 'Descripción' }),
+      title: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Título de la página' }),
+      description: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Descripción' }),
       // Public origin of the deployed site (canonical and og:url), no trailing slash.
-      siteUrl: z.string().url().optional().meta({ title: 'URL pública del sitio' }),
+      siteUrl: z.optional(z.url()).clone().register(z.globalRegistry, { title: 'URL pública del sitio' }),
       // Share preview image: a path under public/ or an absolute URL.
-      image: z.string().min(1).optional().meta({ title: 'Imagen al compartir' }),
+      image: z.optional(z.string().check(z.minLength(1))).clone().register(z.globalRegistry, { title: 'Imagen al compartir' }),
     })
-    .meta({ title: 'SEO' }),
+    .clone().register(z.globalRegistry, { title: 'SEO' }),
   hero: z
     .object({
-      headline: z.string().min(1).meta({ title: 'Titular' }),
-      summary: RichTextSchema.meta({ title: 'Resumen' }),
+      headline: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Titular' }),
+      summary: RichTextSchema.clone().register(z.globalRegistry, { title: 'Resumen' }),
     })
-    .meta({ title: 'Portada' }),
-  sections: z.array(SiteSectionSchema).length(FACE_ORDER.length).meta({ title: 'Caras' }),
+    .clone().register(z.globalRegistry, { title: 'Portada' }),
+  sections: z.array(SiteSectionSchema).check(z.length(FACE_ORDER.length)).clone().register(z.globalRegistry, { title: 'Caras' }),
 })
 
 export type SiteContent = z.infer<typeof SiteContentSchema>

@@ -3,41 +3,40 @@
 // have no layout to fit. The build writes it into /llms.txt and the plain
 // profile pages (seo/renderMachine.ts); the site never loads it, so the first
 // view does not carry it. Pure, like the rest of the kernel.
-import { z } from 'zod'
+import { z } from 'zod/mini'
 import exampleEn from '../../public/content/profile.example.en.json'
 import exampleEs from '../../public/content/profile.example.es.json'
 import { RichTextSchema } from './fields'
 import type { Issue } from './publishRules'
 import type { SiteLocale } from './siteContent'
 
-const Text = z.string().min(1)
+const Text = z.string().check(z.minLength(1))
 
 export const ProfileContentSchema = z
   .object({
-    locale: z.enum(['en', 'es']).meta({ title: 'Idioma', widget: 'fixed' }),
-    about: RichTextSchema.meta({ title: 'Resumen largo' }),
-    titles: z.array(Text).meta({ title: 'Títulos reconocidos' }),
-    skills: z.array(Text).meta({ title: 'Habilidades' }),
+    locale: z.enum(['en', 'es']).clone().register(z.globalRegistry, { title: 'Idioma', widget: 'fixed' }),
+    about: RichTextSchema.clone().register(z.globalRegistry, { title: 'Resumen largo' }),
+    titles: z.array(Text).clone().register(z.globalRegistry, { title: 'Títulos reconocidos' }),
+    skills: z.array(Text).clone().register(z.globalRegistry, { title: 'Habilidades' }),
     roles: z
       .array(
         z.object({
-          title: Text.meta({ title: 'Rol' }),
-          years: Text.optional().meta({ title: 'Años' }),
-          text: RichTextSchema.meta({ title: 'Qué implicó' }),
+          title: Text.clone().register(z.globalRegistry, { title: 'Rol' }),
+          years: z.optional(Text).clone().register(z.globalRegistry, { title: 'Años' }),
+          text: RichTextSchema.clone().register(z.globalRegistry, { title: 'Qué implicó' }),
         }),
       )
-      .meta({ title: 'Roles' }),
-    research: RichTextSchema.optional().meta({ title: 'Investigación (un párrafo)' }),
-    location: Text.optional().meta({ title: 'Ubicación' }),
-    languages: z.array(Text).optional().meta({ title: 'Idiomas' }),
-    education: z
-      .array(z.object({ name: Text.meta({ title: 'Título o programa' }), institution: Text.optional().meta({ title: 'Institución' }) }))
-      .optional()
-      .meta({ title: 'Formación' }),
+      .clone().register(z.globalRegistry, { title: 'Roles' }),
+    research: z.optional(RichTextSchema).clone().register(z.globalRegistry, { title: 'Investigación (un párrafo)' }),
+    location: z.optional(Text).clone().register(z.globalRegistry, { title: 'Ubicación' }),
+    languages: z.optional(z.array(Text)).clone().register(z.globalRegistry, { title: 'Idiomas' }),
+    education: z.optional(z
+      .array(z.object({ name: Text.clone().register(z.globalRegistry, { title: 'Título o programa' }), institution: z.optional(Text).clone().register(z.globalRegistry, { title: 'Institución' }) })))
+      .clone().register(z.globalRegistry, { title: 'Formación' }),
     // Other profiles of the owner (ORCID, a scholar page): the JSON-LD's sameAs.
-    profiles: z.array(Text).optional().meta({ title: 'Otros perfiles (enlaces)' }),
+    profiles: z.optional(z.array(Text)).clone().register(z.globalRegistry, { title: 'Otros perfiles (enlaces)' }),
   })
-  .meta({ title: 'Perfil para máquinas' })
+  .clone().register(z.globalRegistry, { title: 'Perfil para máquinas' })
 
 export type ProfileContent = z.infer<typeof ProfileContentSchema>
 

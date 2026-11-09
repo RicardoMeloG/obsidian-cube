@@ -47,3 +47,6 @@ audit-runs/
 
 # Media uploaded by the owner through the admin (spec 011, AD-03)
 public/content/media/
+
+# Verified CDK source and locally prepared dependency archive
+/infra/.vendor/

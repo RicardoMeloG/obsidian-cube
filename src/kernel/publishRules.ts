@@ -1,3 +1,4 @@
+import { z } from 'zod/mini'
 // Publish rules (spec 010, AD-02): what owner content must meet before the
 // admin publishes it. Kept apart from SiteContentSchema on purpose: the site
 // loads with the tolerant render contract, so content published under older
@@ -197,6 +198,6 @@ export function publishRuleIssues(content: SiteContent): Issue[] {
 }
 
 // The shape and the publish rules together, as production requires them.
-export const PublishableSiteContentSchema = SiteContentSchema.superRefine((content, context) => {
+export const PublishableSiteContentSchema = SiteContentSchema.check(z.superRefine((content, context) => {
   for (const issue of publishRuleIssues(content)) context.addIssue({ code: 'custom', path: issue.path, message: issue.message })
-})
+}))

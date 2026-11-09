@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ZodType } from 'zod'
+import type { ZodMiniType } from 'zod/mini'
 import { ProfileContentSchema, profileRuleIssues } from '../../src/kernel/profileContent'
 import type { ProfileContent } from '../../src/kernel/profileContent'
 import { publishRuleIssues } from '../../src/kernel/publishRules'
@@ -21,7 +21,7 @@ export type DocDescriptor = {
   label: string
   file: string
   example: string
-  schema: ZodType
+  schema: ZodMiniType
   // Called with data the schema accepted.
   rules?: (data: unknown) => Issue[]
 }

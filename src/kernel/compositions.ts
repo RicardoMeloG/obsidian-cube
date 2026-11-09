@@ -6,15 +6,15 @@
 // fields of the section (siteContent.ts), read by every layout, so a template
 // holds only what is particular to its shape. Text is per language: the
 // composition lives in site.{lang}.json.
-import { z } from 'zod'
+import { z } from 'zod/mini'
 import { RichTextSchema } from './fields'
 import { ICON_IDS } from './icons'
 import type { IconId } from './icons'
 
-const Text = z.string().min(1)
-const IconSchema = z.enum(ICON_IDS as unknown as [IconId, ...IconId[]]).meta({ title: 'Icono' })
-const ChipsSchema = z.array(Text).meta({ title: 'Etiquetas' })
-const HrefSchema = z.string().min(1).optional().meta({ title: 'Enlace' })
+const Text = z.string().check(z.minLength(1))
+const IconSchema = z.enum(ICON_IDS as unknown as [IconId, ...IconId[]]).clone().register(z.globalRegistry, { title: 'Icono' })
+const ChipsSchema = z.array(Text).clone().register(z.globalRegistry, { title: 'Etiquetas' })
+const HrefSchema = z.optional(z.string().check(z.minLength(1))).clone().register(z.globalRegistry, { title: 'Enlace' })
 
 // Owner images are uploaded through the admin and stored under their content
 // hash, the thumbnail beside its image as <hash>-thumb.webp (AD-03); example
@@ -25,19 +25,19 @@ export const EXAMPLE_MEDIA_PREFIX = '/examples/'
 
 export const MediaRefSchema = z
   .object({
-    src: z.string().regex(MEDIA_SRC, 'imagen subida por el admin (.webp)'),
-    thumb: z.string().regex(MEDIA_SRC, 'miniatura subida por el admin (.webp)').optional(),
-    alt: Text.meta({ title: 'Texto alternativo' }),
-    width: z.number().int().positive(),
-    height: z.number().int().positive(),
+    src: z.string().check(z.regex(MEDIA_SRC, 'imagen subida por el admin (.webp)')),
+    thumb: z.optional(z.string().check(z.regex(MEDIA_SRC, 'miniatura subida por el admin (.webp)'))),
+    alt: Text.clone().register(z.globalRegistry, { title: 'Texto alternativo' }),
+    width: z.int().check(z.positive()),
+    height: z.int().check(z.positive()),
   })
-  .meta({ widget: 'media', title: 'Imagen' })
+  .clone().register(z.globalRegistry, { widget: 'media', title: 'Imagen' })
 
 // An item with an icon: steps, facts, the reading chain.
 const IconItemSchema = z.object({
   icon: IconSchema,
-  label: Text.meta({ title: 'Rótulo' }),
-  text: RichTextSchema.meta({ title: 'Texto' }),
+  label: Text.clone().register(z.globalRegistry, { title: 'Rótulo' }),
+  text: RichTextSchema.clone().register(z.globalRegistry, { title: 'Texto' }),
 })
 
 const ShowcaseSchema = z
@@ -46,58 +46,57 @@ const ShowcaseSchema = z
     featured: z
       .object({
         icon: IconSchema,
-        label: Text.meta({ title: 'Rótulo' }),
-        title: Text.meta({ title: 'Título' }),
-        text: RichTextSchema.meta({ title: 'Texto' }),
+        label: Text.clone().register(z.globalRegistry, { title: 'Rótulo' }),
+        title: Text.clone().register(z.globalRegistry, { title: 'Título' }),
+        text: RichTextSchema.clone().register(z.globalRegistry, { title: 'Texto' }),
         chips: ChipsSchema,
         href: HrefSchema,
       })
-      .meta({ title: 'Caso destacado' }),
-    stepsTitle: Text.meta({ title: 'Título de los pasos' }),
-    steps: z.array(IconItemSchema).meta({ title: 'Pasos' }),
-    proofsTitle: Text.meta({ title: 'Título de las pruebas' }),
-    proofsTrail: Text.optional().meta({ title: 'Línea junto al título' }),
+      .clone().register(z.globalRegistry, { title: 'Caso destacado' }),
+    stepsTitle: Text.clone().register(z.globalRegistry, { title: 'Título de los pasos' }),
+    steps: z.array(IconItemSchema).clone().register(z.globalRegistry, { title: 'Pasos' }),
+    proofsTitle: Text.clone().register(z.globalRegistry, { title: 'Título de las pruebas' }),
+    proofsTrail: z.optional(Text).clone().register(z.globalRegistry, { title: 'Línea junto al título' }),
     proofs: z
       .array(
         z.object({
           icon: IconSchema,
-          kind: Text.meta({ title: 'Tipo' }),
-          title: Text.meta({ title: 'Título' }),
-          text: RichTextSchema.meta({ title: 'Texto' }),
+          kind: Text.clone().register(z.globalRegistry, { title: 'Tipo' }),
+          title: Text.clone().register(z.globalRegistry, { title: 'Título' }),
+          text: RichTextSchema.clone().register(z.globalRegistry, { title: 'Texto' }),
           chips: ChipsSchema,
           href: HrefSchema,
         }),
       )
-      .meta({ title: 'Pruebas' }),
+      .clone().register(z.globalRegistry, { title: 'Pruebas' }),
   })
-  .meta({ title: 'Vitrina' })
+  .clone().register(z.globalRegistry, { title: 'Vitrina' })
 
 const CatalogSchema = z
   .object({
     template: z.literal('catalog'),
-    listTitle: Text.meta({ title: 'Título de la lista' }),
+    listTitle: Text.clone().register(z.globalRegistry, { title: 'Título de la lista' }),
     items: z
       .array(
         z.object({
-          id: z.string().regex(/^[a-z0-9-]+$/, 'solo minúsculas, números y guiones').meta({ title: 'Identificador' }),
-          name: Text.meta({ title: 'Nombre' }),
-          meta: Text.meta({ title: 'Tipo' }),
-          status: Text.meta({ title: 'Estado' }),
-          text: RichTextSchema.meta({ title: 'Texto' }),
+          id: z.string().check(z.regex(/^[a-z0-9-]+$/, 'solo minúsculas, números y guiones')).clone().register(z.globalRegistry, { title: 'Identificador' }),
+          name: Text.clone().register(z.globalRegistry, { title: 'Nombre' }),
+          meta: Text.clone().register(z.globalRegistry, { title: 'Tipo' }),
+          status: Text.clone().register(z.globalRegistry, { title: 'Estado' }),
+          text: RichTextSchema.clone().register(z.globalRegistry, { title: 'Texto' }),
           chips: ChipsSchema,
           // Optional: without a real image the sheet shows none, rather than a
           // made-up one (2026-10-16).
-          image: MediaRefSchema.optional(),
-          facts: z.array(IconItemSchema).meta({ title: 'Datos' }),
-          links: z
-            .array(z.object({ label: Text.meta({ title: 'Texto' }), href: z.string().min(1).meta({ title: 'Enlace' }) }))
-            .optional()
-            .meta({ title: 'Enlaces' }),
+          image: z.optional(MediaRefSchema),
+          facts: z.array(IconItemSchema).clone().register(z.globalRegistry, { title: 'Datos' }),
+          links: z.optional(z
+            .array(z.object({ label: Text.clone().register(z.globalRegistry, { title: 'Texto' }), href: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Enlace' }) })))
+            .clone().register(z.globalRegistry, { title: 'Enlaces' }),
         }),
       )
-      .meta({ title: 'Elementos' }),
+      .clone().register(z.globalRegistry, { title: 'Elementos' }),
   })
-  .meta({ title: 'Catálogo' })
+  .clone().register(z.globalRegistry, { title: 'Catálogo' })
 
 export const CELL_STATES = ['done', 'active', 'pending'] as const
 export type CellState = (typeof CELL_STATES)[number]
@@ -105,26 +104,23 @@ export type CellState = (typeof CELL_STATES)[number]
 const CaseSchema = z
   .object({
     template: z.literal('case'),
-    caseLabel: Text.meta({ title: 'Rótulo del caso' }),
-    caseName: Text.meta({ title: 'Nombre del caso' }),
-    before: z.object({ title: Text.meta({ title: 'Título' }), items: z.array(Text).meta({ title: 'Puntos' }) }).meta({ title: 'Antes' }),
-    after: z.object({ title: Text.meta({ title: 'Título' }), items: z.array(Text).meta({ title: 'Puntos' }) }).meta({ title: 'Después' }),
-    map: z
+    caseLabel: Text.clone().register(z.globalRegistry, { title: 'Rótulo del caso' }),
+    caseName: Text.clone().register(z.globalRegistry, { title: 'Nombre del caso' }),
+    before: z.object({ title: Text.clone().register(z.globalRegistry, { title: 'Título' }), items: z.array(Text).clone().register(z.globalRegistry, { title: 'Puntos' }) }).clone().register(z.globalRegistry, { title: 'Antes' }),
+    after: z.object({ title: Text.clone().register(z.globalRegistry, { title: 'Título' }), items: z.array(Text).clone().register(z.globalRegistry, { title: 'Puntos' }) }).clone().register(z.globalRegistry, { title: 'Después' }),
+    map: z.optional(z
       .object({
-        title: Text.meta({ title: 'Título' }),
-        note: Text.optional().meta({ title: 'Nota' }),
+        title: Text.clone().register(z.globalRegistry, { title: 'Título' }),
+        note: z.optional(Text).clone().register(z.globalRegistry, { title: 'Nota' }),
         legend: z
-          .object({ done: Text.meta({ title: 'Hecho' }), active: Text.meta({ title: 'En curso' }), pending: Text.meta({ title: 'Pendiente' }) })
-          .meta({ title: 'Leyenda' }),
-        cells: z.array(z.enum(CELL_STATES)).meta({ title: 'Celdas' }),
-      })
-      // Optional: without real data the block does not appear, rather than an
-      // illustrative map (2026-10-16).
-      .optional()
-      .meta({ title: 'Mapa de estado' }),
-    steps: z.array(IconItemSchema).meta({ title: 'Pasos' }),
+          .object({ done: Text.clone().register(z.globalRegistry, { title: 'Hecho' }), active: Text.clone().register(z.globalRegistry, { title: 'En curso' }), pending: Text.clone().register(z.globalRegistry, { title: 'Pendiente' }) })
+          .clone().register(z.globalRegistry, { title: 'Leyenda' }),
+        cells: z.array(z.enum(CELL_STATES)).clone().register(z.globalRegistry, { title: 'Celdas' }),
+      }))
+      .clone().register(z.globalRegistry, { title: 'Mapa de estado' }),
+    steps: z.array(IconItemSchema).clone().register(z.globalRegistry, { title: 'Pasos' }),
   })
-  .meta({ title: 'Caso' })
+  .clone().register(z.globalRegistry, { title: 'Caso' })
 
 export const CONTROL_STATES = ['implemented', 'verified', 'planned'] as const
 export type ControlState = (typeof CONTROL_STATES)[number]
@@ -136,57 +132,57 @@ const LedgerSchema = z
       .array(
         z.object({
           icon: IconSchema,
-          label: Text.meta({ title: 'Rótulo' }),
-          title: Text.optional().meta({ title: 'Título' }),
-          text: RichTextSchema.meta({ title: 'Texto' }),
+          label: Text.clone().register(z.globalRegistry, { title: 'Rótulo' }),
+          title: z.optional(Text).clone().register(z.globalRegistry, { title: 'Título' }),
+          text: RichTextSchema.clone().register(z.globalRegistry, { title: 'Texto' }),
         }),
       )
-      .meta({ title: 'Destacados' }),
+      .clone().register(z.globalRegistry, { title: 'Destacados' }),
     console: z
       .object({
-        title: Text.meta({ title: 'Título' }),
-        command: Text.optional().meta({ title: 'Comando' }),
+        title: Text.clone().register(z.globalRegistry, { title: 'Título' }),
+        command: z.optional(Text).clone().register(z.globalRegistry, { title: 'Comando' }),
         rows: z
           .array(
             z.object({
-              status: z.enum(CONTROL_STATES).meta({ title: 'Estado' }),
-              id: Text.meta({ title: 'Identificador' }),
-              text: Text.meta({ title: 'Texto' }),
+              status: z.enum(CONTROL_STATES).clone().register(z.globalRegistry, { title: 'Estado' }),
+              id: Text.clone().register(z.globalRegistry, { title: 'Identificador' }),
+              text: Text.clone().register(z.globalRegistry, { title: 'Texto' }),
             }),
           )
-          .meta({ title: 'Filas' }),
+          .clone().register(z.globalRegistry, { title: 'Filas' }),
         statusLabels: z
           .object({
-            implemented: Text.meta({ title: 'Implementado' }),
-            verified: Text.meta({ title: 'Verificado' }),
-            planned: Text.meta({ title: 'Planificado' }),
+            implemented: Text.clone().register(z.globalRegistry, { title: 'Implementado' }),
+            verified: Text.clone().register(z.globalRegistry, { title: 'Verificado' }),
+            planned: Text.clone().register(z.globalRegistry, { title: 'Planificado' }),
           })
-          .meta({ title: 'Nombres de los estados' }),
+          .clone().register(z.globalRegistry, { title: 'Nombres de los estados' }),
       })
-      .meta({ title: 'Consola' }),
+      .clone().register(z.globalRegistry, { title: 'Consola' }),
   })
-  .meta({ title: 'Registro' })
+  .clone().register(z.globalRegistry, { title: 'Registro' })
 
 const ReadingSchema = z
   .object({
     template: z.literal('reading'),
-    questionLabel: Text.meta({ title: 'Rótulo de la pregunta' }),
-    question: RichTextSchema.meta({ title: 'Pregunta' }),
-    chain: z.array(IconItemSchema).meta({ title: 'Cadena' }),
-    distinctionsTitle: Text.meta({ title: 'Título de las distinciones' }),
+    questionLabel: Text.clone().register(z.globalRegistry, { title: 'Rótulo de la pregunta' }),
+    question: RichTextSchema.clone().register(z.globalRegistry, { title: 'Pregunta' }),
+    chain: z.array(IconItemSchema).clone().register(z.globalRegistry, { title: 'Cadena' }),
+    distinctionsTitle: Text.clone().register(z.globalRegistry, { title: 'Título de las distinciones' }),
     distinctions: z
-      .array(z.object({ term: Text.meta({ title: 'Término' }), text: RichTextSchema.meta({ title: 'Texto' }) }))
-      .meta({ title: 'Distinciones' }),
+      .array(z.object({ term: Text.clone().register(z.globalRegistry, { title: 'Término' }), text: RichTextSchema.clone().register(z.globalRegistry, { title: 'Texto' }) }))
+      .clone().register(z.globalRegistry, { title: 'Distinciones' }),
     document: z
       .object({
-        label: Text.meta({ title: 'Rótulo' }),
-        title: Text.meta({ title: 'Título' }),
-        meta: Text.optional().meta({ title: 'Detalle' }),
+        label: Text.clone().register(z.globalRegistry, { title: 'Rótulo' }),
+        title: Text.clone().register(z.globalRegistry, { title: 'Título' }),
+        meta: z.optional(Text).clone().register(z.globalRegistry, { title: 'Detalle' }),
         href: HrefSchema,
       })
-      .meta({ title: 'Documento' }),
+      .clone().register(z.globalRegistry, { title: 'Documento' }),
   })
-  .meta({ title: 'Lectura' })
+  .clone().register(z.globalRegistry, { title: 'Lectura' })
 
 export const CHANNEL_KINDS = ['email', 'github', 'linkedin', 'web'] as const
 export type ChannelKind = (typeof CHANNEL_KINDS)[number]
@@ -196,23 +192,23 @@ export type ChannelKind = (typeof CHANNEL_KINDS)[number]
 const ChannelsSchema = z
   .object({
     template: z.literal('channels'),
-    availability: Text.optional().meta({ title: 'Disponibilidad' }),
+    availability: z.optional(Text).clone().register(z.globalRegistry, { title: 'Disponibilidad' }),
     channels: z
       .array(
         z.object({
-          kind: z.enum(CHANNEL_KINDS).meta({ title: 'Tipo' }),
-          label: Text.meta({ title: 'Rótulo' }),
-          text: Text.meta({ title: 'Texto' }),
-          href: z.string().min(1).meta({ title: 'Enlace' }),
+          kind: z.enum(CHANNEL_KINDS).clone().register(z.globalRegistry, { title: 'Tipo' }),
+          label: Text.clone().register(z.globalRegistry, { title: 'Rótulo' }),
+          text: Text.clone().register(z.globalRegistry, { title: 'Texto' }),
+          href: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Enlace' }),
         }),
       )
-      .meta({ title: 'Canales' }),
+      .clone().register(z.globalRegistry, { title: 'Canales' }),
   })
-  .meta({ title: 'Canales' })
+  .clone().register(z.globalRegistry, { title: 'Canales' })
 
 export const CompositionSchema = z
   .discriminatedUnion('template', [ShowcaseSchema, CatalogSchema, CaseSchema, LedgerSchema, ReadingSchema, ChannelsSchema])
-  .meta({ title: 'Composición' })
+  .clone().register(z.globalRegistry, { title: 'Composición' })
 
 export type Composition = z.infer<typeof CompositionSchema>
 export type TemplateId = Composition['template']

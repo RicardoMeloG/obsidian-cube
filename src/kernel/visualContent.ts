@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/mini'
 import visualExample from '../../public/content/visual.example.json'
 import { FACE_ORDER } from './faces'
 import type { FaceId } from './faces'
@@ -15,31 +15,30 @@ import type { WorldId } from './worlds'
 // example (`visual.example.json`) that is also the default (ADR 003).
 
 const WorldIdSchema = z.enum(WORLD_IDS as [WorldId, ...WorldId[]])
-const HexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'accent must be a 6-digit hex color')
+const HexColorSchema = z.string().check(z.regex(/^#[0-9a-fA-F]{6}$/, 'accent must be a 6-digit hex color'))
 
 // A world in the catalog: it can be enabled or disabled whether or not a face
 // points at it. Its name is code (`WORLD_LABELS`, shown by the dev showcase);
 // the editable `label` was retired on 2026-10-16 (audit-3 F-7) because
 // nothing rendered it. Older documents that still have it parse.
 const WorldCatalogEntrySchema = z.object({
-  id: WorldIdSchema.meta({ title: 'Mundo', widget: 'fixed' }),
-  enabled: z.boolean().meta({ title: 'Activo' }),
+  id: WorldIdSchema.clone().register(z.globalRegistry, { title: 'Mundo', widget: 'fixed' }),
+  enabled: z.boolean().clone().register(z.globalRegistry, { title: 'Activo' }),
 })
 
 // Per-face presentation: which world backs it (or none), its accent hue and
 // its icon in the stage's dock (spec 011, AD-02).
 const FaceVisualSchema = z.object({
-  worldId: WorldIdSchema.nullable().meta({ title: 'Mundo de fondo' }),
-  accent: HexColorSchema.meta({ title: 'Color de acento', widget: 'color' }),
-  icon: z
-    .enum(ICON_IDS as unknown as [IconId, ...IconId[]])
-    .optional()
-    .meta({ title: 'Icono en el dock' }),
+  worldId: z.nullable(WorldIdSchema).clone().register(z.globalRegistry, { title: 'Mundo de fondo' }),
+  accent: HexColorSchema.clone().register(z.globalRegistry, { title: 'Color de acento', widget: 'color' }),
+  icon: z.optional(z
+    .enum(ICON_IDS as unknown as [IconId, ...IconId[]]))
+    .clone().register(z.globalRegistry, { title: 'Icono en el dock' }),
 })
 
 export const VisualContentSchema = z.object({
-  worlds: z.array(WorldCatalogEntrySchema).meta({ title: 'Mundos' }),
-  faces: z.record(FaceIdSchema, FaceVisualSchema).meta({ title: 'Caras' }),
+  worlds: z.array(WorldCatalogEntrySchema).clone().register(z.globalRegistry, { title: 'Mundos' }),
+  faces: z.record(FaceIdSchema, FaceVisualSchema).clone().register(z.globalRegistry, { title: 'Caras' }),
 })
 
 export type WorldCatalogEntry = z.infer<typeof WorldCatalogEntrySchema>

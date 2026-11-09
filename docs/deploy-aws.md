@@ -34,7 +34,7 @@ Defined in `infra/` with the **AWS CDK (TypeScript)**.
 
 1. **Bootstrap CDK** in the target account/region (needs AWS credentials locally):
    ```bash
-   cd infra && npm install
+   cd infra && npm run prepare:cdk && npm ci
    npx cdk bootstrap aws://<ACCOUNT_ID>/<REGION>
    ```
 2. **Deploy the stack**:
@@ -58,7 +58,8 @@ stage (spec 010, D-6).
 
 ```bash
 cd infra
-npm install
+npm run prepare:cdk
+npm ci
 npm run synth   # generates CloudFormation into cdk.out/ — fully offline
 ```
 

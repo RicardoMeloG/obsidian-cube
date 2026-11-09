@@ -117,7 +117,7 @@ export default defineConfig([
         {
           patterns: [
             {
-              regex: '^(?!zod$|\\.{1,2}/)',
+              regex: '^(?!zod(?:/mini)?$|\\.{1,2}/)',
               message: 'The content kernel depends on zod only (ADR 005).',
             },
             {

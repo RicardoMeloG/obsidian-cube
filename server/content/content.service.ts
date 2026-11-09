@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
-import type { ZodError } from 'zod'
+import type { $ZodError as ZodError } from 'zod/v4/core'
 import { templateMismatches } from '../../src/kernel/publishRules'
 import type { Issue } from '../../src/kernel/publishRules'
 import { SiteContentSchema } from '../../src/kernel/siteContent'

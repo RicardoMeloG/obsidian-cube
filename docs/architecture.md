@@ -82,6 +82,8 @@ Hand-written CSS, each file commented with why: `src/app/shell.css` (the page's 
 
 Imports across top-level modules use `@/`; a relative path that climbs into another module is an error. Interface code does not compare locales (strings come from `features/content/copy.ts`) and does not load code lazily (only the scene's worlds and the app's dev showcase do).
 
+The runtime content contracts use `zod/mini`; the admin server uses Zod's full JSON Schema renderer over those same contracts. Form metadata is registered on cloned schemas, so reusable fields retain independent labels. The five generated JSON Schemas were unchanged by this switch (verified 2026-11-08).
+
 ## Flows
 
 - **Addresses (owner, 2026-10-20; spec 012, AD-08).** One page per language and face, on clean paths: English at the root (`/`, `/security`), Spanish under `/es` (`/es`, `/es/seguridad`); the slugs and the path of every page are in `src/kernel/sitePaths.ts`. The browser reads the language and the face from the path (`features/content/loadContent.ts`, `features/experience/faceUrl.ts`); the bare `/` takes the visitor's last choice (`localStorage`), otherwise the browser's language. The address and the title follow what the visitor sees, written in place with `history.replaceState` once the content in that language is shown: the face once the visitor picks one (from the cube, the dock, or by leaving cube mode), the language always. The bar shows no query: the review's `?intro=` and `?nudge=` are read on arrival and leave it, as does any other; in development the tools that read theirs while the page runs keep them (`faceUrl.ts`). No router: every page is the same single-screen experience. `vite preview` serves `/es/seguridad` from `es/seguridad.html`; CloudFront needs a function that does the same, at the release (spec 012, AD-08).
@@ -99,6 +101,7 @@ Imports across top-level modules use `@/`; a relative path that climbs into anot
 | Rule | Status | Gate |
 |---|---|---|
 | Personal data never in the repository | In force | `.gitignore`; `npm run check:privacy` in CI and pre-push (H-08a); `--history` (authors, messages and the content of every past version) before publishing a repository |
+| No known dependency advisories in either package | In force since 2026-11-08; transitive fixes and the verified CDK archive are documented in `docs/dependency-security.md` | `npm audit --audit-level=low` after `npm ci` in the frontend and infrastructure CI jobs |
 | Build, lint and unit tests pass; tests are type-checked | In force | CI, on every push to any branch and on pull requests (audit-3 F-1; the trigger is tested by `scripts/checks/ciWorkflow.test.ts`); `tsconfig.test.json` in `tsc -b` |
 | CDK synthesises | In force | CI, when `infra/` changes (`.github/workflows/infra.yml`, 2026-10-16) |
 | Server linted and type-checked | In force | `npm run lint`, `npm run typecheck:server` (H-05) |
