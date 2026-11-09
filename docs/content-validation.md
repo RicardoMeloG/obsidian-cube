@@ -15,13 +15,14 @@ Keep the snapshot, build, manifest, logs and images outside the repository, besi
 The private build can be selected explicitly:
 
 ```sh
+node scripts/check-layout.mjs --content-report --out-dir="<private-build>"
 node scripts/check-layout.mjs --full --out-dir="<private-build>" --require-complete-content
 node scripts/check-budget.mjs --out-dir="<private-build>"
 node scripts/report-objective.mjs --out-dir="<private-build>"
 node scripts/walkthrough.mjs --out-dir="<private-build>" --output="<empty-private-review-directory>"
 ```
 
-The layout check verifies the five document hashes against the manifest before running. With `--require-complete-content`, a missing manifest, an example composition fallback or unresolved publish warnings fails acceptance even when geometry is correct. Known layout debt is not applied to owner snapshots. The custom walkthrough directory must be empty; earlier evidence is preserved.
+The layout check verifies the five document hashes against the manifest before running. It derives composition ownership and the fields filled from examples from the actual JSON, rather than trusting the manifest's face labels. `--content-report` reports that scope without starting a browser. With `--require-complete-content`, a missing manifest, an example composition fallback or unresolved publish warnings fails acceptance even when geometry is correct. Known layout debt is not applied to owner snapshots. The custom walkthrough directory must be empty; earlier evidence is preserved.
 
 Record geometry/accessibility separately from content completion. The objective report checks links anonymously and the raw HTML/machine layer of the selected build; LinkedIn still needs a signed-out manual check. Add `--worlds` to the layout check when the scene/top-bar/veil changed or for stage acceptance, as required by `AGENTS.md`.
 

@@ -52,13 +52,25 @@ const reviewBuild = process.argv.find(arg => arg.startsWith('--out-dir='))?.slic
 const buildArgs = reviewBuild ? ['--outDir', reviewBuild] : []
 const manifestPath = join(resolve(reviewBuild ?? 'dist'), 'review-manifest.json')
 const reviewManifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : null
+const canonical = value => JSON.stringify(value, (_, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item)
 if (reviewManifest) {
   const ids = ['site.en', 'site.es', 'visual', 'profile.en', 'profile.es']
   if (ids.some(id => !reviewManifest.documents?.[id]?.sha256)) throw new Error('Incomplete review manifest')
   for (const id of ids) {
     const document = reviewManifest.documents[id]
-    const hash = createHash('sha256').update(readFileSync(join(resolve(reviewBuild ?? 'dist'), 'content', `${id}.json`))).digest('hex')
+    const data = readFileSync(join(resolve(reviewBuild ?? 'dist'), 'content', `${id}.json`))
+    const hash = createHash('sha256').update(data).digest('hex')
     if (hash !== document.sha256) throw new Error(`Review input mismatch: ${id}`)
+    if (id.startsWith('site.')) {
+      const content = JSON.parse(data)
+      if (!Array.isArray(content.sections) || content.sections.length !== 6 || new Set(content.sections.map(section => section.id)).size !== 6) throw new Error(`Invalid review sections: ${id}`)
+      const example = JSON.parse(readFileSync(new URL(`../public/content/site.example.${id.slice(5)}.json`, import.meta.url), 'utf8'))
+      reviewManifest.faces[id] = content.sections.map(section => {
+        const sameExample = canonical(section.composition) === canonical(example.sections.find(face => face.id === section.id)?.composition)
+        const fallbackFields = ['eyebrow', 'ctaPrimary', 'ctaSecondary', 'detail', 'tagline', 'composition'].filter(field => section[field] == null)
+        return { id: section.id, ownComposition: Boolean(section.composition) && !sameExample, template: section.composition?.template ?? null, exampleFallback: !section.composition || sameExample, fallbackFields }
+      })
+    }
   }
 }
 
@@ -799,7 +811,19 @@ async function checkBehaviour(noWebglBrowser) {
   return failures
 }
 
+function ownerContentIncomplete() {
+  const ids = ['site.en', 'site.es', 'visual', 'profile.en', 'profile.es']
+  return !reviewManifest || ids.some(id => !Array.isArray(reviewManifest.warnings?.[id])) ||
+    Object.values(reviewManifest.faces).some(faces => faces.some(face => face.exampleFallback || face.fallbackFields.length > 0)) ||
+    Object.values(reviewManifest.warnings).some(warnings => warnings.length > 0)
+}
+
 async function main() {
+  if (args.has('--content-report')) {
+    console.log(JSON.stringify({ documents: reviewManifest?.documents, faces: reviewManifest?.faces, warnings: reviewManifest?.warnings, contentAccepted: !ownerContentIncomplete() }, null, 2))
+    process.exitCode = ownerContentIncomplete() ? 1 : 0
+    return
+  }
   const known = JSON.parse(readFileSync(KNOWN_PATH, 'utf8'))
   const preview = startPreview()
   let browser
@@ -876,7 +900,7 @@ async function main() {
     }
     let contentRejected = false
     if (args.has('--require-complete-content')) {
-      const incomplete = !reviewManifest || Object.values(reviewManifest.faces).some(faces => faces.some(face => face.exampleFallback)) || Object.values(reviewManifest.warnings).some(warnings => warnings.length > 0)
+      const incomplete = ownerContentIncomplete()
       if (incomplete) {
         console.log('OWNER CONTENT INCOMPLETE: missing review manifest, example fallback, or unresolved publish warnings. Geometry success does not accept the content.')
         contentRejected = true
