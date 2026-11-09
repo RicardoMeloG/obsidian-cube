@@ -130,3 +130,7 @@ The runtime content contracts use `zod/mini`; the admin server uses Zod's full J
 | The served font is the one measured (Inter) | In force | `font-not-loaded` in `npm run check:layout` (AD-10) |
 | Living docs carry no undated measurements | In force | `npm run check:docs` (H-11) |
 | Architecture doc updated with boundary changes | Unchecked | PR template |
+
+## Owner content acceptance
+
+The CI fixtures and the local published files do not validate database drafts. Use a fixed private snapshot for HTML and runtime data, select its build with `--out-dir`, and require `--require-complete-content`; provenance, hashes and example fallbacks are explicit (2026-11-08). See `docs/content-validation.md`. Geometry and accessibility can pass while content acceptance fails.

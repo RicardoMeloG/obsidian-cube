@@ -13,9 +13,13 @@
 //   npm run build && npm run report:objective
 import { existsSync, readFileSync } from 'node:fs'
 import { createServer } from 'vite'
+import { resolve, sep } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
-const CONTENT = new URL('../public/content/', import.meta.url)
-const DIST = new URL('../dist/', import.meta.url)
+const reviewBuild = process.argv.find(arg => arg.startsWith('--out-dir='))?.slice('--out-dir='.length)
+const DIST = reviewBuild ? pathToFileURL(resolve(reviewBuild) + sep) : new URL('../dist/', import.meta.url)
+const CONTENT = reviewBuild ? new URL('./content/', DIST) : new URL('../public/content/', import.meta.url)
+console.log(`Content reported: ${CONTENT.href}; HTML: ${DIST.href}`)
 const BY_HAND = /(^|\.)linkedin\.com$/i
 
 const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' })

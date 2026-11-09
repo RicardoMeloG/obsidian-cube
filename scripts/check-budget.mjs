@@ -15,12 +15,14 @@
 // Requires `npm run build` first.
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 
 const BUDGET_PATH = fileURLToPath(new URL('./checks/budget.json', import.meta.url))
-const DIST = fileURLToPath(new URL('../dist', import.meta.url))
+const reviewBuild = process.argv.find(arg => arg.startsWith('--out-dir='))?.slice('--out-dir='.length)
+const DIST = reviewBuild ? resolvePath(reviewBuild) : fileURLToPath(new URL('../dist', import.meta.url))
+console.log(`Build measured: ${DIST}`)
 
 const budget = JSON.parse(readFileSync(BUDGET_PATH, 'utf8'))
 

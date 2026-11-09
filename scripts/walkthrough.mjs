@@ -8,17 +8,24 @@
 //   node scripts/walkthrough.mjs --admin     also the admin page (server on 5182)
 //   node scripts/walkthrough.mjs --content=stress   every slot at its budget
 //   node scripts/walkthrough.mjs --content=example  the committed example (safe to share)
+//   --out-dir=<private build> --output=<empty private directory> photographs
+//   an owner snapshot without replacing earlier evidence.
 //
 // Screenshots go to walkthrough/ (gitignored): they may show private content.
 import { spawn } from 'node:child_process'
-import { mkdirSync, readFileSync, rmSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, existsSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { resolve, parse } from 'node:path'
 import { chromium } from 'playwright'
 import { buildStressContent } from './checks/stressContent.mjs'
 
 const PORT = 4181
 const BASE = `http://127.0.0.1:${PORT}`
-const OUT = 'walkthrough'
+const OUT = process.argv.find(arg => arg.startsWith('--output='))?.slice('--output='.length) ?? 'walkthrough'
+const outputPath = resolve(OUT)
+if (outputPath === parse(outputPath).root || outputPath === process.cwd() || !/(?:walkthrough|review|revision|capturas)/i.test(outputPath)) throw new Error('Unsafe walkthrough output directory')
+const reviewBuild = process.argv.find(arg => arg.startsWith('--out-dir='))?.slice('--out-dir='.length)
+const buildArgs = reviewBuild ? ['--outDir', reviewBuild] : []
 const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contact']
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.split('=')[1]?.split(',') ?? fallback
 const viewports = option('viewport', ['1440x900', '1366x768', '390x844'])
@@ -29,7 +36,7 @@ const readJson = (path) => JSON.parse(readFileSync(fileURLToPath(new URL(path, i
 const budgets = readJson('../src/kernel/layoutBudgets.json')
 
 const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url))
-const server = spawn(process.execPath, [vite, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { stdio: 'ignore' })
+const server = spawn(process.execPath, [vite, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1', ...buildArgs], { stdio: 'ignore' })
 const errors = []
 
 try {
@@ -41,7 +48,9 @@ try {
     }
     await new Promise((resolve) => setTimeout(resolve, 300))
   }
-  rmSync(OUT, { recursive: true, force: true })
+  console.log(`Build photographed: ${reviewBuild ?? 'dist (default build)'}`)
+  if (OUT === 'walkthrough') rmSync(OUT, { recursive: true, force: true })
+  else if (existsSync(OUT) && readdirSync(OUT).length > 0) throw new Error('Custom review output must be empty; existing evidence is preserved')
   mkdirSync(OUT, { recursive: true })
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   for (const viewport of viewports) {

@@ -9,6 +9,8 @@
 //
 //   node scripts/check-layout.mjs              default matrix (4 viewports, every layout mode)
 //   node scripts/check-layout.mjs --full       full matrix (9 viewports)
+//   --out-dir=<private build> --require-complete-content checks a fixed owner
+//   snapshot and refuses acceptance while examples or publish warnings remain.
 //   node scripts/check-layout.mjs --worlds     also the contrast over every world
 //   node scripts/check-layout.mjs --update-known   record current failures as known
 //   node scripts/check-layout.mjs --content=stress every field at its budget, and
@@ -31,7 +33,9 @@
 // changes, and before a stage's acceptance.
 
 import { spawn } from 'node:child_process'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { resolve, join } from 'node:path'
+import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { buildStressContent } from './checks/stressContent.mjs'
@@ -44,6 +48,19 @@ const { PNG } = require('pngjs')
 const KNOWN_PATH = fileURLToPath(new URL('./checks/layout-known.json', import.meta.url))
 const PORT = 4179
 const BASE = `http://127.0.0.1:${PORT}`
+const reviewBuild = process.argv.find(arg => arg.startsWith('--out-dir='))?.slice('--out-dir='.length)
+const buildArgs = reviewBuild ? ['--outDir', reviewBuild] : []
+const manifestPath = join(resolve(reviewBuild ?? 'dist'), 'review-manifest.json')
+const reviewManifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : null
+if (reviewManifest) {
+  const ids = ['site.en', 'site.es', 'visual', 'profile.en', 'profile.es']
+  if (ids.some(id => !reviewManifest.documents?.[id]?.sha256)) throw new Error('Incomplete review manifest')
+  for (const id of ids) {
+    const document = reviewManifest.documents[id]
+    const hash = createHash('sha256').update(readFileSync(join(resolve(reviewBuild ?? 'dist'), 'content', `${id}.json`))).digest('hex')
+    if (hash !== document.sha256) throw new Error(`Review input mismatch: ${id}`)
+  }
+}
 
 // The default matrix renders every layout mode (audit-3 F-2: until 2026-10-16
 // no default viewport was taller than 900px, so `desktop` was only ever
@@ -107,7 +124,7 @@ function watchCsp(page, where) {
 
 function startPreview() {
   const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url))
-  return spawn(process.execPath, [vite, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], {
+  return spawn(process.execPath, [vite, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1', ...buildArgs], {
     stdio: 'ignore',
   })
 }
@@ -792,6 +809,9 @@ async function main() {
     // Stress content twice: every slot at its budget, then without the
     // optional blocks (audit-3 F-6).
     const variants = contentMode === 'stress' ? [['', false], ['bare', true]] : [['', false]]
+    console.log(`Build tested: ${reviewBuild ?? 'dist (default build)'}`)
+    if (reviewManifest) console.log(`Content provenance: ${JSON.stringify({ documents: reviewManifest.documents, faces: reviewManifest.faces })}`)
+    else console.log('Content provenance: built files; owner drafts were not selected for this run.')
     console.log(`Layout check on ${viewports.length} viewports × ${LOCALES.length} locales, content: ${contentMode}${variants.length > 1 ? ' (full, then without the optional blocks)' : ''}`)
     const found = { layout: [], axe: [] }
     const modes = new Set()
@@ -847,15 +867,24 @@ async function main() {
 
     let failed = false
     for (const kind of ['layout', 'axe']) {
-      const knownSet = new Set(contentMode === 'built' ? known[kind] : [])
+      const knownSet = new Set(contentMode === 'built' && !reviewManifest ? known[kind] : [])
       const newFailures = found[kind].filter((id) => !knownSet.has(id))
       const fixed = [...knownSet].filter((id) => viewports.includes(id.split(' ')[0]) && !found[kind].includes(id))
       for (const id of newFailures) console.log(`NEW ${kind}: ${id}`)
       for (const id of fixed) console.log(`FIXED ${kind} (remove from the known list): ${id}`)
       if (newFailures.length > 0) failed = true
     }
+    let contentRejected = false
+    if (args.has('--require-complete-content')) {
+      const incomplete = !reviewManifest || Object.values(reviewManifest.faces).some(faces => faces.some(face => face.exampleFallback)) || Object.values(reviewManifest.warnings).some(warnings => warnings.length > 0)
+      if (incomplete) {
+        console.log('OWNER CONTENT INCOMPLETE: missing review manifest, example fallback, or unresolved publish warnings. Geometry success does not accept the content.')
+        contentRejected = true
+      }
+    }
     console.log(failed ? 'Layout check failed.' : 'Layout check passed (known failures only).')
-    process.exitCode = failed ? 1 : 0
+    if (contentRejected) console.log('Owner content acceptance failed.')
+    process.exitCode = failed || contentRejected ? 1 : 0
   } finally {
     await browser?.close()
     preview.kill()

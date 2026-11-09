@@ -122,3 +122,5 @@ Read in this order:
 ## License
 
 MIT
+
+Content checks: CI uses neutral fixtures. Reviewing the owner's database drafts requires a separate private build with recorded provenance; see `docs/content-validation.md`. A green CI does not accept the personal content.
