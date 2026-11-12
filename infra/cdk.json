@@ -6,6 +6,8 @@
   },
   "context": {
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
-    "@aws-cdk/core:checkSecretUsage": true
+    "@aws-cdk/core:checkSecretUsage": true,
+    "siteDomains": ["ricardomelog.com", "www.ricardomelog.com"],
+    "certificateArn": "arn:aws:acm:us-east-1:124562135765:certificate/dd5d5bfc-4d67-459c-ba15-445fccc0e2f1"
   }
 }

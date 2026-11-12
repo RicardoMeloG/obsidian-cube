@@ -3,6 +3,7 @@ import { Construct } from 'constructs'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
+import * as acm from 'aws-cdk-lib/aws-certificatemanager'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -56,6 +57,8 @@ export class StaticSiteStack extends cdk.Stack {
           override: true,
         },
       },
+      // The origin's `Server: AmazonS3` adds nothing for a visitor (ZAP 10036).
+      removeHeaders: ['Server'],
       customHeadersBehavior: {
         customHeaders: [
           { header: 'Permissions-Policy', value: securityHeaders.permissionsPolicy, override: true },
@@ -83,8 +86,21 @@ export class StaticSiteStack extends cdk.Stack {
 }`),
     })
 
+    // Custom domain (D-7, decided 2026-11-12): the DNS lives in Cloudflare, not
+    // Route 53, so the ACM certificate (us-east-1) is requested and validated by
+    // hand with CNAMEs in Cloudflare, and only its ARN reaches the stack through
+    // the context in cdk.json. Without both values the distribution keeps its
+    // default *.cloudfront.net domain, so `cdk synth` still works offline.
+    const siteDomains = this.node.tryGetContext('siteDomains') as string[] | undefined
+    const certificateArn = this.node.tryGetContext('certificateArn') as string | undefined
+    const customDomain =
+      siteDomains?.length && certificateArn
+        ? { domainNames: siteDomains, certificate: acm.Certificate.fromCertificateArn(this, 'SiteCertificate', certificateArn) }
+        : {}
+
     const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
       comment: 'Obsidian Cube portfolio',
+      ...customDomain,
       defaultRootObject: 'index.html',
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       defaultBehavior: {
