@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
+import './threeConsole'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import { playCubeNudgeSound } from '@/features/audio/cubeAudio'
 import { useExperience, useExperienceStore } from '@/features/experience/experienceStore'
