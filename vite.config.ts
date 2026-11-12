@@ -27,6 +27,7 @@ function previewSecurityHeaders(): Record<string, string> {
   const policy = JSON.parse(readFileSync(new URL('./infra/security-headers.json', import.meta.url), 'utf8')) as {
     contentSecurityPolicy: Record<string, string[]>
     referrerPolicy: string
+    permissionsPolicy: string
   }
   const csp = Object.entries(policy.contentSecurityPolicy)
     .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
@@ -34,6 +35,7 @@ function previewSecurityHeaders(): Record<string, string> {
   return {
     'Content-Security-Policy': csp,
     'Referrer-Policy': policy.referrerPolicy,
+    'Permissions-Policy': policy.permissionsPolicy,
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
   }

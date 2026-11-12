@@ -1,20 +1,48 @@
 {
-  "//": "Security headers of the public site (spec 010, 5.13). One source: the CDK stack serves them from CloudFront and vite preview applies them, so the layout check runs the built site under the same policy. reportOnly sends the policy as Content-Security-Policy-Report-Only until it has run in production without reports; vite preview always enforces it.",
-  "reportOnly": true,
+  "//": "Security headers of the public site (spec 010, 5.13). One source: the CDK stack serves them from CloudFront and vite preview applies them, so the layout check runs the built site under the same policy. The policy is enforced from the first deploy (2026-11-12: it ran clean under check:layout); reportOnly true would send it as Content-Security-Policy-Report-Only instead. permissionsPolicy turns off the browser features the site does not use.",
+  "reportOnly": false,
   "contentSecurityPolicy": {
-    "default-src": ["'self'"],
-    "script-src": ["'self'"],
-    "style-src": ["'self'"],
-    "img-src": ["'self'", "data:", "blob:"],
-    "font-src": ["'self'"],
-    "connect-src": ["'self'"],
-    "media-src": ["'self'"],
-    "worker-src": ["'self'", "blob:"],
-    "object-src": ["'none'"],
-    "base-uri": ["'self'"],
-    "form-action": ["'self'"],
-    "frame-ancestors": ["'none'"]
+    "default-src": [
+      "'self'"
+    ],
+    "script-src": [
+      "'self'"
+    ],
+    "style-src": [
+      "'self'"
+    ],
+    "img-src": [
+      "'self'",
+      "data:",
+      "blob:"
+    ],
+    "font-src": [
+      "'self'"
+    ],
+    "connect-src": [
+      "'self'"
+    ],
+    "media-src": [
+      "'self'"
+    ],
+    "worker-src": [
+      "'self'",
+      "blob:"
+    ],
+    "object-src": [
+      "'none'"
+    ],
+    "base-uri": [
+      "'self'"
+    ],
+    "form-action": [
+      "'self'"
+    ],
+    "frame-ancestors": [
+      "'none'"
+    ]
   },
   "strictTransportSecuritySeconds": 63072000,
-  "referrerPolicy": "strict-origin-when-cross-origin"
+  "referrerPolicy": "strict-origin-when-cross-origin",
+  "permissionsPolicy": "accelerometer=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()"
 }

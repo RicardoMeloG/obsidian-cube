@@ -13,6 +13,7 @@ type SecurityHeaders = {
   contentSecurityPolicy: Record<string, string[]>
   strictTransportSecuritySeconds: number
   referrerPolicy: string
+  permissionsPolicy: string
 }
 const securityHeaders = JSON.parse(readFileSync(join(__dirname, '..', 'security-headers.json'), 'utf8')) as SecurityHeaders
 const contentSecurityPolicy = Object.entries(securityHeaders.contentSecurityPolicy)
@@ -55,9 +56,31 @@ export class StaticSiteStack extends cdk.Stack {
           override: true,
         },
       },
-      customHeadersBehavior: securityHeaders.reportOnly
-        ? { customHeaders: [{ header: 'Content-Security-Policy-Report-Only', value: contentSecurityPolicy, override: true }] }
-        : undefined,
+      customHeadersBehavior: {
+        customHeaders: [
+          { header: 'Permissions-Policy', value: securityHeaders.permissionsPolicy, override: true },
+          ...(securityHeaders.reportOnly
+            ? [{ header: 'Content-Security-Policy-Report-Only', value: contentSecurityPolicy, override: true }]
+            : []),
+        ],
+      },
+    })
+
+    // Clean paths (spec 012, AD-08): a path with no extension is served from
+    // its page, `/es/seguridad` from `es/seguridad.html` and `/es` from
+    // `es.html`, so each address gets its own language, title and share
+    // preview. A trailing slash is dropped first; `/` stays on index.html.
+    const cleanPaths = new cloudfront.Function(this, 'CleanPaths', {
+      comment: 'Serves each clean path from its .html page (spec 012, AD-08)',
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+      code: cloudfront.FunctionCode.fromInline(`function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+  if (uri.length > 1 && uri.endsWith('/')) uri = uri.slice(0, -1);
+  if (uri !== '/' && uri.lastIndexOf('.') <= uri.lastIndexOf('/')) uri = uri + '.html';
+  request.uri = uri;
+  return request;
+}`),
     })
 
     const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
@@ -69,11 +92,10 @@ export class StaticSiteStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         responseHeadersPolicy: headersPolicy,
+        functionAssociations: [{ function: cleanPaths, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST }],
       },
-      // Unknown paths answer with the page (status 200). The release stage
-      // replaces this with a viewer-request function that serves each clean
-      // path from its page (`/es/seguridad` from `es/seguridad.html`, spec 012,
-      // AD-08) and real 404s for the rest (spec 010, AD-09).
+      // Unknown paths still answer with the page (status 200); real 404s
+      // come with spec 010, AD-09.
       errorResponses: [
         { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
         { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
