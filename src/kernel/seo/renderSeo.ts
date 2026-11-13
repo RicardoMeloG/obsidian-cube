@@ -204,7 +204,7 @@ export function renderStaticBody(content: SeoInput, face: FaceId | null = null):
     content.locale === 'es'
       ? 'Este portafolio es una experiencia 3D interactiva; activa JavaScript para verla completa.'
       : 'This portfolio is an interactive 3D experience; enable JavaScript to see it in full.'
-  // The layer for machines, in full (spec 012, AD-07).
+  // The layer for machines, in full (ADR 009).
   const profile = content.locale === 'es' ? 'Perfil completo' : 'Full profile'
 
   return `<main class="seo-fallback">

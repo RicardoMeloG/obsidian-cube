@@ -1,4 +1,4 @@
-// The layer for machines (spec 012, AD-07), rendered at build time from the
+// The layer for machines (ADR 009), rendered at build time from the
 // same documents as the faces (vite.config.ts → machineLayer): /llms.txt and
 // one plain profile page per language, which carries the fuller JSON-LD. The
 // same facts as the site, more of them and in one structure; nothing a person

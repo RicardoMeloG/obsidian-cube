@@ -1,4 +1,4 @@
-// A face as plain text for the layer for machines (spec 012, AD-07): the
+// A face as plain text for the layer for machines (ADR 009): the
 // heading, the composition's text by template and the detail, in reading
 // order. Only what the document itself holds: a face without its own
 // composition or detail gives its heading only, never the example's text,

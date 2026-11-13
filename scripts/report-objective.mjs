@@ -1,4 +1,4 @@
-// Objective report (spec 012, AD-02): what a stranger and a machine find, read
+// Objective report (ADR 009): what a stranger and a machine find, read
 // from the owner's published documents and the build. Every artifact link a
 // face carries is requested without credentials, and a link that does not
 // answer 200 is not an artifact. The raw HTML must name the owner, the role,

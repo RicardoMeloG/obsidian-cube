@@ -1,4 +1,4 @@
-// Where the layer for machines lives under the site root (spec 012, AD-07):
+// Where the layer for machines lives under the site root (ADR 009):
 // rendered by renderMachine.ts, linked from index.html by renderSeo.ts.
 import type { SiteLocale } from '../siteContent'
 

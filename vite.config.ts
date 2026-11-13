@@ -19,7 +19,7 @@ import type { SitePage } from './src/kernel/sitePaths.ts'
 // (renderMachine.ts): the published content of each language when it exists
 // locally (gitignored, written by the admin), otherwise the committed example.
 // CI has no private content, so a deploy from CI ships the example until the
-// admin publish step renders the pages (ADR 004; spec 012, D-6).
+// admin publish step renders the pages (ADR 004; spec 010, D-6).
 const CONTENT_DIR = new URL('./public/content/', import.meta.url)
 const contentSources = (locale: SiteLocale) => [`site.${locale}.json`, `site.example.${locale}.json`]
 
@@ -69,7 +69,7 @@ function readMachineInput(locale: SiteLocale): MachineInput {
   return { ...content, profile }
 }
 
-// One page per language and face (src/kernel/sitePaths.ts; spec 012, AD-08):
+// One page per language and face (src/kernel/sitePaths.ts; ADR 009):
 // the built index.html, with the language, the share preview and the plain
 // body of that page. Rendered last, once Vite has written the scripts and
 // preloads into the template, so every page loads exactly what index.html
@@ -114,7 +114,7 @@ function seoPages(): Plugin {
   }
 }
 
-// The layer for machines (spec 012, AD-07): /llms.txt and the plain profile
+// The layer for machines (ADR 009): /llms.txt and the plain profile
 // pages, written into the build and served by the dev server. None of them is
 // loaded by the first view.
 const MACHINE_FILES = [LLMS_FILE, ...Object.values(PROFILE_PAGES)]

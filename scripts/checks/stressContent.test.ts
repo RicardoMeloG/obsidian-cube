@@ -68,7 +68,7 @@ describe('stress content', () => {
 describe('publish rules', () => {
   const example = SiteContentSchema.parse(exampleEn)
 
-  it('keep the example content within every layout budget, in both languages (spec 012: the Spanish one was not checked)', () => {
+  it('keep the example content within every layout budget, in both languages (the Spanish one was once left unchecked)', () => {
     for (const content of [example, SiteContentSchema.parse(exampleEs)]) {
       const budgetIssues = publishIssues(content).filter((issue) => /caracteres|elementos/.test(issue.message))
       expect(budgetIssues).toEqual([])

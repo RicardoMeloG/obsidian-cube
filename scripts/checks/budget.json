@@ -8,6 +8,6 @@
   "raises": [
     "2026-10-12: +47 KB for the self-hosted Inter font (spec 010, AD-10).",
     "2026-10-20: +1 KB for the nudge that invites the first click on the cube (spec 011, section 7, owner).",
-    "2026-10-20: +0.7 KB for one page per language and face: the code that reads and writes the clean addresses and titles, and the Spanish page, now the heaviest first view (spec 012, AD-08; pending the owner's signature)."
+    "2026-10-20: +0.7 KB for one page per language and face: the code that reads and writes the clean addresses and titles, and the Spanish page, now the heaviest first view (ADR 009)."
   ]
 }

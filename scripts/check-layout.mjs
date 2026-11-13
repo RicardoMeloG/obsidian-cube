@@ -669,7 +669,7 @@ async function checkBehaviour(noWebglBrowser) {
     await context.close()
   }
 
-  // Addresses (spec 012, AD-08): each language and face has a page of its own,
+  // Addresses (ADR 009): each language and face has a page of its own,
   // served in its language and under its title before any script runs; the
   // address bar follows what the visitor sees and shows no query (the
   // review's is read on arrival, then leaves the bar);

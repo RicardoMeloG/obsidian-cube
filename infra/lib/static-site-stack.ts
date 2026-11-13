@@ -69,12 +69,12 @@ export class StaticSiteStack extends cdk.Stack {
       },
     })
 
-    // Clean paths (spec 012, AD-08): a path with no extension is served from
+    // Clean paths (ADR 009): a path with no extension is served from
     // its page, `/es/seguridad` from `es/seguridad.html` and `/es` from
     // `es.html`, so each address gets its own language, title and share
     // preview. A trailing slash is dropped first; `/` stays on index.html.
     const cleanPaths = new cloudfront.Function(this, 'CleanPaths', {
-      comment: 'Serves each clean path from its .html page (spec 012, AD-08)',
+      comment: 'Serves each clean path from its .html page (ADR 009)',
       runtime: cloudfront.FunctionRuntime.JS_2_0,
       code: cloudfront.FunctionCode.fromInline(`function handler(event) {
   var request = event.request;

@@ -9,8 +9,8 @@ import type { SiteContent } from '../../src/kernel/siteContent'
 import { VisualContentSchema } from '../../src/kernel/visualContent'
 
 // The editable documents. Each maps to the kernel schema the frontend
-// renders with (the profile: the build, for the layer for machines; spec 012,
-// AD-07), its publish rules (layout budgets, links, no placeholders; blocking
+// renders with (the profile: the build, for the layer for machines; ADR 009),
+// its publish rules (layout budgets, links, no placeholders; blocking
 // or warning by APP_ENV), its published file and a committed example used as
 // the first-load fallback. This whitelist is also the path-traversal guard: only
 // these ids ever reach the filesystem.

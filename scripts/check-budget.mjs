@@ -3,8 +3,8 @@
 // Counts everything a visitor downloads before the first face is shown: the
 // page's HTML, the entry script and its preloaded chunks, the stylesheets, and
 // the public files the first view always loads (listed in the budget file).
-// Every page of the site is a first view (one per language and face, spec 012,
-// AD-08), and the heaviest one counts. Sizes are gzip, as a CDN serves them.
+// Every page of the site is a first view (one per language and face, ADR 009),
+// and the heaviest one counts. Sizes are gzip, as a CDN serves them.
 // The limit is a ratchet: it is the last
 // accepted value, plus 1% so builds with the example or the private content
 // both fit, and it only goes down unless a spec raises it.

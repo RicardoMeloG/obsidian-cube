@@ -1,4 +1,4 @@
-// The profile for machines (spec 012, AD-07): a document of its own per
+// The profile for machines (ADR 009): a document of its own per
 // language (profile.{en,es}.json, edited in the admin), with the facts that
 // have no layout to fit. The build writes it into /llms.txt and the plain
 // profile pages (seo/renderMachine.ts); the site never loads it, so the first

@@ -163,7 +163,7 @@ The overview, the module map and the status of every rule (in force, or the phas
 
 The site is bilingual: English (primary), Spanish (secondary).
 
-Language behavior and addresses (owner, 2026-10-20; spec 012, AD-08):
+Language behavior and addresses (ADR 009):
 
 - Every language and face has a clean address of its own, served as its own static HTML page: English at the root (`/` for the cube, `/security` for a face), Spanish under `/es` (`/es`, `/es/seguridad`). The slugs live in `src/kernel/sitePaths.ts` and never follow the content's labels: shared links point at them.
 - The bare `/` opens in the language the visitor last chose (remembered in the browser), otherwise in `navigator.language` (Spanish if it starts with `es`, English otherwise); the address then names the language shown.
@@ -174,7 +174,7 @@ Content files (paths):
 - Public examples (committed): `public/content/site.example.en.json`, `public/content/site.example.es.json`
 - Private deploy (gitignored): `public/content/site.en.json`, `public/content/site.es.json`
 - Visual layer, world and accent per face: `public/content/visual.example.json` (committed) / `public/content/visual.json` (gitignored)
-- Profile for machines, one per language (`llms.txt` and the profile pages, built from it; spec 012, AD-07): `public/content/profile.example.{en,es}.json` (committed) / `public/content/profile.{en,es}.json` (gitignored). It may say more than the faces, never anything else.
+- Profile for machines, one per language (`llms.txt` and the profile pages, built from it; ADR 009): `public/content/profile.example.{en,es}.json` (committed) / `public/content/profile.{en,es}.json` (gitignored). It may say more than the faces, never anything else.
 
 Loading order: the private document if present and valid, otherwise the example, which is bundled as the defaults; a field a published face leaves empty comes from the example in the same language. Validate shape (Zod) before rendering. Prose fields accept inline HTML only, sanitized at render time by `sanitizeRichText` (no block tags, no Markdown).
 
@@ -227,7 +227,7 @@ Phase 1 (status on 2026-11-12):
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a composition CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
-- [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (spec 012, AD-07). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
+- [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (ADR 009). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [x] Real identity live at a public URL (https://ricardomelog.com, 2026-11-12).
 - [ ] At least one real artifact per face.
@@ -238,7 +238,7 @@ Phase 1 (status on 2026-11-12):
 - `docs/visual-direction.md` — design system (materials, color, motion, layout, tokens)
 - `docs/roadmap.md` — phase status, known gaps, priority order
 - `docs/architecture.md` — code architecture overview, module map, flows and the status of every rule
-- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture, 007 normalize before publishing)
+- `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture, 007 staged path to publishing, 008 compositions before content, 009 a layer for machines and clean addresses)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
 - `docs/assets.md` — source and licence of every public asset
 - `docs/live-use-cases.md` — the visitor use cases checked against the published site (`npm run check:live`)

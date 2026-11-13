@@ -1,4 +1,4 @@
-// The site's addresses (owner, 2026-10-20; spec 012, AD-08): one page per
+// The site's addresses (ADR 009): one page per
 // language and face, each on a clean path (`/security`, `/es/seguridad`), and
 // the bare `/` and `/es` for the cube. English, the primary language, lives at
 // the root. The slugs are a public contract, since shared links point at them,

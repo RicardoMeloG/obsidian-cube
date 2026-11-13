@@ -315,7 +315,7 @@
     }
 
     // The visual document and the profile for machines are edited whole; the
-    // profile has a language, like the site (spec 012, AD-07).
+    // profile has a language, like the site (ADR 009).
     const wholeDoc = () => currentTarget.kind === 'visual' || currentTarget.kind === 'profile';
     const underlyingDocId = () => currentTarget.kind === 'visual' ? 'visual' : (currentTarget.kind === 'profile' ? 'profile.' : 'site.') + currentLang;
     const faceSlice = (doc, id) => (doc.sections || []).find((s) => s.id === id) || { id };

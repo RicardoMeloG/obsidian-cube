@@ -194,7 +194,7 @@ Owner-editable text stays in the content documents; **content wins** (the `getEy
 
 The single-screen home stays route-less. A router arrives with the methodology page (roadmap priority 3), with one static HTML file per route rendered by the kernel's SEO renderer. Not before.
 
-Amended 2026-10-20 (owner; spec 012, AD-08): the home has one clean address per language and face (`/security`, `/es/seguridad`), each a static HTML file rendered by the kernel's SEO renderer, as this section foresaw for routes; there is still no router, because every address is the same single-screen experience and the browser writes the address in place. The CloudFront function that serves those paths replaces the SPA fallback of AD-09 at the release.
+Amended 2026-10-20 (owner; ADR 009): the home has one clean address per language and face (`/security`, `/es/seguridad`), each a static HTML file rendered by the kernel's SEO renderer, as this section foresaw for routes; there is still no router, because every address is the same single-screen experience and the browser writes the address in place. The CloudFront function that serves those paths replaces the SPA fallback of AD-09 at the release.
 
 ### 5.10 Degradation (AD-09)
 
