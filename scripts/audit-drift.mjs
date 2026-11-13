@@ -9,7 +9,7 @@
 //
 //   node scripts/audit-drift.mjs --spec=specs/011-stage-compositions --label=stage \
 //     --files=src/features/stage/StageView.tsx,src/features/stage/blocks.tsx
-//   options: --models=qwen3.6:27b,gemma4:31b  --diff=scripts/check-layout.mjs
+//   options: --models=qwen3.8:27b,gemma4:31b  --diff=scripts/check-layout.mjs
 //            --brief="what the slice built, one sentence"
 //
 // Needs Ollama on 127.0.0.1:11434 with the models pulled.
@@ -23,7 +23,7 @@ const specDir = option('spec')
 const label = option('label', 'audit')
 const files = list(option('files'))
 const diffs = list(option('diff'))
-const models = list(option('models', 'qwen3.6:27b,gemma4:31b'))
+const models = list(option('models', 'qwen3.8:27b,gemma4:31b'))
 const brief = option('brief', 'the slice of the spec that was just built')
 if (!specDir || files.length === 0) throw new Error('Usage: --spec=<spec dir> --files=<comma-separated paths> [--label --models --diff --brief]')
 

@@ -42,6 +42,7 @@ I design the architecture, the rules and the gates; AI agents implement inside t
 - **Decisions before code.** Each change of direction is an ADR (`docs/decisions/`) and each body of work a spec (`specs/`) with its acceptance criteria. `AGENTS.md` is the contract every agent, human or AI, reads first.
 - **Rules are gates, not advice.** A rule counts as in force only when a check fails without it: lint boundaries, type-checked tests, a first-view size ratchet, a privacy scan (files and, before publishing, the whole history), colour and type tokens, a layout check that measures every face on a viewport matrix with real and worst-case content, accessibility and contrast, and the content security policy. Every new gate is proved by breaking it once on purpose.
 - **Independent audits.** Stages close only after an audit by a reviewer with no context from the work (`specs/010-architecture/audit-1.md`, `audit-2.md`); every finding is fixed or recorded as a decision.
+- **Process in proportion to the change** (spec 012). The pre-push hook reads what a push changes: documentation passes with the usual gates, code needs an audit of its exact diff by two local models, and a change to the contract or a gate needs its spec or ADR. It also refuses ignored files, keys and secret values.
 - **Stages in order** (ADR 007, ADR 008): normalize the code, compositions, content, security, release.
 - **The published site is tested too.** `npm run check:live` walks twelve visitor use cases against the live site and fails on any console error or warning (`docs/live-use-cases.md`).
 
@@ -79,7 +80,7 @@ npm run check:tokens     # colours and type only from the tokens
 npm run check:layout     # layout, accessibility, contrast and CSP on a viewport matrix (Playwright)
 npm run check:layout -- --worlds   # also name and role over every world (software WebGL; on demand in CI)
 npm run check:live       # use cases against the published site (or --url=http://127.0.0.1:5181)
-git config core.hooksPath .githooks   # once per clone: privacy check before every push
+npm run audit:change     # before pushing code: two local models audit the exact diff (Ollama)
 ```
 
 Private values for the privacy check go in `.privacy-denylist` (gitignored, one per line) and, in CI, in the `PRIVACY_DENYLIST` secret.
