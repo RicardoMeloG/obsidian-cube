@@ -99,6 +99,8 @@ Personal deploy content (gitignored):
 - `public/content/site.es.json`
 - `public/content/visual.json` (world and accent per face; example committed as `visual.example.json`)
 
+Backup: `npm run backup:content` exports what exists only on the author's machine (the private documents and images, the admin's drafts and versions, the local notes in `private/`) to a separate private repository set by `CONTENT_BACKUP_DIR`, commits and pushes. It never copies `.env` or the admin users table, and refuses to commit anything that looks like a secret.
+
 Loading order: the private file if present, otherwise the example, which is bundled as the defaults (`src/kernel/siteContent.ts`); a face that leaves a field empty takes it from the example in the same language. The admin edits and publishes these same files.
 
 Addresses and language: one page per language and face, English at the root (`/`, `/security`) and Spanish under `/es` (`/es`, `/es/seguridad`), each built as its own static HTML with its title and share preview (`src/kernel/sitePaths.ts`). The bare `/` opens in the visitor's last choice, otherwise in `navigator.language`.
