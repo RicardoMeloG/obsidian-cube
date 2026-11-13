@@ -129,11 +129,12 @@ Before reporting a change complete (definition of done; items marked with a phas
 1. `npm run build`, `npm run lint` (site and server), `npm run typecheck:server` and `npm test` pass.
 2. `npm run check:budget`, `npm run check:privacy`, `npm run check:docs` and `npm run check:tokens` pass.
 3. `npm run check:layout` passes: no layout or accessibility failure beyond the known ones in `scripts/checks/layout-known.json`. A fix removes its entry; a new entry needs a reason in the commit. Add `--worlds` when a world, the top bar or its veil changed, and `--full --worlds` before a stage's acceptance: CI runs both only on demand while the site is being built (2026-10-16). `npm run check:admin` passes when the admin or a schema changed.
-4. The pre-push hook is enabled (`git config core.hooksPath .githooks`).
+4. The pre-push hook is enabled: `npm install` sets it (`scripts/enable-hooks.mjs`); by hand, `git config core.hooksPath .githooks`. Before a push, stage files by name and read `git diff --cached --stat`, never `git add -A`.
 5. Every slice, visual or not, closes with a visual walkthrough a person looks at (owner, 2026-10-15): `node scripts/walkthrough.mjs` photographs every face in every layout, both languages, at 1440×900, 1366×768 and 390×844 (screenshots in `walkthrough/`, gitignored); add `--admin` when the admin changed. Green gates do not prove the experience still holds; the walkthrough's findings are reported.
 6. `docs/architecture.md` is updated in the same change when a boundary, flow or rule status changes.
 7. Changes stay scoped to one product hito per commit.
 8. A spec in progress is audited for drift at the checkpoints its slice table names, by agents without prior context (`node scripts/audit-drift.mjs`: two local models, each on its own), against `AGENTS.md`, its ADRs and the spec, and judged against the objective (Direction, Audience, MVP Definition: closer, neutral or postpones); every finding is verified, and the result is recorded next to the spec (`audit-N.md`) and resolved before the next slice.
+9. A push that changes code carries an audit of its exact diff (`npm run audit:change`, spec 012), with every finding verified; the pre-push hook refuses it otherwise.
 
 Admin and backend rules:
 
@@ -204,7 +205,13 @@ Privacy:
 
 ## Working Method
 
-Large changes follow: spec (`specs/NNN-*/`) → independent audit by an agent without prior context, recorded next to the spec → revision → build → gates → visual verification → Conventional Commit. The method is part of what the site presents as its own case study; `specs/010-architecture/audit-1.md` is the first record. Unchecked: enforced by review.
+Process is proportional to what a change touches, and the paths it changes decide the level, not whoever pushes (spec 012; the lists in `scripts/lib/push-gate.mjs`):
+
+- **Adjustment** (documentation, specs, examples, assets): the definition of done.
+- **Change** (code: `src/`, `server/`, `scripts/`, `infra/`, hooks, workflows, `package.json`, root configuration): also an audit of the exact code diff by the two local models before the push (`npm run audit:change`); every finding is verified and fixed, or answered in the commit.
+- **Large change** (the contract or a gate: the kernel, the admin's auth, the infrastructure stack, the security headers, the hooks and checks, the CI workflows, the lint rules, this file, the ADRs): a spec (`specs/NNN-*/`) or an ADR first → independent audit by agents without prior context, recorded next to the spec → revision → build → gates → visual verification → Conventional Commit whose message names the spec or ADR.
+
+The pre-push hook enforces all three (`scripts/check-push.mjs`): it also refuses any file that matches an ignore rule, is named like a key or environment file, or adds a secret value. The audit runs on the author's machine, so CI does not repeat it; `git push --no-verify` is for the owner only, with the reason in the next commit. The method is part of what the site presents as its own case study; `specs/010-architecture/audit-1.md` is the first record.
 
 ## Commits
 

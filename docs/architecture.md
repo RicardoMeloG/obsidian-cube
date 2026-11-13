@@ -101,6 +101,7 @@ The runtime content contracts use `zod/mini`; the admin server uses Zod's full J
 | Rule | Status | Gate |
 |---|---|---|
 | Personal data never in the repository | In force | `.gitignore`; `npm run check:privacy` in CI and pre-push (H-08a); `--history` (authors, messages and the content of every past version) before publishing a repository |
+| A push carries no ignored file, key or environment file and no secret value; code arrives audited by the two local models on its exact diff; a change to the contract or a gate names its spec or ADR | In force since 2026-11-13, local: the models run on the author's machine | `scripts/check-push.mjs` in the pre-push hook, enabled by `npm install` (spec 012); the rules tested by `scripts/checks/pushGate.test.ts` |
 | No known dependency advisories in either package | In force since 2026-11-08; transitive fixes and the verified CDK archive are documented in `docs/dependency-security.md` | `npm audit --audit-level=low` after `npm ci` in the frontend and infrastructure CI jobs |
 | Build, lint and unit tests pass; tests are type-checked | In force | CI, on every push to any branch and on pull requests (audit-3 F-1; the trigger is tested by `scripts/checks/ciWorkflow.test.ts`); `tsconfig.test.json` in `tsc -b` |
 | CDK synthesises | In force | CI, when `infra/` changes (`.github/workflows/infra.yml`, 2026-10-16) |
