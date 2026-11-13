@@ -1,7 +1,7 @@
 // Static SEO for every page of the site (one per language and face,
 // sitePaths.ts), rendered at build time from the site content (vite.config.ts
 // → seoPages). Crawlers that do not run JavaScript (GPTBot, ClaudeBot,
-// Perplexity, link-preview scrapers; see docs/visitor-profile.md) only ever see
+// Perplexity, link-preview scrapers) only ever see
 // this HTML, so it carries the identity, the page's share preview and a
 // plain-text version of every face.
 //

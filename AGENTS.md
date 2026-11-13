@@ -1,10 +1,10 @@
 # Agent Orientation
 
-This is the **single source of truth** for the agentic-cube-prototype project. Read this before making any product, content, UI, or architecture change. Other docs are referenced from here only when relevant.
+This is the **single source of truth** for the obsidian-cube project. Read this before making any product, content, UI, or architecture change. Other docs are referenced from here only when relevant.
 
-The project is an open-source, public, agentic portfolio prototype for Ricardo Melo. It is **not** a CV — it is visible proof of a transition from senior software engineering into Agentic Product Engineering.
+The project is Ricardo Melo's portfolio, live at https://ricardomelog.com since 2026-11-12. The code is public; the personal content never enters the repository. Local direction notes, when present, live in `private/` (gitignored): read them before product or content work.
 
-## Direction (reset 2026-10-09)
+## Direction (ADR 002, 2026-10-09)
 
 A review on 2026-10-09 found the engineering well ahead of the product: the site was not yet published and no face linked to a real artifact, so the priority moved from the container to the content. Full reasoning in `docs/decisions/002-evidence-before-spectacle.md`.
 
@@ -28,7 +28,7 @@ Stages (ADR 007, ADR 008): (1) normalization, spec 010 P2b–P4 and the develope
 
 ## Audience
 
-Evidence and segments behind this list: `docs/visitor-profile.md` (2026-10-10). Machines that read raw HTML are the largest audience; most AI crawlers do not execute JavaScript.
+Machines that read raw HTML are the largest audience; most AI crawlers do not execute JavaScript.
 
 1. **Recruiters / hiring managers**: must understand in under 30 seconds what Ricardo is becoming professionally, why his senior systems background matters, what he can build with agentic workflows, and how to contact him.
 2. **AI / recruiter systems**: indexable, semantic HTML with clear keywords (Agentic Product Engineer, AI-assisted development, React, TypeScript, Python, PostgreSQL, AWS, Security, Legacy modernization, Open source, Production systems).
@@ -209,17 +209,17 @@ Large changes follow: spec (`specs/NNN-*/`) → independent audit by an agent wi
 ## Commits
 
 - Commit only coherent milestones.
-- Commit messages describe the product hito, not the file diff.
+- Commit messages describe the product milestone, not the file diff.
 - Do not mix unrelated refactors with feature changes.
 - Messages follow Conventional Commits: `type(scope): summary`, lowercase after the colon except proper names (AWS, Cognito), no trailing period.
-- Language: the summary and body are written in Spanish; types, scopes and footers (`BREAKING CHANGE:`, `Co-Authored-By:`) stay in English because tooling reads them. Example: `feat(cube): intro de primera visita e invitación a girar`.
+- Language: English, like the code and the docs. Example: `feat(cube): first-visit intro and rotate invitation`.
   - Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`.
   - Scopes are optional; reuse the existing ones: `cube`, `admin`, `content`, `infra`, `a11y`, `mobile`.
   - A breaking change to the content schema or a public contract adds `!` after the type and a `BREAKING CHANGE:` footer.
 
 ## MVP Definition
 
-Phase 1 ships when (status as of the 2026-10-09 audit):
+Phase 1 (status on 2026-11-12):
 
 - [x] The cube is the persistent focal element of the home experience.
 - [x] Each face reveals minimal content in the composition around the cube in a single viewport (no overlay routing, no scroll on desktop).
@@ -229,18 +229,17 @@ Phase 1 ships when (status as of the 2026-10-09 audit):
 - [ ] At least one deep-dive page exists (methodology) reached from a composition CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
 - [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (spec 012, AD-07). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
-- [ ] Real identity and at least one real artifact per face, live at a public URL.
+- [x] Real identity live at a public URL (https://ricardomelog.com, 2026-11-12).
+- [ ] At least one real artifact per face.
 - [x] The CI gates pass (build, lint, types, tests, budget, privacy, docs, layout).
 
 ## Other References (load on demand)
 
 - `docs/visual-direction.md` — design system (materials, color, motion, layout, tokens)
-- `docs/project-memory.md` — owner direction that must survive across sessions (future-state positioning, presentation layer, market reframing)
 - `docs/roadmap.md` — phase status, known gaps, priority order
 - `docs/architecture.md` — code architecture overview, module map, flows and the status of every rule
 - `docs/decisions/` — architectural decision records (001 spectacle as retention, 002 evidence before spectacle, 003 per-face accent and glyph, 004 Cognito-authenticated admin on AWS, 005 content kernel inside the site, 006 frontend architecture, 007 normalize before publishing)
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD, one-time AWS setup
 - `docs/assets.md` — source and licence of every public asset
-- `docs/visitor-profile.md` — who visits, with sources: recruiters, hiring managers, peers, AI crawlers, link previews, sourcing tools
-- `docs/research-philosophy.md` — content brief for the RESEARCH face (what of the private archive may be shown)
-- `specs/NNN-*/` — feature specs (lightweight markdown; Spec Kit drafts 002/003 kept as input)
+- `docs/live-use-cases.md` — the visitor use cases checked against the published site (`npm run check:live`)
+- `specs/NNN-*/` — feature specs (lightweight markdown)

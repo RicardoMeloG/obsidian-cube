@@ -8,7 +8,6 @@ For visual decisions (color, motion, layout, materials, tokens), also read `docs
 
 All other docs are loaded on demand only:
 
-- `docs/project-memory.md` — owner direction that must survive across sessions
 - `docs/roadmap.md` — phase status, known gaps, priority order
 - `docs/decisions/` — architectural decision records
 - `docs/deploy-aws.md` — static hosting IaC and CI/CD

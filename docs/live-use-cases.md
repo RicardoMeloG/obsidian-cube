@@ -2,7 +2,7 @@
 
 **Status:** living document, 2026-11-12. Run by `npm run check:live` (`scripts/check-live.mjs`).
 
-The layout check proves the build before it ships; these use cases prove the published site, in a real browser, the way each kind of visitor meets it ([visitor-profile.md](visitor-profile.md)). The console is watched in every case: a reviewer may open the developer tools, so any error, warning, failed request or CSP violation fails the run. The script is read-only.
+The layout check proves the build before it ships; these use cases prove the published site, in a real browser, the way each kind of visitor meets it. The console is watched in every case: a reviewer may open the developer tools, so any error, warning, failed request or CSP violation fails the run. The script is read-only.
 
 ```
 npm run check:live                                 # https://ricardomelog.com

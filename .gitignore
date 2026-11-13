@@ -50,3 +50,6 @@ public/content/media/
 
 # Verified CDK source and locally prepared dependency archive
 /infra/.vendor/
+
+# Local direction notes and retired drafts; never committed
+private/

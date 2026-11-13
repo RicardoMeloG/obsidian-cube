@@ -1,6 +1,6 @@
 ## What and why
 
-<!-- The product hito, in one or two lines. Link the spec or ADR. -->
+<!-- The product milestone, in one or two lines. Link the spec or ADR. -->
 
 Spec / ADR:
 

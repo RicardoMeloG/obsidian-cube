@@ -10,7 +10,7 @@ ADR 001 bet on visual spectacle as the retention device: background stops the bo
 - The site had not been published yet and still ran on example content.
 - Most of the engineering existed and worked (cube, bilingual content system, admin with MFA, Postgres persistence, AWS IaC, CI). The product lagged behind: no real name, no real links, no artifact behind any face, no methodology page, no public URL.
 - The funnel of ADR 001 was not landing even on its own terms. Four of the five finished worlds are drowned by the cube, the fog and the darkness in the main composition; they only read in the `?bg=` showcase. All six faces share one identical layout. The owner's name is the least visible text on screen.
-- What the site claims to prove, agentic product engineering with production judgment, is proven by the repository (AGENTS.md, ADRs, specs, admin with MFA, CDK, commit discipline), which recruiters never open. The site hides its best evidence.
+- What the site claims to prove, agentic product engineering with production judgment, is proven by the repository (AGENTS.md, ADRs, specs, admin with MFA, CDK, commit discipline), which most visitors never open. The site hides its best evidence.
 
 The conclusion: the cube is a strong hook but not evidence by itself; a portfolio is judged by whether a stranger leaves wanting to talk to its author.
 

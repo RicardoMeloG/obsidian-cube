@@ -1,8 +1,8 @@
 # Obsidian Cube
 
-Open-source agentic portfolio prototype for Ricardo Melo.
+The portfolio of Ricardo Melo, live at **https://ricardomelog.com**.
 
-This project is **not** a public CV. It is visible proof of a transition into Agentic Product Engineering: building AI-assisted products with real production systems experience, security awareness, open-source practice, and independent research depth.
+The site is the visible part. The repository is the evidence: how a product is built with AI agents under an architecture, gates and decision records that keep it honest.
 
 ## Concept
 
@@ -11,7 +11,7 @@ A single-screen experience built around a persistent obsidian cube.
 - The cube stays at screen center; it is not a portal that disappears on selection.
 - Selecting a face changes the composition around the cube in place — each face has its own shape (a showcase, a catalog with screenshots, a case with its status map, a register of controls, a reading, the contact channels), chosen and filled from the admin; the cube turns between faces but never goes away. On phones the cube is the hero and the composition follows below it.
 - All content per face fits a single desktop viewport without scrolling; the layout treats each face as a poster, not a page.
-- Each face opens its long form in a detail dialog; whether the first release also has a methodology page is decision D-8 (release stage).
+- Each face opens its long form in a detail dialog.
 - Bilingual (English / Spanish), driven by structured JSON content with Zod validation.
 
 ## Stack
@@ -31,18 +31,19 @@ Four parts, one repository (`docs/architecture.md` has the module map, the flows
 - **The site** (`src/`): React and React Three Fiber, organised by feature (`app`, `features/{experience,scene,faces,navigation,content,audio,dev}`, `ui`, `styles`, `lib`). The 3D scene and the DOM interface never import each other; they meet in one experience store, a pure reducer with typed events. Styling is Tailwind v4 over the tokens and layout-mode variants of `src/styles/tokens.css`; without WebGL the page shows a poster and keeps working.
 - **The content kernel** (`src/kernel/`): the Zod contract for the content, the publish rules (layout budgets, safe links, one artifact per face) and the static SEO. No DOM and no React, so the site, the Vite build and the admin share it.
 - **The local admin** (`server/`): NestJS on 127.0.0.1, MFA, writes the same content files; it imports only the kernel. Its cloud form is ADR 004, after the release.
-- **The infrastructure** (`infra/`): AWS CDK, private S3 behind CloudFront with the security headers of `infra/security-headers.json`; GitHub Actions deploys over OIDC, only after a green CI.
+- **The infrastructure** (`infra/`): AWS CDK, private S3 behind CloudFront with the security headers of `infra/security-headers.json`; for now I deploy from my machine with the private content (spec 010, D-6); the GitHub Actions workflow over OIDC runs on demand.
 
 Module boundaries are lint rules, and each rule is proved by a test that feeds it a violating file (`scripts/checks/boundaries.test.ts`).
 
 ## How It Is Built
 
-The process is part of the evidence: an AI agent writes most of the code, and the repository shows how it is kept in line.
+I design the architecture, the rules and the gates; AI agents implement inside them, and nothing reaches `main` without passing them. The repository shows that loop, not only its output.
 
-- **Decisions before code.** Each change of direction is an ADR (`docs/decisions/`) and each body of work a spec (`specs/`) with its acceptance criteria. `AGENTS.md` is the contract every agent reads first.
+- **Decisions before code.** Each change of direction is an ADR (`docs/decisions/`) and each body of work a spec (`specs/`) with its acceptance criteria. `AGENTS.md` is the contract every agent, human or AI, reads first.
 - **Rules are gates, not advice.** A rule counts as in force only when a check fails without it: lint boundaries, type-checked tests, a first-view size ratchet, a privacy scan (files and, before publishing, the whole history), colour and type tokens, a layout check that measures every face on a viewport matrix with real and worst-case content, accessibility and contrast, and the content security policy. Every new gate is proved by breaking it once on purpose.
-- **Independent audits.** Stages close only after an audit by an agent with no context from the work (`specs/010-architecture/audit-1.md`, `audit-2.md`); every finding is fixed or recorded as a decision.
-- **Stages in order** (ADR 007): normalize the code, then the content, then release.
+- **Independent audits.** Stages close only after an audit by a reviewer with no context from the work (`specs/010-architecture/audit-1.md`, `audit-2.md`); every finding is fixed or recorded as a decision.
+- **Stages in order** (ADR 007, ADR 008): normalize the code, compositions, content, security, release.
+- **The published site is tested too.** `npm run check:live` walks twelve visitor use cases against the live site and fails on any console error or warning (`docs/live-use-cases.md`).
 
 ## Getting Started
 
@@ -77,6 +78,7 @@ npm run check:docs       # no undated measurements in living docs
 npm run check:tokens     # colours and type only from the tokens
 npm run check:layout     # layout, accessibility, contrast and CSP on a viewport matrix (Playwright)
 npm run check:layout -- --worlds   # also name and role over every world (software WebGL; on demand in CI)
+npm run check:live       # use cases against the published site (or --url=http://127.0.0.1:5181)
 git config core.hooksPath .githooks   # once per clone: privacy check before every push
 ```
 
@@ -105,22 +107,21 @@ Addresses and language: one page per language and face, English at the root (`/`
 
 Obsidian Interface System: dark, premium, technical, sober. Violet volumetric ambient is the signature; obsidian black is the surface. No `Bloom` in production, no auto-playing audio, no generic SaaS gradients. See `docs/visual-direction.md` for tokens, materials, motion, and layout rules.
 
-## Status (2026-10-13)
+## Status (2026-11-12)
 
-Prototype, not yet published. The first stage, normalizing the code, is closed: the architecture of spec 010 is built (P0–P4) and passed two independent audits. Next is the content stage: real identity and one inspectable artifact per face. Then the release stage: the public repository, the domain and the first deploy. The direction is *evidence before spectacle* (`docs/decisions/002-evidence-before-spectacle.md`); what is left, in order, is in `docs/roadmap.md`.
+Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy and an A+ on Mozilla Observatory and SSL Labs. This is the first release. Still open, in order (`docs/roadmap.md`): the contact form and the CV request of the security stage, real 404s, and the Cognito admin of ADR 004.
 
-## Orientation for Contributors and AI Agents
+## Orientation for Contributors
 
 Read in this order:
 
 1. `AGENTS.md` — single source of truth (identity, audience, rules, contract, current direction).
 2. `docs/architecture.md` — module map, flows, and which rules are in force with their gates; read before changing code.
 3. `docs/visual-direction.md` — design system, loaded for visual work.
-4. `docs/project-memory.md` — owner direction that must survive across sessions.
-5. `docs/roadmap.md`, `docs/decisions/`, `docs/deploy-aws.md`, `specs/` — loaded on demand.
+4. `docs/roadmap.md`, `docs/decisions/`, `docs/deploy-aws.md`, `specs/` — loaded on demand.
 
 ## License
 
 MIT
 
-Content checks: CI uses neutral fixtures. Reviewing the owner's database drafts requires a separate private build with recorded provenance; see `docs/content-validation.md`. A green CI does not accept the personal content.
+Content checks: CI uses neutral fixtures. Reviewing the private database drafts requires a separate private build with recorded provenance; see `docs/content-validation.md`. A green CI does not accept the personal content.
