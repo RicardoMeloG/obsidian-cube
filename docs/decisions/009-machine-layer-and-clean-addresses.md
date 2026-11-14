@@ -26,5 +26,5 @@ A link that passes the publish rule (an `https:` scheme) may still not open for 
 
 - Every page is a first view, so `check:budget` measures the heaviest of the fourteen; the Spanish pages, with longer text, are the heaviest, and the limit rose by 0.7 KB for the code that reads and writes the addresses (`scripts/checks/budget.json`).
 - A build without the private documents (CI) renders the pages and the machine files from the example content.
-- `robots.txt` admitting the AI crawlers by name and `sitemap.xml` with the fourteen pages and their alternates need the domain; they come after the first release, together with serving `llms.txt` as `text/plain; charset=utf-8`.
+- `robots.txt` admitting the AI crawlers by name and `sitemap.xml` with the fourteen pages and their alternates need the domain; they came after the first release (2026-11-13, `src/kernel/seo/crawlFiles.ts`), and CloudFront's viewer-response function names UTF-8 on text responses S3 serves without a charset, `llms.txt` among them (spec 014, D-7).
 - Rejected: a single address with the language kept in the browser (no link opens on a face, and Spanish has nothing to index); fragments (`/#seguridad`), which search engines ignore.

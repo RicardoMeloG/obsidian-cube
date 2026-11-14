@@ -25,7 +25,7 @@ describe('edge security headers', () => {
     const expected = headerValues(securityHeaders)
     for (const [name, value] of Object.entries(expected)) expect(out[name]?.value).toBe(value)
     expect(Object.keys(expected)).toContain(securityHeaders.reportOnly ? 'content-security-policy-report-only' : 'content-security-policy')
-    expect(out['content-type']?.value).toBe('text/html')
+    expect(out['content-type']?.value).toBe('text/html; charset=utf-8')
   })
 
   it('overrides what the origin sent and drops Server (ZAP 10036)', () => {
@@ -38,6 +38,14 @@ describe('edge security headers', () => {
     const csp = headerValues(securityHeaders)['content-security-policy'] ?? headerValues(securityHeaders)['content-security-policy-report-only']
     for (const directive of Object.keys(securityHeaders.contentSecurityPolicy)) expect(csp).toContain(directive)
     expect(csp).toContain("default-src 'self'")
+  })
+
+  it('names UTF-8 on text responses without a charset, and leaves others alone (ADR 009)', () => {
+    const code = headersFunctionCode(securityHeaders)
+    expect(run(code, { 'content-type': { value: 'text/plain' } })['content-type']?.value).toBe('text/plain; charset=utf-8')
+    expect(run(code, { 'content-type': { value: 'application/xml' } })['content-type']?.value).toBe('application/xml; charset=utf-8')
+    expect(run(code, { 'content-type': { value: 'text/html; charset=utf-8' } })['content-type']?.value).toBe('text/html; charset=utf-8')
+    expect(run(code, { 'content-type': { value: 'image/webp' } })['content-type']?.value).toBe('image/webp')
   })
 
   it('fits the CloudFront Functions size limit (10 KB)', () => {

@@ -6,6 +6,7 @@ import { SiteContentSchema } from '../siteContent'
 import { buildProfileJsonLd, LLMS_FILE, PROFILE_PAGES, renderLlmsTxt, renderMachineFiles, renderProfilePage } from './renderMachine'
 import type { MachineInput } from './renderMachine'
 import { renderStaticBody } from './renderSeo'
+import { ROBOTS_FILE, SITEMAP_FILE } from './crawlFiles'
 
 const en: MachineInput = { ...SiteContentSchema.parse(exampleEn), profile: EXAMPLE_PROFILES.en }
 const es: MachineInput = { ...SiteContentSchema.parse(exampleEs), profile: EXAMPLE_PROFILES.es }
@@ -134,12 +135,18 @@ describe('the profile JSON-LD', () => {
 })
 
 describe('the files of the layer', () => {
-  it('llms.txt in English and one profile page per language, with their types', () => {
-    const files = renderMachineFiles({ en, es })
-    expect(Object.keys(files).sort()).toEqual([LLMS_FILE, PROFILE_PAGES.es, PROFILE_PAGES.en].sort())
+  it('llms.txt in English, one profile page per language and robots.txt, with their types; no sitemap without the public address', () => {
+    const files = renderMachineFiles({ en: { ...en, seo: { ...en.seo, siteUrl: undefined } }, es })
+    expect(Object.keys(files).sort()).toEqual([LLMS_FILE, PROFILE_PAGES.es, PROFILE_PAGES.en, ROBOTS_FILE].sort())
     expect(files[LLMS_FILE].contentType).toBe('text/plain; charset=utf-8')
     expect(files[LLMS_FILE].body).toBe(renderLlmsTxt(en))
     expect(files[PROFILE_PAGES.es].body).toContain('<html lang="es">')
+  })
+
+  it('adds sitemap.xml once the site has its public address', () => {
+    const files = renderMachineFiles({ en: { ...en, seo: { ...en.seo, siteUrl: 'https://example.org' } }, es })
+    expect(files[SITEMAP_FILE].contentType).toBe('application/xml; charset=utf-8')
+    expect(files[ROBOTS_FILE].body).toContain('Sitemap: https://example.org/sitemap.xml')
   })
 
   it('index.html’s plain body links the profile page and llms.txt', () => {
