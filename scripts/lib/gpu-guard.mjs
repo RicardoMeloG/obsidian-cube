@@ -5,7 +5,9 @@
 // holds the card, instead of loading anyway.
 import { execFileSync } from 'node:child_process'
 
-const MARGIN_MB = 1536
+// The model sizes Ollama reports already include their weights; 256 MB covers its runtime. A larger
+// margin refused gemma (19.4 GB) on a card with 19.8 GB free, where it has always run.
+const MARGIN_MB = 256
 
 /** Free and total video memory of the first NVIDIA card, or null without nvidia-smi. */
 export function gpuMemory(run = execFileSync) {

@@ -20,7 +20,7 @@ describe('gpu guard', () => {
 
   it('accepts the model on a free card, with its margin', () => {
     expect(fitsOnGpu(17000, { freeMb: 22000, totalMb: 24564 }).fits).toBe(true)
-    expect(fitsOnGpu(17000, { freeMb: 17500, totalMb: 24564 }).fits).toBe(false)
+    expect(fitsOnGpu(17000, { freeMb: 17200, totalMb: 24564 }).fits).toBe(false)
   })
 
   it('does not block where memory cannot be measured, and says so', () => {
