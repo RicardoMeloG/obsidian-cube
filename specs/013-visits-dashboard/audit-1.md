@@ -39,3 +39,18 @@ Found by the agent's own review in the same pass, fixed before the next round:
 ### Round 2 (diff `92abb935758ea66e`)
 
 `qwen3.8:27b`: two findings in 578 s, both repeats of round 1 and both not real for the same reasons: C-1 (the language switch, restored by `selectTarget`'s own toggle) and C-3 (a «truncated» first line of the fixture, again where the audit cut a hunk). `gemma4:31b`: no usable answer again. Running it part by part showed that it failed on exactly the 14 parts that carry `server/admin/world.json` (answers describing the map, empty answers or the context running out) and answered every other part. Decision D-10 of the spec: the generated shapes join the lockfiles in `AUDIT_EXCLUDE`, by exact path; their generator stays audited (test in `scripts/checks/pushGate.test.ts`).
+
+### Round 3 (diff `9cc991c0be387169`, 17 parts)
+
+Both models answered every part: `qwen3.8:27b` five findings in 420 s, `gemma4:31b` eleven in 282 s.
+
+| Id | Model | Finding | Verdict |
+|---|---|---|---|
+| C-4 | both | `getWorld()` caches the body of `/world.json` without checking `r.ok`, so one failed load breaks every later render until a reload | Real, low. Fixed (round 24): an error is thrown and nothing is cached unless the body has `countries` and `other` |
+| C-5 | gemma | The bucket policy allows writes only under `AWSLogs/<account>/CloudFront/`, but the destination is the bucket root | Not real by the documentation: with no destination prefix CloudFront writes under `AWSLogs/<account>/CloudFront/` plus the suffix path ([standard logging, S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#bucket-without-prefix)). Only a deploy proves it: the first check after the owner's deploy is that objects appear under that prefix (open as debt D-3 of the report) |
+| C-6 | gemma | `.flat()` on MultiPolygon coordinates leaves rings, not points | Not real: the function returns the list of rings on purpose, and the loop walks each ring's points; the map was looked at in Chromium |
+| C-7 | gemma | The stand-in API serves `visits.js` with no page that runs it | Not real: the stand-in serves `index.html` at `/`, which loads it |
+| C-8 | gemma | `ADMIN_PORT`'s error message is in Spanish | Not real: the server's operator messages are Spanish (`appEnv.ts`, `devBypass.ts`); `copy.ts` is the public site's copy |
+| C-9 | gemma | The fixture shows `/.env` answered 200: secrets exposed | Not real: the site answers unknown paths with its own page (spec 010, AD-09, known), and the fixture models exactly that scanner traffic; no `.env` is served |
+| C-10 | gemma | `Date.UTC` with a negative day is fragile; `since` ignores daylight saving; a corrupt gzip crashes the process | Not real: `Date.UTC` normalises overflow by specification, UTC has no daylight saving, and `gunzipSync` throws inside the service's `try`, which answers 503 |
+| C-1, C-3 | both | The language switch and the «truncated» fixture lines (repeated) | Not real (rounds 1 and 2) |

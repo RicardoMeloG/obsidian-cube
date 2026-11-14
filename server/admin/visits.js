@@ -21,7 +21,15 @@
   async function getWorld() {
     if (world) return world;
     const r = await fetch('/world.json', { credentials: 'same-origin' });
-    world = await r.json();
+    if (!r.ok) {
+      throw new Error('Failed to load world data');
+    }
+    const body = await r.json();
+    if (body && typeof body.countries === 'object' && Array.isArray(body.other)) {
+      world = body;
+    } else {
+      throw new Error('Invalid world data format');
+    }
     return world;
   }
 

@@ -29,5 +29,6 @@ The feature code was written by a local model and reviewed by the agent acting a
 | 21 | Stream S3 one object at a time (`forEachS3Line`), use the tally, and the SSO hint only for credential errors (R-2); tests for both | Done, 60 tests | Accepted; the tally is created before the `try`, so a bad range is not reported as an S3 error |
 | 22 | Audit-1 C-2: the day chart with an empty range (think off) | A four-line guard | Accepted |
 | 23 | Audit-1 round 2 (D-10): exclude exactly `server/admin/world.json` from the change audit, with a test that its generator is still audited (think off) | Two snippets, as asked | Accepted; pasted by the agent |
+| 24 | Audit-1 C-4: do not cache a failed `/world.json` (think off) | Fixed as asked | Accepted |
 
 Nothing was rewritten by the agent after two failed attempts. Glue written by the agent: the `.env.example` section, pasting the CSS and wiring the view into `index.html`, the two routes in `admin.controller.ts`, pasting the check snippets, one assertion in `check:admin`, the stack switch's placement and the `cdk.json` context, and the documentation.
