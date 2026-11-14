@@ -6,6 +6,7 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 import * as acm from 'aws-cdk-lib/aws-certificatemanager'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { MatchLogReceiver } from './match-log-receiver'
 
 // Security headers, shared with `vite preview` so the layout check runs the
 // built site under the same policy (spec 010, 5.13). CloudFront sets them with
@@ -72,10 +73,43 @@ export class StaticSiteStack extends cdk.Stack {
     // forbids removing it). Without it the distribution has no web ACL.
     const webAclArn = this.node.tryGetContext('webAclArn') as string | undefined
 
+    // Match-log receiver (spec 015, D-1/D-3): opt-in by context; without it
+    // nothing changes. A string from `-c` is JSON-parsed; an array from
+    // cdk.json is used as is.
+    const rawMatchLogOrigins = this.node.tryGetContext('matchLogOrigins') as string[] | string | undefined
+    const matchLogOrigins: string[] | undefined =
+      rawMatchLogOrigins === undefined
+        ? undefined
+        : typeof rawMatchLogOrigins === 'string'
+          ? (JSON.parse(rawMatchLogOrigins) as string[])
+          : rawMatchLogOrigins
+
+    let matchLog: MatchLogReceiver | undefined
+    let matchLogBehavior: Record<string, unknown> = {}
+    if (matchLogOrigins) {
+      matchLog = new MatchLogReceiver(this, 'MatchLog', { allowedOrigins: matchLogOrigins })
+      matchLogBehavior = {
+        additionalBehaviors: {
+          '/api/iron-bastion/*': {
+            origin: matchLog.origin,
+            // HTTPS_ONLY: a redirect would drop the POST body
+            viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+            functionAssociations: [
+              { function: securityHeadersFunction, eventType: cloudfront.FunctionEventType.VIEWER_RESPONSE },
+            ],
+          },
+        },
+      }
+    }
+
     const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
       comment: 'Obsidian Cube portfolio',
       ...customDomain,
       ...(webAclArn ? { webAclId: webAclArn } : {}),
+      ...matchLogBehavior,
       defaultRootObject: 'index.html',
       // Pay as you go serves from the cheapest edges only; a flat-rate plan does
       // not support price classes and removes the setting (spec 014).
@@ -101,5 +135,6 @@ export class StaticSiteStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'BucketName', { value: bucket.bucketName })
     new cdk.CfnOutput(this, 'DistributionId', { value: distribution.distributionId })
     new cdk.CfnOutput(this, 'DistributionDomain', { value: distribution.distributionDomainName })
+    if (matchLog) new cdk.CfnOutput(this, 'MatchLogBucket', { value: matchLog.bucket.bucketName })
   }
 }

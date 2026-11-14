@@ -16,6 +16,7 @@
 // Needs Ollama on 127.0.0.1:11434 with the models pulled.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { auditModels, changedPaths, classify, codeDiff, diffHash, git, pushBase } from './lib/push-gate.mjs'
+import { fitsOnGpu, gpuMemory, gpuProcesses, modelSizeMb } from './lib/gpu-guard.mjs'
 
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback
 const remote = option('remote', 'origin')
@@ -165,6 +166,16 @@ for (const model of auditModels()) {
     console.log(`${model}: already audited this diff (${done.findings.length} finding(s)); --again to rerun`)
     continue
   }
+  // One large GPU job at a time: measure the card before loading the model.
+  const sizeMb = await modelSizeMb(model)
+  const room = fitsOnGpu(sizeMb ?? 18432, gpuMemory())
+  if (!room.fits) {
+    console.error(`audit:change: ${model} does not fit on the GPU now (${room.reason}). Wait for this job to end, then run again:`)
+    for (const line of gpuProcesses()) console.error(`  ${line}`)
+    if (runs.length) writeFileSync(record, JSON.stringify({ hash, base, head, at: new Date().toISOString(), files: code, models: runs }, null, 1))
+    process.exit(2)
+  }
+  console.log(`${model}: GPU ${room.reason}`)
   const started = Date.now()
   const run = { model, findings: [], parts: pieces.length }
   try {
