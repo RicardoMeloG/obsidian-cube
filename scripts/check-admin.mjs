@@ -36,6 +36,31 @@ await vite.close()
 const canonical = (value) =>
   JSON.stringify(value, (_, node) => (node && typeof node === 'object' && !Array.isArray(node) ? Object.fromEntries(Object.entries(node).sort(([a], [b]) => a.localeCompare(b))) : node))
 
+// The visits view's summary (spec 013), as /api/visits answers it.
+const VISITS = {
+  days: 30,
+  from: '2026-10-15',
+  to: '2026-11-13',
+  source: 'fixture',
+  visits: 42,
+  crawlers: 5,
+  otherPaths: 2,
+  countries: [
+    { key: 'CL', visits: 20 },
+    { key: 'US', visits: 12 },
+    { key: 'ES', visits: 6 },
+    { key: 'ZZ', visits: 4 },
+  ],
+  perDay: Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(Date.UTC(2026, 9, 15 + i))
+    return { key: d.toISOString().slice(0, 10), visits: i % 3 }
+  }),
+  pages: [
+    { key: '/es', visits: 20 },
+    { key: '/', visits: 22 },
+  ],
+}
+
 const failures = []
 const fail = (id, detail) => failures.push(detail ? `${id}: ${detail}` : id)
 
@@ -70,6 +95,9 @@ await page.route(`${ORIGIN}/**`, async (route) => {
       return json({ ok: true })
     }
   }
+  if (pathname === '/visits.js') return route.fulfill({ contentType: 'text/javascript', body: read('server/admin/visits.js') })
+  if (pathname === '/world.json') return route.fulfill({ contentType: 'application/json', body: read('server/admin/world.json') })
+  if (pathname === '/api/visits') return json(VISITS)
   return json({ message: `unexpected ${request.method()} ${pathname}` }, 404)
 })
 
@@ -163,10 +191,43 @@ validation = { ok: false, errors: [{ path: 'sections.1.composition.listTitle', m
 await page.click('#validate')
 await page.waitForSelector('[data-path="composition.listTitle"].sf-error', { timeout: 3000 }).catch(() => fail('error-marking'))
 
+// 7. The visits view (spec 013): render, tiles, map classes, editor hidden, legend, leave
+await page.click('.nav-item[data-kind="visits"]')
+let visitsRendered = true
+try {
+  await page.waitForSelector('#visitsPane[data-ready="true"]', { timeout: 5000 })
+} catch {
+  fail('visits-render')
+  visitsRendered = false
+}
+if (visitsRendered) {
+  const firstTile = (await page.locator('.vz-tile-num').first().textContent()).trim()
+  if (firstTile !== '42') fail('visits', `first .vz-tile-num is '${firstTile}' not '42'`)
+  const clClass = await page.locator('path[data-cc="CL"]').getAttribute('class')
+  if (!clClass.includes('vz-5')) fail('visits', `path[data-cc="CL"] class is '${clClass}', expected vz-5`)
+  const esClass = await page.locator('path[data-cc="ES"]').getAttribute('class')
+  if (!esClass.includes('vz-2')) fail('visits', `path[data-cc="ES"] class is '${esClass}', expected vz-2 (6 of 20 is the second step)`)
+  const frClass = await page.locator('path[data-cc="FR"]').getAttribute('class')
+  if (!frClass.includes('vz-0')) fail('visits', `path[data-cc="FR"] class is '${frClass}', expected vz-0`)
+  const editorCls = await page.locator('#editorPane').getAttribute('class')
+  if (!editorCls.includes('hidden')) fail('visits', '#editorPane is not hidden')
+  const legendText = await page.locator('#visitsPane .vz-legend').textContent()
+  if (!legendText.includes('4 visitas sin país')) fail('visits', `legend text does not contain '4 visitas sin país'`)
+  if (process.argv.includes('--screenshots')) {
+    await page.screenshot({ path: 'walkthrough/admin-visits.png' })
+  }
+  await loading(() => page.click('.nav-item[data-kind="face"][data-id="agentic"]'))
+  const editorAfter = await page.locator('#editorPane').getAttribute('class')
+  const visitsAfter = await page.locator('#visitsPane').getAttribute('class')
+  if (editorAfter.includes('hidden') || !visitsAfter.includes('hidden')) {
+    fail('visits-leave', `editor hidden=${editorAfter.includes('hidden')}, visits hidden=${visitsAfter.includes('hidden')}`)
+  }
+}
+
 await browser.close()
 if (failures.length) {
   console.log(`Admin check failed:\n${failures.map((line) => `  ${line}`).join('\n')}`)
   process.exitCode = 1
 } else {
-  console.log(`Admin check passed: ${FACES.length * 2 + 5} documents round-trip, lists, template switch, text, image upload, error marking.`)
+  console.log(`Admin check passed: ${FACES.length * 2 + 5} documents round-trip, lists, template switch, text, image upload, error marking, the visits view.`)
 }

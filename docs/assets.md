@@ -19,6 +19,7 @@ Every file served from `public/` (except the content documents in `public/conten
 
 Bundled from npm (not in `public/`, so not in the table the test reads):
 
+- The world map of the local admin's visits view (spec 013), `server/admin/world.json`: Natural Earth 1:110m admin-0 countries v5.1.2 (naturalearthdata.com, public domain; «Made with Natural Earth»), projected to Equal Earth by `scripts/build-world-map.mjs`. Served only by the local admin, never by the site.
 - Inter, variable weight, `@fontsource-variable/inter` 5.3.0: SIL Open Font License 1.1. The browser downloads only the Latin subset the page uses (counted in the first-view budget).
 
 ## Prompt of the reflection environment
