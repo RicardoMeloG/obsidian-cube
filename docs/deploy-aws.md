@@ -1,32 +1,37 @@
 # AWS deployment (static site)
 
-Infrastructure-as-code for hosting the **public** Obsidian Cube frontend on AWS.
-Scope of this slice: the static site only (S3 + CloudFront) plus CI/CD. The admin
-backend and Postgres are **not** deployed here — they run locally today (see
-`docker-compose.yml` / `server/`) and are a future slice.
+Infrastructure-as-code for hosting the **public** Obsidian Cube frontend on AWS,
+live at `ricardomelog.com` since 2026-11-12. Scope: the static site (S3 +
+CloudFront) and its cost guardrails (spec 014). The admin backend and Postgres
+are **not** deployed here: they run locally (see `docker-compose.yml` /
+`server/`), and the cloud admin is ADR 004 (Cognito).
 
 ## Architecture
 
 ```
-GitHub Actions ──(OIDC)──> AWS
-   build dist/  ──►  S3 (private bucket)  ──(OAC)──►  CloudFront  ──►  viewers
-                     └── content synced by deploy.yml
+owner's machine (SSO) ──► S3 (private bucket) ──(OAC)──► CloudFront ──► viewers
+                                                          ▲
+                        DNS in Cloudflare (CNAMEs, grey cloud) ──┘
 ```
 
 - **S3**: private bucket (all public access blocked, SSE-S3, TLS enforced). Never
   served directly.
 - **CloudFront**: fronts the bucket via Origin Access Control; redirects to HTTPS;
-  serves `index.html` for 403/404 so client-side routing works (to be removed in
-  the release stage, spec 010 AD-09, when a viewer-request function starts
-  serving each clean path from its page, `/es/seguridad` from
-  `es/seguridad.html`, ADR 009); adds the security headers of
-  `infra/security-headers.json` (content security policy report-only until it
-  has run clean in production; set `reportOnly` to `false` to enforce it).
+  a viewer-request function serves each clean path from its page
+  (`/es/seguridad` from `es/seguridad.html`, ADR 009); unknown paths still get
+  `index.html` with status 200 until real 404s land (spec 010, AD-09). The
+  security headers of `infra/security-headers.json` are enforced, CSP included;
+  from spec 014 a viewer-response function sets them (D-7).
+- **Domain**: `ricardomelog.com` and `www`, registered and resolved in
+  Cloudflare, not Route 53. The ACM certificate (us-east-1) was requested and
+  validated by hand with CNAME records in Cloudflare; its ARN and the domains
+  reach the stack through the context in `infra/cdk.json`. Both names are
+  CNAMEs with the grey cloud (DNS only) to the distribution's domain.
 - **CI/CD**: `.github/workflows/ci.yml` (every gate listed in
-  `docs/architecture.md`), `infra.yml` (`cdk synth`, when `infra/` changes)
-  and `deploy.yml` (on demand only since 2026-10-16: build → `aws s3 sync` →
-  CloudFront invalidation), authenticating with a short-lived **OIDC role**,
-  with no long-lived AWS keys in GitHub.
+  `docs/architecture.md`) and `infra.yml` (`cdk synth`, when `infra/` changes).
+  `deploy.yml` (build → `aws s3 sync` → invalidation, over a short-lived OIDC
+  role) exists but is not wired yet: the OIDC role is not created, so today
+  releases go out from the owner's machine (below).
 
 Defined in `infra/` with the **AWS CDK (TypeScript)**.
 
@@ -131,6 +136,6 @@ npm run synth   # generates CloudFormation into cdk.out/ — fully offline
 
 ## Not yet included
 
-- Custom domain + ACM certificate (CloudFront currently serves its default domain; decision D-7, release stage).
-- Cognito-authenticated admin (HTTP API + Lambda + S3, no database in the cloud), decided in ADR 004, built after the release.
-- WAF.
+- Deploys from GitHub with the OIDC role (spec 010, D-6; steps 3 and 4 of the setup above).
+- Real 404s for unknown paths (spec 010, AD-09).
+- Cognito-authenticated admin (HTTP API + Lambda + S3, no database in the cloud), decided in ADR 004.
