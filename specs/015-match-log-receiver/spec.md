@@ -65,7 +65,8 @@ Expected: **under 0.10 USD a month**. Worst case under a flood that passes the r
 
 1. Merging `feat/registro-partidas` into `main` (changes nothing in AWS by itself: D-3).
 2. Adding `matchLogOrigins` to `infra/cdk.json` and deploying `ObsidianCubeStaticSite` (new bucket, function, URL, OAC and behavior; estimated cost in section 6).
-3. In the game: building 0.4.0 with `VITE_REGISTRO_URL=https://ricardomelog.com/api/iron-bastion/partidas` and publishing it.
+3. Watching the first deploy: if CloudFront refused the function URL origin on the Free plan, CloudFormation rolls the stack back and nothing changes; it is not expected (a function URL is a standard custom origin), but it has not been tried on this account.
+4. In the game: building 0.4.0 with `VITE_REGISTRO_URL=https://ricardomelog.com/api/iron-bastion/partidas` and publishing it.
 
 ## 8. Validation
 
