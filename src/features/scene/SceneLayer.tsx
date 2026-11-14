@@ -92,8 +92,9 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
 
   // Pixel budget (dt-03): the scene is fill-bound on integrated GPUs, so it
   // starts at the screen's density capped at 1.5, climbs to 2 only while the
-  // frame rate holds, and drops to 1 when it falls. High-density screens skip
-  // MSAA: at 1.5 or more the edges are already fine and the samples cost most.
+  // frame rate holds, and drops to 1 when it falls. MSAA stays on: the canvas
+  // is drawn below the screen's density and stretched, so without it the thin
+  // bright rings of the pedestal showed stair-stepped edges (owner, 2026-11-14).
   const screenDpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1
   // It moves in steps of 0.25 and never below 1.25 on a high-density screen:
   // loading a world dips the frame rate for a moment, and a jump to 1 made the
@@ -101,7 +102,6 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   const dprFloor = screenDpr >= 2 ? 1.25 : 1
   const dprCeiling = Math.max(Math.min(screenDpr, 2), dprFloor)
   const [dpr, setDpr] = useState(() => Math.min(Math.max(screenDpr, dprFloor), 1.5))
-  const antialias = useMemo(() => screenDpr < 1.5, [screenDpr])
 
   const poster = <img className="cube-canvas__poster block size-full object-cover" src="/og-image.jpg" alt="" />
   if (!webglAvailable) return poster
@@ -112,7 +112,7 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
         camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
         dpr={dpr}
         frameloop={ready ? 'always' : 'never'}
-        gl={{ antialias, alpha: false, powerPreference: 'high-performance', stencil: true }}
+        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', stencil: true }}
         shadows={effects.shadows}
         onCreated={() => store.dispatch({ type: 'sceneMounted' })}
       >
