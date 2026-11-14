@@ -11,3 +11,18 @@
 | 4 | gemma | `color-mix(...)` breaks "no colour literal outside the tokens" | **Not real.** It mixes token variables with `transparent`; `check:tokens` passes (0 problems in 97 files) and `stage.css` uses the same form. |
 | 5 | gemma | `alpha: false` contradicts the violet volumetric ambient if the canvas layers over the page | **Not real.** The art canvas is meant to be opaque: it covers the page, and the cube scene's canvas uses the same setting. |
 | 6 | gemma | The second top-bar button may break "one height and one top edge" | **Not real.** Both buttons use `.stage-explore` (height 2.83em) inside a centred flex row; the walkthrough screenshots show them on the same top edge as the links and the language switch. |
+
+## Round 2 · the gallery (D-9)
+
+**Diff:** `main..df54b5b` · **Record:** `audit-runs/change-004b8c4b3e21b7c8.json` (local) · **Models:** `qwen3.8:27b` (3 findings, 241 s) and `gemma4:31b` (5 findings, 261 s), one at a time, the card measured first (21.2 GB free).
+
+| # | Model | Finding | Verdict |
+|---|---|---|---|
+| 7 | qwen | `src/app/ArtModeLayer.tsx` imports a scene component, while scene and DOM features may only meet through the store | **Not real.** The rule binds the features (`scene` ↔ `stage`, `faces`, `navigation`); `app/` composes them and may import any of them (eslint boundary for `src/app/**` has no restriction), as `Experience.tsx` already imports `SceneLayer`. The layer and the canvas still exchange nothing but props. |
+| 8 | qwen | `artMode.css` is a second unlayered sheet in `app/` | **Not real**, same as #1: it is inside `@layer components`. |
+| 9 | qwen | In `ShowcaseLookAt`, the memoized vector keeps a y-adjusted value if `composition` later becomes undefined | **Not real here.** The code moved unchanged from the dev showcase; `composition` comes from the world's registry entry, a constant, and the art canvas is remounted per world (`key={worldId}`), so it never changes within one instance. |
+| 10 | gemma | The owner's name is a `<p>`, not the `<h1>` every face opens with | **Not real.** Art mode is not a face: the face's `<h1>` stays in the page underneath; the layer is a modal dialog labelled «Modo arte: el fondo a solas», and the signature is a decoration on the art (ADR 001). |
+| 11 | gemma | The double-click now works in production, where it was dev-only | **Intended:** that is the feature (spec 017, D-2). |
+| 12 | gemma | `color-mix` with a token, uncommented | **Not real**, same as #4; the file's header says why it is hand-written. |
+| 13 | gemma | The canvas lacks the violet volumetric ambient | **Not real**, same as #5: it shows each world exactly as its approved showcase does. |
+| 14 | gemma | The second top-bar button may break the shared height and top edge | **Not real**, same as #6. |
