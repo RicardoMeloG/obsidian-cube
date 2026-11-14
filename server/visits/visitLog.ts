@@ -128,7 +128,9 @@ function sortCounts(arr: Count[]): Count[] {
   return [...arr].sort((a, b) => b.visits - a.visits || a.key.localeCompare(b.key))
 }
 
-export function summarize(lines: Iterable<string>, days: number, today: string): VisitSummary {
+export type Tally = { add(line: string): void; result(): VisitSummary }
+
+export function createTally(days: number, today: string): Tally {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) {
     throw new RangeError(`today must match YYYY-MM-DD, got ${today}`)
   }
@@ -145,40 +147,51 @@ export function summarize(lines: Iterable<string>, days: number, today: string):
   const dayMap = new Map<string, number>()
   const pageMap = new Map<string, number>()
 
-  for (const line of lines) {
-    const result = readLogLine(line)
-    if (result.kind === 'view') {
-      const { date, country, page, agent } = result.view
-      if (date < from || date > to) continue
-      if (agent === 'human') {
-        visits++
-        countryMap.set(country, (countryMap.get(country) ?? 0) + 1)
-        dayMap.set(date, (dayMap.get(date) ?? 0) + 1)
-        pageMap.set(page, (pageMap.get(page) ?? 0) + 1)
-      } else {
-        crawlers++
-      }
-    } else if (result.kind === 'other-path') {
-      if (result.date < from || result.date > to) continue
-      otherPaths++
-    }
-  }
-
-  const perDay: Count[] = []
-  for (let i = 0; i < days; i++) {
-    const d = addDaysUTC(from, i)
-    perDay.push({ key: d, visits: dayMap.get(d) ?? 0 })
-  }
-
   return {
-    days,
-    from,
-    to,
-    visits,
-    crawlers,
-    otherPaths,
-    countries: sortCounts([...countryMap.entries()].map(([key, v]) => ({ key, visits: v }))),
-    perDay,
-    pages: sortCounts([...pageMap.entries()].map(([key, v]) => ({ key, visits: v }))),
+    add(line: string): void {
+      const result = readLogLine(line)
+      if (result.kind === 'view') {
+        const { date, country, page, agent } = result.view
+        if (date < from || date > to) return
+        if (agent === 'human') {
+          visits++
+          countryMap.set(country, (countryMap.get(country) ?? 0) + 1)
+          dayMap.set(date, (dayMap.get(date) ?? 0) + 1)
+          pageMap.set(page, (pageMap.get(page) ?? 0) + 1)
+        } else {
+          crawlers++
+        }
+      } else if (result.kind === 'other-path') {
+        if (result.date < from || result.date > to) return
+        otherPaths++
+      }
+    },
+    result(): VisitSummary {
+      const perDay: Count[] = []
+      for (let i = 0; i < days; i++) {
+        const d = addDaysUTC(from, i)
+        perDay.push({ key: d, visits: dayMap.get(d) ?? 0 })
+      }
+
+      return {
+        days,
+        from,
+        to,
+        visits,
+        crawlers,
+        otherPaths,
+        countries: sortCounts([...countryMap.entries()].map(([key, v]) => ({ key, visits: v }))),
+        perDay,
+        pages: sortCounts([...pageMap.entries()].map(([key, v]) => ({ key, visits: v }))),
+      }
+    },
   }
+}
+
+export function summarize(lines: Iterable<string>, days: number, today: string): VisitSummary {
+  const tally = createTally(days, today)
+  for (const line of lines) {
+    tally.add(line)
+  }
+  return tally.result()
 }

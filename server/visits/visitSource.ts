@@ -95,9 +95,14 @@ export type S3Reader = {
   read(key: string): Promise<Uint8Array>
 }
 
-export async function s3Lines(reader: S3Reader, prefix: string, since: Date): Promise<string[]> {
+export async function forEachS3Line(
+  reader: S3Reader,
+  prefix: string,
+  since: Date,
+  onLine: (line: string) => void,
+): Promise<number> {
   const cutoff = new Date(since.getTime() - 86400000)
-  const allLines: string[] = []
+  let objectsRead = 0
 
   for await (const obj of reader.list(prefix)) {
     if (obj.lastModified < cutoff) continue
@@ -109,11 +114,12 @@ export async function s3Lines(reader: S3Reader, prefix: string, since: Date): Pr
     const text = data.toString('utf-8')
     const lines = text.split(/\r?\n/).filter((l) => l.length > 0)
     for (const line of lines) {
-      allLines.push(line)
+      onLine(line)
     }
+    objectsRead++
   }
 
-  return allLines
+  return objectsRead
 }
 
 export function createS3Reader(config: { bucket: string; profile: string; region: string }): S3Reader {

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
-import { summarize, type VisitSummary } from './visitLog'
-import { createS3Reader, fixtureLines, s3Lines, visitsConfig, VisitsConfigError } from './visitSource'
+import { summarize, createTally, type VisitSummary } from './visitLog'
+import { createS3Reader, fixtureLines, forEachS3Line, visitsConfig, VisitsConfigError } from './visitSource'
 
 // Counts only, in memory, five-minute cache (spec 013, D-4 and D-5).
 // No persistence: the admin is a local tool, not a reporting service.
@@ -26,16 +26,20 @@ export class VisitsService {
       value = { ...summarize(lines, days, today), source: 'fixture' as const }
     } else {
       const since = new Date(Date.parse(`${today}T00:00:00.000Z`) - (days - 1) * 86_400_000)
+      const tally = createTally(days, today)
       try {
-        const lines = await s3Lines(this.reader(config), config.prefix, since)
-        value = { ...summarize(lines, days, today), source: 's3' as const }
+        await forEachS3Line(this.reader(config), config.prefix, since, (line) => tally.add(line))
       } catch (err) {
         const name = (err as Error)?.name ?? 'Error'
         this.logger.warn(`S3 read failed: ${name}: ${(err as Error)?.message}`)
+        const hint = /Credential|Token|SSO|Expired/i.test(name)
+          ? `Si la sesión expiró: aws sso login --profile ${config.profile}`
+          : `Revisa VISITS_BUCKET y los permisos del perfil ${config.profile}.`
         throw new ServiceUnavailableException(
-          `No se pudieron leer los registros de visitas en S3 (${name}). Si la sesión expiró: aws sso login --profile ${config.profile}`,
+          `No se pudieron leer los registros de visitas en S3 (${name}). ${hint}`,
         )
       }
+      value = { ...tally.result(), source: 's3' as const }
     }
 
     this.cache.set(key, { at: now.getTime(), value })

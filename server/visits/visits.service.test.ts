@@ -119,6 +119,44 @@ describe('VisitsService', () => {
     expect(msg).not.toContain('security token')
   })
 
+  it('s3: reader list throws NoSuchBucket → ServiceUnavailableException with bucket hint, no sso hint', async () => {
+    process.env.VISITS_SOURCE = 's3'
+    process.env.VISITS_BUCKET = 'b'
+    process.env.VISITS_PROFILE = 'p'
+    process.env.VISITS_PREFIX = 'logs/'
+
+    class NoSuchBucketService extends VisitsService {
+      protected reader() {
+        return {
+          async *list() {
+            const err = new Error('The specified bucket does not exist')
+            err.name = 'NoSuchBucket'
+            throw err
+            yield // unreachable – satisfies TS generator return type
+          },
+          async read() {
+            return new Uint8Array()
+          },
+        }
+      }
+    }
+
+    const svc = new NoSuchBucketService()
+    const now = new Date('2025-06-15T12:00:00.000Z')
+
+    let caught: unknown
+    try {
+      await svc.summary(7, now)
+    } catch (e) {
+      caught = e
+    }
+
+    expect(caught).toBeInstanceOf(ServiceUnavailableException)
+    const msg = (caught as Error).message
+    expect(msg).toContain('Revisa VISITS_BUCKET')
+    expect(msg).not.toContain('aws sso login')
+  })
+
   it('VISITS_SOURCE=nope → BadRequestException', async () => {
     process.env.VISITS_SOURCE = 'nope'
     const svc = new VisitsService()

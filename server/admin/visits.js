@@ -74,6 +74,10 @@
     const col = el('div', 'vz-col');
     col.appendChild(el('h3', 'vz-col-title', 'Visitas por día'));
     const pd = data.perDay, n = pd.length;
+    if (n === 0) {
+      col.appendChild(el('div', 'hint', 'Sin datos en el rango.'));
+      return col;
+    }
     const maxV = Math.max(...pd.map(d => d.visits), 1);
     const bw = 10, gap = 2, ch = 120, pT = 20, pB = 20, pL = 10, pR = 10;
     const W = pL + n * (bw + gap) - gap + pR, H = pT + ch + pB;

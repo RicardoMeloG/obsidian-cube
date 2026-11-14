@@ -7,7 +7,7 @@ import {
   VisitsConfigError,
   redate,
   fixtureLines,
-  s3Lines,
+  forEachS3Line,
   FIXTURE_PATH,
   type S3Reader,
   type S3Object,
@@ -117,7 +117,7 @@ describe('fixtureLines', () => {
   })
 })
 
-describe('s3Lines', () => {
+describe('forEachS3Line', () => {
   function makeFakeReader(objects: S3Object[], bodies: Map<string, Uint8Array>): S3Reader {
     return {
       async *list(): AsyncIterable<S3Object> {
@@ -155,12 +155,14 @@ describe('s3Lines', () => {
     ])
 
     const reader = makeFakeReader(objects, bodies)
-    const lines = await s3Lines(reader, 'logs/', since)
+    const collected: string[] = []
+    const count = await forEachS3Line(reader, 'logs/', since, (line) => collected.push(line))
 
-    expect(lines).toEqual([
+    expect(collected).toEqual([
       '{"date":"2025-06-15","hits":5}',
       '{"date":"2025-06-15","hits":7}',
       '{"date":"2025-06-15","hits":3}',
     ])
+    expect(count).toBe(2)
   })
 })
