@@ -6,6 +6,7 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 import * as acm from 'aws-cdk-lib/aws-certificatemanager'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { VisitLogs } from './visit-logs'
 
 // Security headers, shared with `vite preview` so the layout check runs the
 // built site under the same policy (spec 010, 5.13).
@@ -117,6 +118,15 @@ export class StaticSiteStack extends cdk.Stack {
         { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
       ],
     })
+
+
+    // Spec 013 / D-6: visit logs are off by default.
+    // The owner turns this on after approving the stack diff.
+    // Context key: visitLogs (boolean true or the string 'true').
+    const visitLogsEnabled = this.node.tryGetContext('visitLogs')
+    if (visitLogsEnabled === true || visitLogsEnabled === 'true') {
+      new VisitLogs(this, 'VisitLogs', { distribution })
+    }
 
     // Exports consumed by the deploy workflow (S3 sync + CloudFront invalidation).
     new cdk.CfnOutput(this, 'BucketName', { value: bucket.bucketName })
