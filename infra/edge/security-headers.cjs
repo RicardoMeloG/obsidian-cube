@@ -19,7 +19,8 @@ function headerValues(securityHeaders) {
   }
 }
 
-/** The function's source (cloudfront-js-2.0). It overrides what the origin sent and drops `Server`. */
+/** The function's source (cloudfront-js-2.0). It overrides what the origin sent, drops `Server`,
+ *  and names UTF-8 on text responses S3 serves without a charset (ADR 009: llms.txt, robots.txt). */
 function headersFunctionCode(securityHeaders) {
   const headers = headerValues(securityHeaders)
   return `var HEADERS = ${JSON.stringify(headers)};
@@ -28,6 +29,10 @@ function handler(event) {
   var headers = response.headers;
   for (var name in HEADERS) headers[name] = { value: HEADERS[name] };
   delete headers['server'];
+  var type = headers['content-type'];
+  if (type && /^(text\\/|application\\/(xml|json|javascript))/.test(type.value) && type.value.indexOf('charset') < 0) {
+    type.value = type.value + '; charset=utf-8';
+  }
   return response;
 }`
 }

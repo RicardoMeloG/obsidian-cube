@@ -7,6 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { ProfileContentSchema } from './src/kernel/profileContent.ts'
 import type { ProfileContent } from './src/kernel/profileContent.ts'
 import { LLMS_FILE, PROFILE_PAGES, renderMachineFiles } from './src/kernel/seo/renderMachine.ts'
+import { ROBOTS_FILE, SITEMAP_FILE } from './src/kernel/seo/crawlFiles.ts'
 import type { MachineInput } from './src/kernel/seo/renderMachine.ts'
 import { renderHeadTags, renderStaticBody } from './src/kernel/seo/renderSeo.ts'
 import type { SeoInput } from './src/kernel/seo/renderSeo.ts'
@@ -117,7 +118,7 @@ function seoPages(): Plugin {
 // The layer for machines (ADR 009): /llms.txt and the plain profile
 // pages, written into the build and served by the dev server. None of them is
 // loaded by the first view.
-const MACHINE_FILES = [LLMS_FILE, ...Object.values(PROFILE_PAGES)]
+const MACHINE_FILES = [LLMS_FILE, ...Object.values(PROFILE_PAGES), ROBOTS_FILE, SITEMAP_FILE]
 
 function machineLayer(): Plugin {
   const render = () => renderMachineFiles({ en: readMachineInput('en'), es: readMachineInput('es') })
@@ -129,6 +130,7 @@ function machineLayer(): Plugin {
         if (!MACHINE_FILES.includes(name)) return next()
         // Rendered on each request, so an edit to the content shows at once.
         const file = render()[name]
+        if (!file) return next() // sitemap.xml without the site's public address
         response.setHeader('Content-Type', file.contentType)
         response.end(file.body)
       })
