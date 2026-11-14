@@ -10,6 +10,7 @@
 | E-01 | The account has budget alerts (any spend, and 5 USD a month), created by hand on 2026-11-12. An alert only sends an email: if nobody reads it, the spend goes on. | `aws budgets describe-budgets` lists two budgets with email subscribers and no action. |
 | E-02 | The distribution is billed pay as you go. A viral page or a bot flood is billed in full: the perpetual free tier covers 1 TB and 10 M requests a month, about 500 000 visits at 2 MB each, and every TB after it costs about 85 to 120 USD. | CloudFront pricing; the distribution has no pricing plan. |
 | E-03 | Nothing in front of the distribution blocks a single client that floods it: the distribution has no web ACL. | `aws cloudfront get-distribution-config` shows an empty `WebACLId`. |
+| E-05 | The Free and Pro plans cannot be chosen for this distribution: the console says "You're using configuration not available in this tier: custom response headers policies". The security headers (spec 010, 5.13) come from a custom response headers policy; Business, the first tier that allows one, costs 200 USD a month. | CloudFront console → distribution → *Switch to a plan*, 2026-11-13. |
 | E-04 | Budget actions cannot stop CloudFront: they apply IAM or SCP policies or stop EC2 and RDS instances. Billing data reaches budgets a few times a day, so any budget-driven stop acts hours late. | AWS Budgets documentation, budget actions. |
 
 ## 2. Outcome
@@ -30,6 +31,8 @@ Four independent layers, the strongest first:
 - **D-3 The owner subscribes to the plan by hand.** Subscribing accepts a pricing plan, so the owner does it in the CloudFront console; the console creates the web ACL. The stack then receives the web ACL's ARN through the context (`webAclArn` in `infra/cdk.json`) so a later `cdk deploy` keeps the association instead of removing it, which the plan forbids.
 - **D-4 The rate rule lives in the plan's web ACL, configured in the console.** The plan covers the web ACL it is associated with; managing that web ACL from the stack would duplicate it. The rule and its limit are written down in `docs/deploy-aws.md`.
 - **D-5 No personal data in the repository.** The alert email reaches the kill-switch budget through the context at deploy time (`-c alertEmail=…`), never committed; without it the budget still drives the switch, with no email.
+- **D-7 The security headers move to a viewer-response function (E-05).** A CloudFront Function, which every plan includes, sets the same headers from the same `infra/security-headers.json` and drops `Server`; the custom response headers policy is removed. Before deploying, each of the six header values the function produces was compared with the live site and found identical; `scripts/checks/edgeHeaders.test.ts` runs the function source against the JSON. On pay as you go a function costs 0.10 USD per million invocations, within the free tier at this traffic.
+- **D-8 Price class follows the billing.** Pay as you go keeps `PriceClass_100` (cheapest edges); a plan does not support price classes and removes the setting, so with `webAclArn` in the context the stack asks for all edges, matching what the plan leaves.
 - **D-6 A separate stack.** The kill switch is `ObsidianCubeCostGuard`, in its own stack, so it can be deployed, changed or removed without touching the site's distribution.
 
 ## 4. Non-goals
