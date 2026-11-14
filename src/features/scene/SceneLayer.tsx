@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { PerformanceMonitor } from '@react-three/drei'
 import './threeConsole'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import { playCubeNudgeSound } from '@/features/audio/cubeAudio'
@@ -89,6 +90,14 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
     return () => window.clearTimeout(timeout)
   }, [])
 
+  // Pixel budget (dt-03): the scene is fill-bound on integrated GPUs, so it
+  // starts at the screen's density capped at 1.5, climbs to 2 only while the
+  // frame rate holds, and drops to 1 when it falls. High-density screens skip
+  // MSAA: at 1.5 or more the edges are already fine and the samples cost most.
+  const screenDpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1
+  const [dpr, setDpr] = useState(() => Math.min(Math.max(screenDpr, 1), 1.5))
+  const antialias = useMemo(() => screenDpr < 1.5, [screenDpr])
+
   const poster = <img className="cube-canvas__poster block size-full object-cover" src="/og-image.jpg" alt="" />
   if (!webglAvailable) return poster
 
@@ -96,12 +105,17 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
     <ErrorBoundary label="3D scene" fallback={poster} onError={() => store.dispatch({ type: 'sceneFailed' })}>
       <Canvas
         camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
-        dpr={[1.5, 2]}
+        dpr={dpr}
         frameloop={ready ? 'always' : 'never'}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', stencil: true }}
+        gl={{ antialias, alpha: false, powerPreference: 'high-performance', stencil: true }}
         shadows={effects.shadows}
         onCreated={() => store.dispatch({ type: 'sceneMounted' })}
       >
+        <PerformanceMonitor
+          onIncline={() => setDpr(Math.min(screenDpr, 2))}
+          onDecline={() => setDpr(1)}
+          onFallback={() => setDpr(1)}
+        />
         <Suspense fallback={null}>
           <CubeScene
             activeSectionId={activeFace}
