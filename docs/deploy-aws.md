@@ -122,6 +122,11 @@ subscribing.
    aws cloudfront update-distribution --id <distribution> --if-match <ETag from dist.json> \
      --distribution-config file://<only the DistributionConfig object> --profile <profile>
    ```
+   Tested on 2026-11-14: the function disabled the distribution, the site
+   stopped resolving, and the commands above turned it on again in about three
+   minutes. Resolvers that cached the outage (the visitor's provider) keep
+   answering "no such name" until the negative TTL of the Cloudflare zone runs
+   out, about 30 minutes; public resolvers (1.1.1.1) recover at once.
 4. **Alerts:** the budgets for any spend and 5 USD a month, and the default
    cost anomaly monitor, by email.
 

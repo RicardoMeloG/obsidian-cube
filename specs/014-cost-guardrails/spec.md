@@ -1,6 +1,6 @@
 # 014: Cost Guardrails for the AWS Account
 
-**Status:** in progress (2026-11-13). Owner's decision: the site may be left without attention for months, so the account needs limits that act on their own, not only alerts, with more than one layer in case one fails; the ceiling is about 20 USD a month for the whole account.
+**Status:** built and in force (2026-11-14): Free plan subscribed, IP rate rule, kill switch deployed and tested (acceptance 4: disabled, site down, turned on again; resolvers that cached the outage take up to the zone's negative TTL, about 30 minutes). Owner's decision: the site may be left without attention for months, so the account needs limits that act on their own, not only alerts, with more than one layer in case one fails; the ceiling is about 20 USD a month for the whole account.
 **Builds on:** spec 010 (the static stack, AD-11), `docs/deploy-aws.md`, ADR 004 (the admin stays local until Cognito).
 
 ## 1. Problem
