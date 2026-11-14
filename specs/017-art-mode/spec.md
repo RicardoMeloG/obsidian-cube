@@ -1,6 +1,6 @@
 # 017: Fullscreen Art Mode
 
-**Status:** proposed (2026-11-14), waiting for the owner's approval of the decisions in section 3 and the open questions in section 7. Owner's words: the site is premium and must feel premium; optimize without losing quality; never change an artistic decision he did not ask to change.
+**Status:** approved by the owner with the recommended answers (2026-11-14: no mobile, no gallery, «Contemplar»); built locally on `feat/art-mode`, not merged or deployed. Owner's words: the site is premium and must feel premium; optimize without losing quality; never change an artistic decision he did not ask to change.
 **Builds on:** ADR 001 point 3 (designed, never built for visitors), spec 011 (stage layout), the dev-only world showcase (`src/features/dev/VectorWorldShowcase.tsx`, `?bg=<world>`), the load audit of 2026-11-14 (`E:\Claude\obsidian-cube-verify\carga-inicial\`, finding C-2).
 
 ## 1. Problem
@@ -18,12 +18,12 @@ On a desktop stage layout, a visitor can enter an art mode for the current face 
 
 ## 3. Decisions (proposed)
 
-- **D-1 In place, not a page.** The mode is a state of the experience (`artMode` in `experienceStore`, events `artModeStarted` and `artModeEnded`), not a reload into `?bg=`. No URL change, no new chunk to download: the world is already mounted. The dev showcase stays as it is, for tuning.
+- **D-1 In place, not a page.** The mode is a state of the experience (`artMode` in `experienceStore`, events `artModeStarted` and `artModeEnded`), not a reload into `?bg=`. No URL change; the world's chunk is already downloaded. The dev showcase stays, reachable only by its URL, for tuning; the dev double-click that opened it (`openWorldShowcase`) is gone, since the double-click now opens the art mode everywhere.
 - **D-2 Entering.** Double-click on the background, not on the interface (the same target rule as `openWorldShowcase`: not on `.stage-top`, the composition, the dock, a dialog, a button or a link). Also a quiet control in the top bar, next to «Explorar el cubo», for keyboard and screen-reader visitors and as the discoverable path ADR 001 asks for (discoverable enough to find, quiet enough not to interfere). Only in the stage layout, after the intro, with no dialog open.
 - **D-3 Leaving.** `Esc`, another double-click, or a «Volver» control that appears in a corner when the pointer moves and fades after 2 seconds still. A single click does not leave: it would end the mode by accident. Changing the window to the stacked layout leaves it.
-- **D-4 Framing.** The camera eases to the world's showcase framing (`WORLD_REGISTRY[world].showcase`: camera, lookAt, fog and props), the one the owner already approved in the dev showcase, and back on leaving. About 1.2 seconds each way, the same easing family as the face transition. With `prefers-reduced-motion`, a 200 ms crossfade instead of a camera move.
+- **D-4 Framing, as built.** The world is drawn in its own canvas (`src/features/scene/ArtModeCanvas.tsx`) with its showcase framing (`WORLD_REGISTRY[world].showcase`: camera, lookAt, fog and props, through the shared `showcaseFraming.tsx`), exactly as the owner approved it in the dev showcase. A camera ease from the cube scene was set aside: the embedded and the showcase framings use different world positions, so a camera move alone would jump halfway. Instead the page dips through the site's dark (`--color-abyss`) in 520 ms, the world compiles off the main thread behind the veil, and the veil lifts; leaving dips the same way. With `prefers-reduced-motion`, 160 ms.
 - **D-5 The cube.** It fades out with the pedestal; the rotating skies keep rotating about the same center, so the Polaris rule (ADR 001 point 2) holds: the still point is still there, only invisible. The cube does not leave the composition outside this mode.
-- **D-6 Quality, and the link with C-2.** In art mode the world runs at full cadence and at the pixel-density ceiling the adaptive monitor allows. When the audit's idle cadence (C-2) is built, it applies only outside this mode: reading slows down, contemplating never does. The perf branch's floor of 1.25 on dense screens and its MSAA stay.
+- **D-6 Quality, and the link with C-2.** In art mode the world runs at full cadence, at a pixel density of 1.25 to 2; the cube scene's canvas stops drawing once the veil covers it (`SceneLayer`, 600 ms), so only one canvas runs. When the audit's idle cadence (C-2) is built, it applies only outside this mode: reading slows down, contemplating never does. The perf branch's floor of 1.25 on dense screens and its MSAA stay.
 - **D-7 The cursor** hides after 2 seconds still and returns on movement, so nothing sits on the art.
 - **D-8 The name.** `identity.fullName` in the bottom corner, in the showcase signature style (`.wave-showcase__signature`), visible the whole time. No other text.
 
@@ -53,3 +53,9 @@ Unit tests of the store events and of the target rule; the walkthrough screensho
 1. **Mobile.** Recommended: out of this slice. A double tap competes with the browser's zoom and with dragging the cube; on phones it would need its own control and its own framing per world (the showcase cameras are tuned for a wide screen). Alternative: a button in the hero layout with the same framing, accepting worse composition on a tall screen.
 2. **Moving between worlds in art mode.** Recommended: no; one world, then back. Alternative: arrow keys move to the next face's world, a gallery of the six.
 3. **The control's label.** Recommended: «Contemplar» with an expand icon. Alternatives: «Modo arte», «Ver el fondo».
+
+## 8. Built and measured (2026-11-14)
+
+- Store events with their unit tests (`experienceStore.test.ts`, 4 cases); `npm run check`-level gates: 248 tests, tsc, eslint, `check:tokens`, `check:privacy`, `check:docs`, `check:layout`.
+- Walkthrough with Playwright on the built site (`E:\Claude\obsidian-cube-verify\modo-arte\`): the six faces at 1920×1080 and 1366×768, a double-click on the background enters (12 of 12), `Esc` leaves and the face comes back (12 of 12), no console errors. Screenshots in the art, at rest (pointer and «Volver» hidden) and on return.
+- Frame rate (headless Chromium on the integrated Radeon, one run each, not tied to the display): higher in art mode than outside it on 11 of 12; Systems at 1920×1080 measured 66 against 77, since its showcase draws extra fog lines (acceptance 7 is met on 11 of 12).

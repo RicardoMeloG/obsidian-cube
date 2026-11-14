@@ -102,6 +102,14 @@
     letter-spacing: 0.04em;
   }
 
+  /* The two ways to look at the art: take the cube, or contemplate the world
+     alone (spec 017). Centred in the top bar. */
+  .stage-modes {
+    display: flex;
+    gap: 0.6em;
+    justify-self: center;
+  }
+
   .stage-explore {
     pointer-events: auto;
     display: inline-flex;

@@ -22,6 +22,10 @@ type SceneLayerProps = {
 // comes (a stalled compile, a lost context), it draws anyway after this long,
 // compiling on the first frames as it did before.
 const READY_TIMEOUT_MS = 3000
+// The art mode (spec 017) draws the world in its own canvas; once its veil has
+// covered the page (ArtModeLayer, 520 ms), this canvas stops drawing, so only
+// one canvas runs. It resumes as soon as the mode ends, under the veil.
+const ART_PAUSE_MS = 600
 
 // The 3D scene, wired to the experience: it reports where the cube lands and
 // what the visitor does with it, and turns the cube when a face is requested.
@@ -33,6 +37,16 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   const requestedFace = useExperience((state) => state.requestedFace)
   const introSkipped = useExperience((state) => state.introSkipped)
   const nudged = useExperience((state) => state.nudge === 'shown')
+  const artMode = useExperience((state) => state.artMode)
+  const [artPaused, setArtPaused] = useState(false)
+  useEffect(() => {
+    if (!artMode) return
+    const timer = window.setTimeout(() => setArtPaused(true), ART_PAUSE_MS)
+    return () => {
+      window.clearTimeout(timer)
+      setArtPaused(false)
+    }
+  }, [artMode])
   // Stage layout: the cube recedes while the visitor reads, and comes forward
   // during the intro, a face change, or when the visitor takes it.
   const recede = useExperience(
@@ -97,7 +111,7 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
       <Canvas
         camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
         dpr={[1.5, 2]}
-        frameloop={ready ? 'always' : 'never'}
+        frameloop={ready && !artPaused ? 'always' : 'never'}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', stencil: true }}
         shadows={effects.shadows}
         onCreated={() => store.dispatch({ type: 'sceneMounted' })}

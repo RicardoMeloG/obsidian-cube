@@ -27,6 +27,7 @@ type StageViewProps = {
   explore: boolean
   onRequestFace: (face: FaceId) => void
   onExplore: (explore: boolean) => void
+  onContemplate: () => void
   onOpenDetail: (trigger?: HTMLElement) => void
 }
 
@@ -47,6 +48,7 @@ export function StageView({
   explore,
   onRequestFace,
   onExplore,
+  onContemplate,
   onOpenDetail,
 }: StageViewProps) {
   const accentStyle = { '--section-accent': displayedSection.accent } as CSSProperties
@@ -89,6 +91,7 @@ export function StageView({
         onLocaleChange={onLocaleChange}
         explore={explore}
         onExplore={onExplore}
+        onContemplate={onContemplate}
         onContact={() => onRequestFace('contact')}
       />
 

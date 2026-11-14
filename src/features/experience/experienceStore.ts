@@ -40,6 +40,9 @@ export type ExperienceState = {
   layout: ExperienceLayout
   // Stage layout: the visitor took the cube; the content steps aside.
   explore: boolean
+  // Stage layout: the face's world alone, signed with the name (ADR 001,
+  // spec 017). Faces do not change while it is on.
+  artMode: boolean
   nudge: NudgeStage
 }
 
@@ -60,6 +63,8 @@ export type ExperienceEvent =
   | { type: 'layoutChanged'; layout: ExperienceLayout }
   | { type: 'exploreStarted' }
   | { type: 'exploreEnded' }
+  | { type: 'artModeStarted' }
+  | { type: 'artModeEnded' }
   | { type: 'nudgeShown' }
   | { type: 'nudgeEnded' }
 
@@ -85,6 +90,7 @@ export function initialExperience(options: {
     cursor: 'default',
     layout: options.layout ?? 'hero',
     explore: Boolean(options.explore) && options.layout === 'stage',
+    artMode: false,
     nudge: options.nudge ? 'waiting' : 'done',
   }
 }
@@ -105,9 +111,9 @@ export function experienceReducer(state: ExperienceState, event: ExperienceEvent
     case 'sceneFailed':
       // The still image replaces the scene: nothing will land, so the
       // interface shows and faces change without turning.
-      return { ...state, sceneReady: false, requestedFace: null, intro: 'done', explore: false }
+      return { ...state, sceneReady: false, requestedFace: null, intro: 'done', explore: false, artMode: false }
     case 'faceRequested':
-      if (event.face === state.activeFace) return state
+      if (event.face === state.activeFace || state.artMode) return state
       // The scene turns the cube and reports the face once it lands; without a
       // scene the face changes at once, so navigation never depends on the 3D.
       return state.sceneReady
@@ -134,11 +140,25 @@ export function experienceReducer(state: ExperienceState, event: ExperienceEvent
     case 'cursorChanged':
       return state.cursor === event.cursor ? state : { ...state, cursor: event.cursor }
     case 'layoutChanged':
-      return state.layout === event.layout ? state : { ...state, layout: event.layout, explore: false }
+      return state.layout === event.layout ? state : { ...state, layout: event.layout, explore: false, artMode: false }
     case 'exploreStarted':
       return state.layout === 'stage' && !state.explore ? { ...state, explore: true, detail: CLOSED_DETAIL } : state
     case 'exploreEnded':
       return state.explore ? { ...state, explore: false } : state
+    case 'artModeStarted':
+      // Only on the desktop stage, with a scene to show, after the intro and
+      // with nothing else in the middle (a dialog, a face turning).
+      return state.layout === 'stage' &&
+        state.sceneReady &&
+        !state.artMode &&
+        state.intro === 'done' &&
+        !state.detail.open &&
+        state.transition === 'idle' &&
+        state.requestedFace === null
+        ? { ...state, artMode: true, explore: false }
+        : state
+    case 'artModeEnded':
+      return state.artMode ? { ...state, artMode: false } : state
     case 'nudgeShown':
       return state.nudge === 'waiting' ? { ...state, nudge: 'shown' } : state
     case 'nudgeEnded':
