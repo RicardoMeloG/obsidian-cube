@@ -54,6 +54,39 @@ runs on demand only (2026-10-16): after every CI on `main` it failed for lack
 of the account; whether it runs on its own again is decided at the release
 stage (spec 010, D-6).
 
+## Going to production from this machine
+
+Until the deploy runs from GitHub with the OIDC role (spec 010, D-6), a release
+goes out from the owner's machine with an SSO profile, never the root account.
+`<bucket>` and `<distribution>` are the stack outputs `BucketName` and
+`DistributionId`.
+
+1. **Publish in the admin.** Check first that the drafts hold only the change
+   meant to go out; publishing writes `public/content/` and records a version.
+2. **Build and check:** `npm run build`, `npm run check:privacy` and
+   `npm run report:objective` (nothing missing).
+3. **Sign in:** `aws sso login --profile <profile>`.
+4. **Upload the code** the way `deploy.yml` does: hashed assets first, never
+   deleted; then the rest with `--delete`, excluding `content/*` and
+   `assets/*`, because content belongs to the admin (ADR 004):
+   ```bash
+   aws s3 sync dist/assets/ s3://<bucket>/assets/ --profile <profile>
+   aws s3 sync dist/ s3://<bucket> --delete --exclude "content/*" --exclude "assets/*" --profile <profile>
+   ```
+5. **Upload only the content documents published in step 1**, one by one, never
+   a sync of `content/`:
+   ```bash
+   aws s3 cp dist/content/site.es.json s3://<bucket>/content/site.es.json --profile <profile>
+   ```
+6. **Invalidate and wait:**
+   ```bash
+   aws cloudfront create-invalidation --distribution-id <distribution> --paths "/*" --profile <profile>
+   aws cloudfront wait invalidation-completed --distribution-id <distribution> --id <invalidation id> --profile <profile>
+   ```
+7. **Check the live site:** `npm run check:live`.
+8. **Back up the content:** `npm run backup:content` (private repository; never
+   `.env` nor `admin_users`). Every content publish ends with this step.
+
 ## Local verification (no AWS account needed)
 
 ```bash
