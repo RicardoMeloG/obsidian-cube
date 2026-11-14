@@ -98,9 +98,16 @@ export class StaticSiteStack extends cdk.Stack {
         ? { domainNames: siteDomains, certificate: acm.Certificate.fromCertificateArn(this, 'SiteCertificate', certificateArn) }
         : {}
 
+    // CloudFront flat-rate Free plan (spec 014, D-3): the owner subscribes in
+    // the console, which creates the web ACL the plan requires; its ARN comes
+    // back through the context so a deploy keeps the association (the plan
+    // forbids removing it). Without it the distribution has no web ACL.
+    const webAclArn = this.node.tryGetContext('webAclArn') as string | undefined
+
     const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
       comment: 'Obsidian Cube portfolio',
       ...customDomain,
+      ...(webAclArn ? { webAclId: webAclArn } : {}),
       defaultRootObject: 'index.html',
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       defaultBehavior: {

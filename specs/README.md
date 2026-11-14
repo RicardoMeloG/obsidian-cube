@@ -15,6 +15,7 @@ Written outside that sequence:
 - `009-cube-intro/` — first-visit intro (the cube falls through the beam shedding sparks and lands) and the rotate invitation asked for by ADR 002, point 4.
 - `011-stage-compositions/` — accepted (2026-10-15): the stage layout and per-face compositions as templates the owner edits from the admin (content in the kernel documents, owner images, forms generated from the schemas). Runs before the content stage (ADR 008); includes the CONTACT world.
 - `012-proportional-gates/` — accepted (2026-11-13): the pre-push hook classifies each push by the paths it changes (adjustment, change, large change), asks code for an audit of its exact diff by two local models and the contract for its spec or ADR, and refuses ignored files and secrets.
+- `014-cost-guardrails/` — in progress (2026-11-13): a cost ceiling of about 20 USD a month in four layers: the CloudFront flat-rate Free plan (no overage charges), IP rate limiting in its web ACL, a kill switch that disables the distribution when a 20 USD budget is passed, and the existing alerts.
 - `010-architecture/` — architecture and harness (system, repository, site modules, styling, layout modes, degradation, gates); built in P0–P4 and closed after two independent audits (`audit-1.md`, `audit-2.md`).
 
 Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). The Spec Kit tooling tried in June 2026 now lives in its own repository, `RicardoMeloG/spec-kit-study` (see `docs/roadmap.md`, Phase 2).
