@@ -92,13 +92,18 @@ goes out from the owner's machine with an SSO profile, never the root account.
 
 ## Cost guardrails (spec 014)
 
-The account has a ceiling of about 20 USD a month, in four layers:
+The account has a ceiling of about 20 USD a month, in four layers. The Free
+plan does not allow custom response headers policies, so the security headers
+are set by a viewer-response CloudFront Function from `infra/security-headers.json`
+(spec 014, D-7); deploy that change, and check the live headers, before
+subscribing.
 
 1. **Flat-rate Free plan.** The owner subscribes the distribution in the
    CloudFront console (distribution → *Pricing plan*), which creates the web
    ACL the plan requires. Copy that web ACL's ARN into `infra/cdk.json` as
    `webAclArn` before the next `cdk deploy` of `ObsidianCubeStaticSite`, or the
-   deploy would remove the association.
+   deploy would remove the association. With it the stack also stops asking
+   for `PriceClass_100`, which a plan does not support (D-8).
 2. **IP rate limiting** in that web ACL (console → the web ACL → rules): block a
    client above 300 requests in 5 minutes. A first visit loads about 40 files.
 3. **Kill switch** (`ObsidianCubeCostGuard`): a 20 USD monthly budget publishes

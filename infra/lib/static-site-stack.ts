@@ -8,18 +8,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Security headers, shared with `vite preview` so the layout check runs the
-// built site under the same policy (spec 010, 5.13).
-type SecurityHeaders = {
-  reportOnly: boolean
-  contentSecurityPolicy: Record<string, string[]>
-  strictTransportSecuritySeconds: number
-  referrerPolicy: string
-  permissionsPolicy: string
-}
-const securityHeaders = JSON.parse(readFileSync(join(__dirname, '..', 'security-headers.json'), 'utf8')) as SecurityHeaders
-const contentSecurityPolicy = Object.entries(securityHeaders.contentSecurityPolicy)
-  .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
-  .join('; ')
+// built site under the same policy (spec 010, 5.13). CloudFront sets them with
+// a viewer-response function, because the flat-rate Free plan does not allow
+// custom response headers policies (spec 014, D-7).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { headersFunctionCode } = require('../edge/security-headers.cjs') as { headersFunctionCode: (headers: unknown) => string }
+const securityHeaders = JSON.parse(readFileSync(join(__dirname, '..', 'security-headers.json'), 'utf8')) as unknown
 
 // Static hosting for the public Obsidian Cube site: a private S3 bucket fronted
 // by CloudFront (Origin Access Control — the bucket is never public). Content is
@@ -37,36 +31,10 @@ export class StaticSiteStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     })
 
-    // Report-only until the policy has run in production without reports; then
-    // set reportOnly to false and it is enforced.
-    const headersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeaders', {
-      comment: 'Obsidian Cube security headers (infra/security-headers.json)',
-      securityHeadersBehavior: {
-        ...(securityHeaders.reportOnly
-          ? {}
-          : { contentSecurityPolicy: { contentSecurityPolicy, override: true } }),
-        strictTransportSecurity: {
-          accessControlMaxAge: cdk.Duration.seconds(securityHeaders.strictTransportSecuritySeconds),
-          includeSubdomains: true,
-          override: true,
-        },
-        contentTypeOptions: { override: true },
-        frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
-        referrerPolicy: {
-          referrerPolicy: securityHeaders.referrerPolicy as cloudfront.HeadersReferrerPolicy,
-          override: true,
-        },
-      },
-      // The origin's `Server: AmazonS3` adds nothing for a visitor (ZAP 10036).
-      removeHeaders: ['Server'],
-      customHeadersBehavior: {
-        customHeaders: [
-          { header: 'Permissions-Policy', value: securityHeaders.permissionsPolicy, override: true },
-          ...(securityHeaders.reportOnly
-            ? [{ header: 'Content-Security-Policy-Report-Only', value: contentSecurityPolicy, override: true }]
-            : []),
-        ],
-      },
+    const securityHeadersFunction = new cloudfront.Function(this, 'SecurityHeadersFunction', {
+      comment: 'Security headers of infra/security-headers.json; drops Server (spec 014, D-7)',
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+      code: cloudfront.FunctionCode.fromInline(headersFunctionCode(securityHeaders)),
     })
 
     // Clean paths (ADR 009): a path with no extension is served from
@@ -109,13 +77,17 @@ export class StaticSiteStack extends cdk.Stack {
       ...customDomain,
       ...(webAclArn ? { webAclId: webAclArn } : {}),
       defaultRootObject: 'index.html',
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+      // Pay as you go serves from the cheapest edges only; a flat-rate plan does
+      // not support price classes and removes the setting (spec 014).
+      priceClass: webAclArn ? cloudfront.PriceClass.PRICE_CLASS_ALL : cloudfront.PriceClass.PRICE_CLASS_100,
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-        responseHeadersPolicy: headersPolicy,
-        functionAssociations: [{ function: cleanPaths, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST }],
+        functionAssociations: [
+          { function: cleanPaths, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
+          { function: securityHeadersFunction, eventType: cloudfront.FunctionEventType.VIEWER_RESPONSE },
+        ],
       },
       // Unknown paths still answer with the page (status 200); real 404s
       // come with spec 010, AD-09.
