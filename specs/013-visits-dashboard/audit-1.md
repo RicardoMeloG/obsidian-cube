@@ -54,3 +54,27 @@ Both models answered every part: `qwen3.8:27b` five findings in 420 s, `gemma4:3
 | C-9 | gemma | The fixture shows `/.env` answered 200: secrets exposed | Not real: the site answers unknown paths with its own page (spec 010, AD-09, known), and the fixture models exactly that scanner traffic; no `.env` is served |
 | C-10 | gemma | `Date.UTC` with a negative day is fragile; `since` ignores daylight saving; a corrupt gzip crashes the process | Not real: `Date.UTC` normalises overflow by specification, UTC has no daylight saving, and `gunzipSync` throws inside the service's `try`, which answers 503 |
 | C-1, C-3 | both | The language switch and the «truncated» fixture lines (repeated) | Not real (rounds 1 and 2) |
+
+### Round 4 (diff `4105e181b9d79556`, 18 parts; the record the push hook accepts)
+
+`qwen3.8:27b` five findings, `gemma4:31b` twelve. No new real defect that a user can reach:
+
+| Id | Model | Finding | Verdict |
+|---|---|---|---|
+| C-11 | qwen | With a single day the chart writes the same date label three times | Real but unreachable: the route accepts only 7, 30 or 90 days. Left open as cosmetic debt |
+| C-12 | gemma | A colour literal outside the tokens in `index.html` | Not real: the token rule and `check:tokens` cover the public site (`src/`); the view's CSS uses the admin's own variables only |
+| C-13 | gemma | `es-CL` and the view's words should come from `src/features/content/copy.ts` | Not real: `copy.ts` is the public site's interface copy; the admin is a Spanish-only tool and never imports from `src/` except the kernel |
+| C-14 | gemma | `forEachS3Line`'s test expects 2 objects when 3 are listed | Not real: one of the three is older than the window and skipped, which is what the test asserts |
+| C-15 | gemma | `check-admin` reads `server/admin/visits.js`, which is not in the diff | Not real: the file is in the diff; the part the model read did not show it |
+| — | both | C-1, C-3, C-5, C-6, C-8, C-9, C-10 again | Not real (rounds 1 to 3) |
+
+## Open findings (debt)
+
+| Id | Finding | Suggested priority |
+|---|---|---|
+| D-1 | C-5: that CloudFront writes under the policy's prefix, and that a v2 delivery works at all on the distribution's pricing plan (D-9), can only be proven by the owner's deploy: check that objects appear under `AWSLogs/<account>/CloudFront/` within a day | Medium (a silent failure would leave the dashboard empty) |
+| D-2 | The vended-logs documentation suggests granting `s3:ListBucket`/`s3:GetBucketAcl` to `delivery.logs.amazonaws.com` to avoid `AccessDenied` noise in CloudTrail; the policy grants only `PutObject` | Low |
+| D-3 | The change audit cuts long hunks by characters, so qwen reads the fixture's line fragments as «truncated JSON» in every round (C-3); the tool could cut at line ends | Low (noise in a check) |
+| D-4 | `node scripts/walkthrough.mjs --admin` always photographs the admin on 5182, so a second checkout cannot use it with `ADMIN_PORT`; the admin screenshots of this change were taken with a one-off Playwright script | Low |
+| D-5 | C-11: the day chart's labels with a one-day range | Cosmetic |
+| D-6 | The Free-plan fallback (D-9) is documented but not built: reading a downloaded Viewers «Locations» CSV into the same map | Low, only if the owner moves to the Free plan |
