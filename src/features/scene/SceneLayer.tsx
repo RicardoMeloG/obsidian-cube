@@ -95,7 +95,12 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   // frame rate holds, and drops to 1 when it falls. High-density screens skip
   // MSAA: at 1.5 or more the edges are already fine and the samples cost most.
   const screenDpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1
-  const [dpr, setDpr] = useState(() => Math.min(Math.max(screenDpr, 1), 1.5))
+  // It moves in steps of 0.25 and never below 1.25 on a high-density screen:
+  // loading a world dips the frame rate for a moment, and a jump to 1 made the
+  // new face look blurred until it climbed back (owner, 2026-11-14).
+  const dprFloor = screenDpr >= 2 ? 1.25 : 1
+  const dprCeiling = Math.max(Math.min(screenDpr, 2), dprFloor)
+  const [dpr, setDpr] = useState(() => Math.min(Math.max(screenDpr, dprFloor), 1.5))
   const antialias = useMemo(() => screenDpr < 1.5, [screenDpr])
 
   const poster = <img className="cube-canvas__poster block size-full object-cover" src="/og-image.jpg" alt="" />
@@ -112,9 +117,10 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
         onCreated={() => store.dispatch({ type: 'sceneMounted' })}
       >
         <PerformanceMonitor
-          onIncline={() => setDpr(Math.min(screenDpr, 2))}
-          onDecline={() => setDpr(1)}
-          onFallback={() => setDpr(1)}
+          flipflops={3}
+          onIncline={() => setDpr((current) => Math.min(current + 0.25, dprCeiling))}
+          onDecline={() => setDpr((current) => Math.max(current - 0.25, dprFloor))}
+          onFallback={() => setDpr(dprFloor)}
         />
         <Suspense fallback={null}>
           <CubeScene
