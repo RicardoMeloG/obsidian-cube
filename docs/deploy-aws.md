@@ -84,8 +84,11 @@ goes out from the owner's machine with an SSO profile, never the root account.
    aws cloudfront wait invalidation-completed --distribution-id <distribution> --id <invalidation id> --profile <profile>
    ```
 7. **Check the live site:** `npm run check:live`.
-8. **Back up the content:** `npm run backup:content` (private repository; never
-   `.env` nor `admin_users`). Every content publish ends with this step.
+8. **Back up the content:** export the pending-work panel to `private/panel/`
+   first (one JSON per item plus `pendientes.md`), then `npm run backup:content`
+   (private repository; never `.env` nor `admin_users`). The backup versions the
+   panel next to the content, so a formatted machine loses neither. Every
+   content publish ends with this step.
 
 ## Local verification (no AWS account needed)
 
