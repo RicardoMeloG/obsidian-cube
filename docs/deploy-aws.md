@@ -90,6 +90,31 @@ goes out from the owner's machine with an SSO profile, never the root account.
    panel next to the content, so a formatted machine loses neither. Every
    content publish ends with this step.
 
+## Cost guardrails (spec 014)
+
+The account has a ceiling of about 20 USD a month, in four layers:
+
+1. **Flat-rate Free plan.** The owner subscribes the distribution in the
+   CloudFront console (distribution → *Pricing plan*), which creates the web
+   ACL the plan requires. Copy that web ACL's ARN into `infra/cdk.json` as
+   `webAclArn` before the next `cdk deploy` of `ObsidianCubeStaticSite`, or the
+   deploy would remove the association.
+2. **IP rate limiting** in that web ACL (console → the web ACL → rules): block a
+   client above 300 requests in 5 minutes. A first visit loads about 40 files.
+3. **Kill switch** (`ObsidianCubeCostGuard`): a 20 USD monthly budget publishes
+   to SNS and a function disables the distribution. Deploy it with
+   `npx cdk deploy ObsidianCubeCostGuard -c alertEmail=<owner email> --profile <profile>`
+   from `infra/`; the email is never committed. The site stays down until it is
+   turned on again:
+   ```bash
+   aws cloudfront get-distribution-config --id <distribution> --profile <profile> > dist.json
+   # set DistributionConfig.Enabled to true, keep the rest, then:
+   aws cloudfront update-distribution --id <distribution> --if-match <ETag from dist.json> \
+     --distribution-config file://<only the DistributionConfig object> --profile <profile>
+   ```
+4. **Alerts:** the budgets for any spend and 5 USD a month, and the default
+   cost anomaly monitor, by email.
+
 ## Local verification (no AWS account needed)
 
 ```bash

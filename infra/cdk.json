@@ -1,13 +1,25 @@
 {
   "app": "npx ts-node --prefer-ts-exts bin/infra.ts",
   "watch": {
-    "include": ["**"],
-    "exclude": ["README.md", "cdk*.json", "node_modules", "cdk.out"]
+    "include": [
+      "**"
+    ],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "node_modules",
+      "cdk.out"
+    ]
   },
   "context": {
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
-    "siteDomains": ["ricardomelog.com", "www.ricardomelog.com"],
-    "certificateArn": "arn:aws:acm:us-east-1:124562135765:certificate/dd5d5bfc-4d67-459c-ba15-445fccc0e2f1"
+    "siteDomains": [
+      "ricardomelog.com",
+      "www.ricardomelog.com"
+    ],
+    "certificateArn": "arn:aws:acm:us-east-1:124562135765:certificate/dd5d5bfc-4d67-459c-ba15-445fccc0e2f1",
+    "distributionId": "E2CFH0DDZGDBAU",
+    "costCeilingUsd": 20
   }
 }
