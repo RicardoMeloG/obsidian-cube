@@ -21,6 +21,7 @@ export type InterfaceCopy = {
   contemplate: string
   artBack: string
   artLabel: string
+  artWorlds: string
   contactLink: string
   githubLink: string
   linkedinLink: string
@@ -41,6 +42,7 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     contemplate: 'Contemplate',
     artBack: 'Back',
     artLabel: 'Art mode: the background alone',
+    artWorlds: 'Backgrounds',
     contactLink: 'Email',
     githubLink: 'GitHub',
     linkedinLink: 'LinkedIn',
@@ -59,6 +61,7 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     contemplate: 'Contemplar',
     artBack: 'Volver',
     artLabel: 'Modo arte: el fondo a solas',
+    artWorlds: 'Fondos',
     contactLink: 'Correo',
     githubLink: 'GitHub',
     linkedinLink: 'LinkedIn',

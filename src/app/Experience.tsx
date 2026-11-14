@@ -22,6 +22,7 @@ import { useViewportSize } from '@/lib/useViewportSize'
 import { LAYOUT_QUERIES, useLayoutMode } from '@/styles/layoutModes'
 import { cx } from '@/ui/cx'
 import { ArtModeLayer } from './ArtModeLayer'
+import type { ArtWorld } from './ArtModeLayer'
 import './intro.css'
 import './shell.css'
 
@@ -103,6 +104,10 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   useFaceUrl(activeFace, explore, content, ready)
 
   const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
+  const artWorlds = useMemo(
+    () => resolvedSections.flatMap((section): ArtWorld[] => (section.worldId ? [{ face: section.id, worldId: section.worldId }] : [])),
+    [resolvedSections],
+  )
   const activeSection = resolvedSections.find((section) => section.id === activeFace) ?? null
   const displayedSection = resolvedSections.find((section) => section.id === displayedFace) ?? activeSection
 
@@ -128,7 +133,15 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const closeDetail = useCallback(() => store.dispatch({ type: 'detailClosed' }), [store])
   const requestFace = useCallback((face: FaceId) => store.dispatch({ type: 'faceRequested', face }), [store])
   const startArtMode = useCallback(() => store.dispatch({ type: 'artModeStarted' }), [store])
-  const endArtMode = useCallback(() => store.dispatch({ type: 'artModeEnded' }), [store])
+  // Leaving the art mode on another world's face turns the cube to it, so the
+  // content always matches the background the visitor was looking at.
+  const endArtMode = useCallback(
+    (face: FaceId) => {
+      store.dispatch({ type: 'artModeEnded' })
+      store.dispatch({ type: 'faceRequested', face })
+    },
+    [store],
+  )
 
   // In the stacked layout the page scrolls and the cube hero takes its height
   // from CSS, so the shell and canvas stop being pinned to the viewport height.
@@ -178,7 +191,8 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
 
       <ArtModeLayer
         active={artMode}
-        worldId={activeSection?.worldId ?? null}
+        worlds={artWorlds}
+        face={activeFace}
         fullName={content.identity.fullName}
         copy={copy}
         onExit={endArtMode}

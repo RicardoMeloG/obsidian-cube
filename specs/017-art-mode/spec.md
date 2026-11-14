@@ -25,12 +25,12 @@ On a desktop stage layout, a visitor can enter an art mode for the current face 
 - **D-5 The cube.** It fades out with the pedestal; the rotating skies keep rotating about the same center, so the Polaris rule (ADR 001 point 2) holds: the still point is still there, only invisible. The cube does not leave the composition outside this mode.
 - **D-6 Quality, and the link with C-2.** In art mode the world runs at full cadence, at a pixel density of 1.25 to 2; the cube scene's canvas stops drawing once the veil covers it (`SceneLayer`, 600 ms), so only one canvas runs. When the audit's idle cadence (C-2) is built, it applies only outside this mode: reading slows down, contemplating never does. The perf branch's floor of 1.25 on dense screens and its MSAA stay.
 - **D-7 The cursor** hides after 2 seconds still and returns on movement, so nothing sits on the art.
-- **D-8 The name.** `identity.fullName` in the bottom corner, in the showcase signature style (`.wave-showcase__signature`), visible the whole time. No other text.
+- **D-8 The name.** `identity.fullName` in the bottom corner, in the showcase signature style (`.wave-showcase__signature`), visible the whole time.
+- **D-9 The gallery (owner, 2026-11-14).** A top bar as in the dev showcase: «Volver», the current world's name, and a menu of the worlds by their names; `←` and `→` move to the previous or next face's world. Each change dips through the dark like entering. Leaving lands on the face of the last world shown (the cube turns to it), so the content always matches the background. The bar shows when the pointer moves and fades with it.
 
 ## 4. Non-goals
 
 - Mobile and the stacked layout in this slice (see 7.1).
-- A gallery to move between worlds inside art mode (see 7.2).
 - New worlds, new camera paths, or any change to a world's look.
 - Analytics of who uses the mode.
 
@@ -51,7 +51,7 @@ Unit tests of the store events and of the target rule; the walkthrough screensho
 ## 7. Open questions for the owner
 
 1. **Mobile.** Recommended: out of this slice. A double tap competes with the browser's zoom and with dragging the cube; on phones it would need its own control and its own framing per world (the showcase cameras are tuned for a wide screen). Alternative: a button in the hero layout with the same framing, accepting worse composition on a tall screen.
-2. **Moving between worlds in art mode.** Recommended: no; one world, then back. Alternative: arrow keys move to the next face's world, a gallery of the six.
+2. **Moving between worlds in art mode.** Recommended at first: no. **Changed by the owner (2026-11-14):** the dev showcase had a menu at the top with each world's name, names he gave them (`WORLD_LABELS`: AGENTIC PLEXUS, PRODUCT BOX FIELD, CITY CORRIDOR, ARROW SHIELD, PARAMO VALLEY, CONTACT SIGNAL) and that no visitor ever saw. Built as D-9.
 3. **The control's label.** Recommended: «Contemplar» with an expand icon. Alternatives: «Modo arte», «Ver el fondo».
 
 ## 8. Built and measured (2026-11-14)
@@ -59,3 +59,4 @@ Unit tests of the store events and of the target rule; the walkthrough screensho
 - Store events with their unit tests (`experienceStore.test.ts`, 4 cases); `npm run check`-level gates: 248 tests, tsc, eslint, `check:tokens`, `check:privacy`, `check:docs`, `check:layout`.
 - Walkthrough with Playwright on the built site (`E:\Claude\obsidian-cube-verify\modo-arte\`): the six faces at 1920×1080 and 1366×768, a double-click on the background enters (12 of 12), `Esc` leaves and the face comes back (12 of 12), no console errors. Screenshots in the art, at rest (pointer and «Volver» hidden) and on return.
 - Frame rate (headless Chromium on the integrated Radeon, one run each, not tied to the display): higher in art mode than outside it on 11 of 12; Systems at 1920×1080 measured 66 against 77, since its showcase draws extra fog lines (acceptance 7 is met on 11 of 12).
+- Gallery (2026-11-14, 1920×1080): entering on AGENTIC PLEXUS, `→` `→` reached CITY CORRIDOR, `←` PRODUCT BOX FIELD, a click on ARROW SHIELD showed it, and `Esc` landed on `/es/seguridad` with the security face; no console errors.
