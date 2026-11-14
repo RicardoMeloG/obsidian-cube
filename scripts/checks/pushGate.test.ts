@@ -19,6 +19,11 @@ describe('classify', () => {
     expect(classify(['package-lock.json', 'infra/package-lock.json'])).toMatchObject({ level: 'adjustment', code: [] })
   })
 
+  it('map shapes alone need no audit, but their generator does', () => {
+    expect(classify(['server/admin/world.json'])).toMatchObject({ level: 'adjustment', code: [] })
+    expect(classify(['server/admin/world.json', 'scripts/build-world-map.mjs']).code).toEqual(['scripts/build-world-map.mjs'])
+  })
+
   it('the contract and the gates are a large change', () => {
     for (const path of ['src/kernel/siteContent.ts', 'server/auth/totp.ts', 'infra/lib/static-site-stack.ts', '.githooks/pre-push', 'scripts/check-privacy.mjs', 'scripts/lib/push-gate.mjs', '.github/workflows/ci.yml', 'AGENTS.md', 'docs/decisions/010-x.md']) {
       expect(classify([path]).level, path).toBe('large change')

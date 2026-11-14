@@ -35,3 +35,7 @@ Found by the agent's own review in the same pass, fixed before the next round:
 |---|---|---|
 | R-1 | The S3 source collected every line of up to 90 days in one array before counting (about three million strings at a million requests a month) | Real, medium. Fixed: `createTally` counts line by line and `forEachS3Line` drops each object after reading it |
 | R-2 | The 503 always suggested `aws sso login`, also for `NoSuchBucket` (seen against a missing bucket with the real SSO profile, a read-only call) | Real, low. Fixed: the SSO hint only for credential and token errors; otherwise it names `VISITS_BUCKET` and the profile's permissions |
+
+### Round 2 (diff `92abb935758ea66e`)
+
+`qwen3.8:27b`: two findings in 578 s, both repeats of round 1 and both not real for the same reasons: C-1 (the language switch, restored by `selectTarget`'s own toggle) and C-3 (a «truncated» first line of the fixture, again where the audit cut a hunk). `gemma4:31b`: no usable answer again. Running it part by part showed that it failed on exactly the 14 parts that carry `server/admin/world.json` (answers describing the map, empty answers or the context running out) and answered every other part. Decision D-10 of the spec: the generated shapes join the lockfiles in `AUDIT_EXCLUDE`, by exact path; their generator stays audited (test in `scripts/checks/pushGate.test.ts`).
