@@ -146,6 +146,15 @@ Admin and backend rules:
 - Code deploys never delete or overwrite private content: `deploy.yml` excludes `content/*` from the deleting sync and uploads hashed `assets/` without deleting old ones (spec 010, AD-11; gated by `scripts/checks/deployWorkflow.test.ts`).
 - Admin backend logic lives in plain functions tested with Vitest against an S3 stub.
 
+Infrastructure and cost rules (spec 014; checked by `scripts/checks/infraPlan.test.ts`):
+
+- The distribution is on the CloudFront flat-rate **Free** plan, the account's cost cap. Never add what the plan refuses: custom response headers policies, real-time logs, standard logging (Pro and above), Lambda@Edge, legacy cache settings. The security headers come only from the viewer-response function built from `infra/security-headers.json` (`infra/edge/security-headers.cjs`).
+- `infra/cdk.json` keeps `webAclArn`, the plan's web ACL: a deploy without it would remove the association, which the plan forbids. With a plan the price class is all edges.
+- The web ACL is the plan's, managed in the console: the IP rate rule (300 requests in 5 minutes, block) and the managed rules in Count mode. Changes to it are written down in `docs/deploy-aws.md`.
+- `ObsidianCubeCostGuard` disables the distribution when a 20 USD monthly budget is passed. Deploy it with `-c alertEmail=…`, never committing the address; turning the site on again is in `docs/deploy-aws.md`.
+- No reserved Lambda concurrency: the account's pool is 10 and AWS keeps all of it unreserved.
+- Every deploy and every new AWS resource is weighed against the ceiling of about 20 USD a month for the whole account; anything billed outside the plan needs the owner's approval first. Budgets without actions are free.
+
 ## Architecture Rules
 
 The overview, the module map and the status of every rule (in force, or the phase that brings it) are in `docs/architecture.md`; the reasoning is in ADR 005, ADR 006 and `specs/010-architecture/`. Read `docs/architecture.md` before changing code. In short:
