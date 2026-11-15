@@ -18,8 +18,9 @@ owner's machine (SSO) ──► S3 (private bucket) ──(OAC)──► CloudFr
   served directly.
 - **CloudFront**: fronts the bucket via Origin Access Control; redirects to HTTPS;
   a viewer-request function serves each clean path from its page
-  (`/es/seguridad` from `es/seguridad.html`, ADR 009); unknown paths still get
-  `index.html` with status 200 until real 404s land (spec 010, AD-09). The
+  (`/es/seguridad` from `es/seguridad.html`, ADR 009); an unknown path gets
+  the static `404.html` with status 404 (spec 010, AD-09), and a 403 (a WAF
+  block, a refusal of the match log receiver) is passed through as is. The
   security headers of `infra/security-headers.json` are enforced, CSP included;
   from spec 014 a viewer-response function sets them (D-7).
 - **Domain**: `ricardomelog.com` and `www`, registered and resolved in
@@ -156,5 +157,4 @@ npm run synth   # generates CloudFormation into cdk.out/ — fully offline
 ## Not yet included
 
 - Deploys from GitHub with the OIDC role (spec 010, D-6; steps 3 and 4 of the setup above).
-- Real 404s for unknown paths (spec 010, AD-09).
 - Cognito-authenticated admin (HTTP API + Lambda + S3, no database in the cloud), decided in ADR 004.

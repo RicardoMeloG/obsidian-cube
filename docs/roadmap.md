@@ -16,7 +16,7 @@ A stage starts only when the previous one met its exit criteria; its decisions a
 
 1. `seo.siteUrl` in the published content, so every page carries an absolute `og:image`, its canonical and `hreflang` (checked by `npm run check:live`, CU-09).
 2. The contact form and the CV request behind a captcha, with their abuse controls (security stage).
-3. Real 404s from CloudFront instead of the home page (spec 010, AD-09).
+3. ~~Real 404s from CloudFront instead of the home page (spec 010, AD-09).~~ Done on 2026-11-15.
 4. `robots.txt` admitting the AI crawlers, `sitemap.xml`, and `llms.txt` served as `text/plain; charset=utf-8` (ADR 009).
 5. The Cognito admin (ADR 004), slices below.
 6. The methodology page (spec 010, D-8), world visibility (ADR 002, point 5) and the fullscreen art mode (ADR 001).

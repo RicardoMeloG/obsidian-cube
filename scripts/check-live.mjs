@@ -262,14 +262,15 @@ try {
       const www = await fetch(BASE.replace('https://', 'https://www.') + '/')
       expect(problems, www.ok, `www answered ${www.status}`)
     }
-    // Private files never reach the visitor (today they get the home page
-    // instead of a 404: AD-09, pending; what matters here is the content).
+    // Private files never reach the visitor, and an unknown path is a real
+    // 404 with the static 404 page, not the home page (spec 010, AD-09).
     // /content/site.*.json is the published content the page itself reads.
-    const home = await (await fetch(`${BASE}/`)).text()
-    for (const path of ['/.env', '/.git/config', '/content/drafts/', '/server/.env', '/package.json', '/db/', '/infra/cdk.json']) {
-      const body = await (await fetch(`${BASE}${path}`)).text()
-      const leaked = /DATABASE_URL|SESSION_SECRET|\[core\]|"dependencies"|certificateArn/.test(body) && body !== home
+    for (const path of ['/.env', '/.git/config', '/content/drafts/', '/server/.env', '/package.json', '/db/', '/infra/cdk.json', '/no-such-page', '/es/no-existe']) {
+      const response = await fetch(`${BASE}${path}`)
+      const body = await response.text()
+      const leaked = /DATABASE_URL|SESSION_SECRET|\[core\]|"dependencies"|certificateArn/.test(body)
       expect(problems, !leaked, `${path} serves private content`)
+      expect(problems, response.status === 404 && body.includes('<h1>404</h1>'), `${path} answered ${response.status} instead of the 404 page`)
     }
   })
 

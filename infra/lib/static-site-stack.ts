@@ -115,7 +115,12 @@ export class StaticSiteStack extends cdk.Stack {
       // not support price classes and removes the setting (spec 014).
       priceClass: webAclArn ? cloudfront.PriceClass.PRICE_CLASS_ALL : cloudfront.PriceClass.PRICE_CLASS_100,
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(bucket),
+        // LIST lets S3 answer 404 instead of 403 for a missing object, so
+        // CloudFront can tell an unknown path from a refused one (spec 010,
+        // AD-09). Viewers cannot list: the cache policy forwards no query string.
+        origin: origins.S3BucketOrigin.withOriginAccessControl(bucket, {
+          originAccessLevels: [cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST],
+        }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         functionAssociations: [
@@ -123,11 +128,12 @@ export class StaticSiteStack extends cdk.Stack {
           { function: securityHeadersFunction, eventType: cloudfront.FunctionEventType.VIEWER_RESPONSE },
         ],
       },
-      // Unknown paths still answer with the page (status 200); real 404s
-      // come with spec 010, AD-09.
+      // Real 404s (spec 010, AD-09): an unknown path gets the static 404 page
+      // with status 404. A 403 is no longer rewritten, so a WAF block, the
+      // match log receiver's refusals and S3 denials reach the client as what
+      // they are instead of looking like the home page.
       errorResponses: [
-        { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
-        { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: cdk.Duration.minutes(5) },
+        { httpStatus: 404, responseHttpStatus: 404, responsePagePath: '/404.html', ttl: cdk.Duration.minutes(1) },
       ],
     })
 
