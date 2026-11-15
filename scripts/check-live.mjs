@@ -263,14 +263,21 @@ try {
       expect(problems, www.ok, `www answered ${www.status}`)
     }
     // Private files never reach the visitor, and an unknown path is a real
-    // 404 with the static 404 page, not the home page (spec 010, AD-09).
+    // 404 with the static 404 page, not the home page (spec 010, AD-09). A
+    // private path may also be refused by the WAF first (403, e.g. /.env).
     // /content/site.*.json is the published content the page itself reads.
     for (const path of ['/.env', '/.git/config', '/content/drafts/', '/server/.env', '/package.json', '/db/', '/infra/cdk.json', '/no-such-page', '/es/no-existe']) {
       const response = await fetch(`${BASE}${path}`)
       const body = await response.text()
-      const leaked = /DATABASE_URL|SESSION_SECRET|\[core\]|"dependencies"|certificateArn/.test(body)
+      const leaked = /DATABASE_URL|SESSION_SECRET|\[core\]|"dependencies"|certificateArn|ListBucketResult/.test(body)
       expect(problems, !leaked, `${path} serves private content`)
-      expect(problems, response.status === 404 && body.includes('<h1>404</h1>'), `${path} answered ${response.status} instead of the 404 page`)
+      const notFound = response.status === 404 && body.includes('<h1>404</h1>')
+      expect(problems, notFound || response.status === 403, `${path} answered ${response.status} instead of the 404 page or a refusal`)
+    }
+    // The bucket is never listed, whatever the root looks like.
+    for (const path of ['/?list-type=2', '//?list-type=2', '//']) {
+      const body = await (await fetch(`${BASE}${path}`)).text()
+      expect(problems, !body.includes('ListBucketResult'), `${path} lists the bucket`)
     }
   })
 
