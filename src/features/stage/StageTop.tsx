@@ -1,4 +1,4 @@
-import { Rotate3d, X } from 'lucide-react'
+import { Expand, Rotate3d, X } from 'lucide-react'
 import type { SiteContent, SiteLocale } from '@/kernel/siteContent'
 import type { InterfaceCopy } from '@/features/content/copy'
 import { SegmentedControl } from '@/ui/SegmentedControl'
@@ -12,13 +12,15 @@ type StageTopProps = {
   onLocaleChange: (locale: SiteLocale) => void
   explore: boolean
   onExplore: (explore: boolean) => void
+  // Opens the art mode (spec 017): the face's world alone.
+  onContemplate: () => void
   onContact: () => void
 }
 
 // The stage's top bar: the name first, the button that brings the cube
 // forward, and the ways to reach the owner (CONTACT and the profiles in
 // `identity.links`, spec 011, AD-02).
-export function StageTop({ identity, copy, locale, localeOptions, onLocaleChange, explore, onExplore, onContact }: StageTopProps) {
+export function StageTop({ identity, copy, locale, localeOptions, onLocaleChange, explore, onExplore, onContemplate, onContact }: StageTopProps) {
   const links = identity.links ?? {}
   return (
     <header className="stage-top">
@@ -28,10 +30,16 @@ export function StageTop({ identity, copy, locale, localeOptions, onLocaleChange
         {identity.keywords && <p className="stage-identity__keywords">{identity.keywords}</p>}
       </div>
 
-      <button className="stage-explore focus-ring" type="button" aria-pressed={explore} onClick={() => onExplore(!explore)}>
-        {explore ? <X aria-hidden size={15} strokeWidth={1.8} /> : <Rotate3d aria-hidden size={15} strokeWidth={1.6} />}
-        <span>{explore ? copy.exploreBack : copy.explore}</span>
-      </button>
+      <div className="stage-modes">
+        <button className="stage-explore focus-ring" type="button" aria-pressed={explore} onClick={() => onExplore(!explore)}>
+          {explore ? <X aria-hidden size={15} strokeWidth={1.8} /> : <Rotate3d aria-hidden size={15} strokeWidth={1.6} />}
+          <span>{explore ? copy.exploreBack : copy.explore}</span>
+        </button>
+        <button className="stage-explore focus-ring" type="button" onClick={onContemplate}>
+          <Expand aria-hidden size={14} strokeWidth={1.7} />
+          <span>{copy.contemplate}</span>
+        </button>
+      </div>
 
       <div className="stage-actions">
         <button className="stage-link focus-ring" type="button" onClick={onContact}>

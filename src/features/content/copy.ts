@@ -18,6 +18,10 @@ export type InterfaceCopy = {
   exploreHint: string
   // The bubble that invites the first click on the cube, once per visitor.
   nudge: string
+  contemplate: string
+  artBack: string
+  artLabel: string
+  artWorlds: string
   contactLink: string
   githubLink: string
   linkedinLink: string
@@ -35,6 +39,10 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     exploreBack: 'Show the content',
     exploreHint: 'Drag to rotate · click a face to open it · Esc to show the content',
     nudge: 'Click me!',
+    contemplate: 'Contemplate',
+    artBack: 'Back',
+    artLabel: 'Art mode: the background alone',
+    artWorlds: 'Backgrounds',
     contactLink: 'Email',
     githubLink: 'GitHub',
     linkedinLink: 'LinkedIn',
@@ -50,6 +58,10 @@ const COPY: Record<SiteLocale, InterfaceCopy> = {
     exploreBack: 'Ver el contenido',
     exploreHint: 'Arrastra para girar · haz clic en una cara para abrirla · Esc para ver el contenido',
     nudge: '¡Haz clic!',
+    contemplate: 'Contemplar',
+    artBack: 'Volver',
+    artLabel: 'Modo arte: el fondo a solas',
+    artWorlds: 'Fondos',
     contactLink: 'Correo',
     githubLink: 'GitHub',
     linkedinLink: 'LinkedIn',
