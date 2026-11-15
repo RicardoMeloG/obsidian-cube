@@ -51,8 +51,8 @@ export class CostGuardStack extends cdk.Stack {
       code: lambda.Code.fromAsset(join(__dirname, '..', 'lambda', 'kill-switch')),
       timeout: cdk.Duration.seconds(30),
       memorySize: 128,
-      // No reserved concurrency: a new account's pool is 10 and AWS keeps
-      // all 10 unreserved; one budget alert a month needs no reservation.
+      // No reserved concurrency: it runs from the unreserved pool, which the
+      // match log receiver cannot drain (it is capped at 3, dt-10).
       logGroup,
       environment: { DISTRIBUTION_ID: props.distributionId },
     })

@@ -152,7 +152,7 @@ Infrastructure and cost rules (spec 014; checked by `scripts/checks/infraPlan.te
 - `infra/cdk.json` keeps `webAclArn`, the plan's web ACL: a deploy without it would remove the association, which the plan forbids. With a plan the price class is all edges.
 - The web ACL is the plan's, managed in the console: the IP rate rule (300 requests in 5 minutes, block) and the managed rules in Count mode. Changes to it are written down in `docs/deploy-aws.md`.
 - `ObsidianCubeCostGuard` disables the distribution when a 20 USD monthly budget is passed. Deploy it with `-c alertEmail=…`, never committing the address; turning the site on again is in `docs/deploy-aws.md`.
-- No reserved Lambda concurrency: the account's pool is 10 and AWS keeps all of it unreserved.
+- Reserved Lambda concurrency only as a ceiling on a public endpoint: the match log receiver is capped at 3 so a flood cannot starve the cost guard (account pool 1,000 since 2026-11-14; a pool of 10 would not allow it).
 - Every deploy and every new AWS resource is weighed against the ceiling of about 20 USD a month for the whole account; anything billed outside the plan needs the owner's approval first. Budgets without actions are free.
 
 ## Architecture Rules

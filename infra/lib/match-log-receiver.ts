@@ -52,7 +52,10 @@ export class MatchLogReceiver extends Construct {
         BUCKET: this.bucket.bucketName,
         ALLOWED_ORIGINS: JSON.stringify(props.allowedOrigins),
       },
-      // no reservedConcurrentExecutions: account pool is 10, AWS keeps all unreserved (AGENTS.md cost rules)
+      // A ceiling, not a guarantee (dt-10): a flood of fake match logs can hold at
+      // most 3 executions, so the cost guard's function always finds room in the
+      // account pool (1,000 since 2026-11-14), and writes and their cost are capped.
+      reservedConcurrentExecutions: 3,
     })
 
     // write-only on the partidas/ prefix; no read, no list (spec 015, D-4)
