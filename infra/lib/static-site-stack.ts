@@ -41,15 +41,20 @@ export class StaticSiteStack extends cdk.Stack {
     // Clean paths (ADR 009): a path with no extension is served from
     // its page, `/es/seguridad` from `es/seguridad.html` and `/es` from
     // `es.html`, so each address gets its own language, title and share
-    // preview. A trailing slash is dropped first; `/` stays on index.html.
+    // preview. A trailing slash is dropped first. The root becomes
+    // `/index.html` here, not by the default root object: since S3 grants
+    // CloudFront s3:ListBucket (AD-09), a bare `/` reaching the origin would
+    // be a bucket listing, so no path (`//` included) may arrive as `/`.
     const cleanPaths = new cloudfront.Function(this, 'CleanPaths', {
       comment: 'Serves each clean path from its .html page (ADR 009)',
       runtime: cloudfront.FunctionRuntime.JS_2_0,
       code: cloudfront.FunctionCode.fromInline(`function handler(event) {
   var request = event.request;
-  var uri = request.uri;
-  if (uri.length > 1 && uri.endsWith('/')) uri = uri.slice(0, -1);
-  if (uri !== '/' && uri.lastIndexOf('.') <= uri.lastIndexOf('/')) uri = uri + '.html';
+  // Empty segments out: '//' and a trailing slash collapse, no backslash
+  // needed inside this template string.
+  var uri = '/' + request.uri.split('/').filter(function (part) { return part !== ''; }).join('/');
+  if (uri === '/') uri = '/index.html';
+  else if (uri.lastIndexOf('.') <= uri.lastIndexOf('/')) uri = uri + '.html';
   request.uri = uri;
   return request;
 }`),
