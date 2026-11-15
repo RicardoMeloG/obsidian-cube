@@ -111,6 +111,20 @@ subscribing.
    for `PriceClass_100`, which a plan does not support (D-8).
 2. **IP rate limiting** in that web ACL (console → the web ACL → rules): block a
    client above 300 requests in 5 minutes. A first visit loads about 40 files.
+   `npm run check:live` run twice in a row can trip it from the owner's own IP;
+   the block shows as the home page with `X-Cache: Error from cloudfront` on
+   every file (the 403 error response maps to `/index.html`) and lifts within
+   a few minutes.
+   The console created the web ACL with three AWS managed rule groups in
+   *Count*. Since 2026-11-14 they block (owner's decision, after a sample of
+   the traffic showed only scanners probing `/.env`, `/.git` and WordPress):
+   `AmazonIpReputationList`, `KnownBadInputsRuleSet` and `CommonRuleSet`,
+   with one override: `SizeRestrictions_BODY` stays in *Count*, because the
+   match log receiver (`/api/iron-bastion/*`, spec 015) accepts bodies up to
+   512 KB and that rule blocks any body above 8 KB. Checked after the change:
+   a blocked path (`/.env.bak`), a 20 KB POST reaching the function, and
+   `check:live`. The web ACL is not in CDK; to go back, set each managed
+   group's override action to *Count* in the console (one minute).
 3. **Kill switch** (`ObsidianCubeCostGuard`): a 20 USD monthly budget publishes
    to SNS and a function disables the distribution. Deploy it with
    `npx cdk deploy ObsidianCubeCostGuard -c alertEmail=<owner email> --profile <profile>`
