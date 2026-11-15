@@ -120,9 +120,9 @@ subscribing.
    the traffic showed only scanners probing `/.env`, `/.git` and WordPress):
    `AmazonIpReputationList`, `KnownBadInputsRuleSet` and `CommonRuleSet`,
    with one override: `SizeRestrictions_BODY` stays in *Count*, because the
-   match log receiver (`/api/iron-bastion/*`, spec 015) accepts bodies up to
-   512 KB and that rule blocks any body above 8 KB. Checked after the change:
-   a blocked path (`/.env.bak`), a 20 KB POST reaching the function, and
+   match log receiver (`/api/iron-bastion/*`, spec 015) has a body limit of
+   512 KB and that rule's limit is 8 KB. Checked on 2026-11-14 after the change:
+   a blocked path (`/.env.bak`), a 20 KB POST reaching the function (2026-11-14), and
    `check:live`. The web ACL is not in CDK; to go back, set each managed
    group's override action to *Count* in the console (one minute).
 3. **Kill switch** (`ObsidianCubeCostGuard`): a 20 USD monthly budget publishes
