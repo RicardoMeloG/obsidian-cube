@@ -114,7 +114,7 @@ Obsidian Interface System: dark, premium, technical, sober. Violet volumetric am
 
 ## Status (2026-11-15)
 
-Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy and an A+ on Mozilla Observatory (2026-11-14). Since the first release (2026-11-12): the art mode and its gallery of worlds (spec 017), a lighter scene on dense and integrated-GPU screens, layered cost ceilings with a tested kill switch (spec 014), the WAF's managed rules blocking, the Iron Bastion match log receiver with a capped concurrency (spec 015), and real 404s; `npm run check:live` passes its twelve use cases on the live site. Still open (`docs/roadmap.md`): the scene's cost at rest and the intro that hides the name for a few seconds, cache headers, the contact form and the CV request of the security stage, and the Cognito admin of ADR 004.
+Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy an A+ on Mozilla Observatory (2026-11-14) and an A+ on SSL Labs on all twelve edge addresses (2026-11-15). Since the first release (2026-11-12): the art mode and its gallery of worlds (spec 017), a lighter scene on dense and integrated-GPU screens, layered cost ceilings with a tested kill switch (spec 014), the WAF's managed rules blocking, the Iron Bastion match log receiver with a capped concurrency (spec 015), and real 404s; `npm run check:live` passes its twelve use cases on the live site. Still open (`docs/roadmap.md`): the scene's cost at rest and the intro that hides the name for a few seconds, cache headers, the contact form and the CV request of the security stage, and the Cognito admin of ADR 004.
 
 ## Orientation for Contributors
 
