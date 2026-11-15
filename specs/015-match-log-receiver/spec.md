@@ -42,7 +42,7 @@ game (GitHub Pages) ──POST──▶ CloudFront /api/iron-bastion/*  (plan we
 
 ## 5. Acceptance
 
-1. `npx cdk synth` passes without `matchLogOrigins` and the template is unchanged in resources; with `-c matchLogOrigins='["https://ricardomelog.github.io"]'` it adds the bucket (block all public access, SSE-S3, SSL only, 365-day expiry), the function (Node.js 22, 128 MB, no reserved concurrency, write-only on `partidas/*`), its URL (`AWS_IAM`, CORS), the OAC and the `/api/iron-bastion/*` behavior.
+1. `npx cdk synth` passes without `matchLogOrigins` and the template is unchanged in resources; with `-c matchLogOrigins='["https://ricardomelog.github.io"]'` it adds the bucket (block all public access, SSE-S3, SSL only, 365-day expiry), the function (Node.js 22, 128 MB, reserved concurrency 3 (dt-10), write-only on `partidas/*`), its URL (`AWS_IAM`, CORS), the OAC and the `/api/iron-bastion/*` behavior.
 2. The validation is unit tested against stubs (`scripts/checks/matchLog.test.ts`): accepts a valid log, refuses a wrong origin, an oversize body, broken JSON, a bad `clave`, a wrong shape; the key format; no header reaches the stored object.
 3. `scripts/checks/infraPlan.test.ts` still passes (no refused features, `webAclArn` kept).
 4. After the owner's deploy (not part of this branch): a POST from the game with consent writes one object; a POST without the hash header, from another origin or directly to the function URL is refused.

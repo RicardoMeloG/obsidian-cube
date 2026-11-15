@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 // must not use what the plan refuses, or a deploy would fail or drop the plan.
 const stack = readFileSync(new URL('../../infra/lib/static-site-stack.ts', import.meta.url), 'utf8')
 const guard = readFileSync(new URL('../../infra/lib/cost-guard-stack.ts', import.meta.url), 'utf8')
+const receiver = readFileSync(new URL('../../infra/lib/match-log-receiver.ts', import.meta.url), 'utf8')
 const context = JSON.parse(readFileSync(new URL('../../infra/cdk.json', import.meta.url), 'utf8')).context as Record<string, unknown>
 
 describe('flat-rate Free plan', () => {
@@ -24,6 +25,10 @@ describe('flat-rate Free plan', () => {
   it('sets the security headers with the viewer-response function', () => {
     expect(stack).toContain('FunctionEventType.VIEWER_RESPONSE')
     expect(stack).toContain('headersFunctionCode(securityHeaders)')
+  })
+
+  it('caps the public match log receiver so a flood cannot starve the kill switch (dt-10)', () => {
+    expect(receiver).toMatch(/reservedConcurrentExecutions:\s*3,/)
   })
 
   it('keeps the kill switch without reserved concurrency and without a committed email', () => {
