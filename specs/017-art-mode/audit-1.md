@@ -26,3 +26,18 @@
 | 12 | gemma | `color-mix` with a token, uncommented | **Not real**, same as #4; the file's header says why it is hand-written. |
 | 13 | gemma | The canvas lacks the violet volumetric ambient | **Not real**, same as #5: it shows each world exactly as its approved showcase does. |
 | 14 | gemma | The second top-bar button may break the shared height and top edge | **Not real**, same as #6. |
+
+## Round 3 · the release merge (perf + art mode)
+
+**Diff:** `b08dce4..cb43f6b` (the two branches together on `main`, as deployed on 2026-11-14) · **Record:** `audit-runs/change-8357d8efc9d349bf.json` (local) · **Models:** `qwen3.8:27b` (2 findings) and `gemma4:31b` (6 findings, 60 s, run after the first attempt found 18.7 GB free of the 19.7 GB it needs), one at a time, the card measured first.
+
+| # | Model | Finding | Verdict |
+|---|---|---|---|
+| 15 | qwen | `ArtModeLayer.tsx` is a syntax fragment and the build fails | **Not real.** The model saw a cut part of the diff; the build passes and this exact commit is live on ricardomelog.com. |
+| 16 | qwen | `artMode.css` breaks the one-unlayered-sheet rule | **Not real**, same as #1 and #8. |
+| 17 | gemma | A state update inside the render body of `ArtModeLayer` | **Not real.** It is guarded (`active !== seenActive`) and is React's documented pattern for adjusting state that follows a prop; it runs once per change, never in a loop. |
+| 18 | gemma | The double-click works in production | **Intended**, same as #11. |
+| 19 | gemma | `var(--color-violet-300)` is a colour literal | **Not real**: it is a token reference, inside `color-mix`. |
+| 20 | gemma | The art canvas has `alpha: false` and no violet ambient | **Not real**, same as #5 and #13; the main canvas uses the same `gl` options. |
+| 21 | gemma | The `artPaused` timer may fire after cleanup | **Not real.** The cleanup clears the timer before resetting the state. |
+| 22 | gemma | `.stage-modes` may break the top bar's shared edge | **Not real**, same as #6 and #14. |
