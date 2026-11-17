@@ -53,5 +53,5 @@ On a 165 Hz screen the 30-frame target lands at 27.5 (one frame every six refres
 - Unit tests: `idleCadence.test.tsx` (the rest starts only after the quiet stretch, input ends it, busy blocks it, listeners removed), `tickRing.test.ts` (every tick where its separate mesh was, sector centres, colours), `edgeHeaders.test.ts` (cache by path, never on an error).
 - `npm run build`, lint, server typecheck, 259 tests, `check:budget`, `check:privacy`, `check:docs`, `check:tokens`, `check:layout`.
 - Pedestal screenshots of `main` and the branch at the same moment (1920×1080), compared by eye.
-- The change audit on the exact diff (`npm run audit:change`).
+- The change audit on the exact diff (`npm run audit:change`): four findings from gemma, none real (`audit-1.md`).
 - After the deploy: `curl -I` on an asset, a page and a 404 to see the header live, and the owner's look at the pedestal.
