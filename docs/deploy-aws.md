@@ -22,7 +22,12 @@ owner's machine (SSO) ──► S3 (private bucket) ──(OAC)──► CloudFr
   the static `404.html` with status 404 (spec 010, AD-09), and a 403 (a WAF
   block, a refusal of the match log receiver) is passed through as is. The
   security headers of `infra/security-headers.json` are enforced, CSP included;
-  from spec 014 a viewer-response function sets them (D-7).
+  from spec 014 a viewer-response function sets them (D-7). The same function
+  sets `Cache-Control` on successful answers (spec 018): a year and
+  `immutable` for names with a content hash (`/assets/*`, the admin's
+  `/content/media/<sha256>.webp`), `no-cache` for everything else, so pages and
+  content documents are revalidated with their ETag on every visit. It governs
+  the browser only; the edge cache follows the cache policy.
 - **Domain**: `ricardomelog.com` and `www`, registered and resolved in
   Cloudflare, not Route 53. The ACM certificate (us-east-1) was requested and
   validated by hand with CNAME records in Cloudflare; its ARN and the domains

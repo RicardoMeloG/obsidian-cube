@@ -19,11 +19,28 @@ function headerValues(securityHeaders) {
   }
 }
 
+/** Browser caching by path (dt-13, M-3): no response carried Cache-Control, so browsers
+ *  guessed. Names with a content hash never change: a year, immutable. Everything else
+ *  (pages, content documents, unhashed files) is revalidated on every visit, a cheap
+ *  304 with the ETag S3 sends. Only successful answers: an error must not be kept.
+ *  It sets what the browser keeps, not the edge cache, which the cache policy rules. */
+const IMMUTABLE = 'public, max-age=31536000, immutable'
+const REVALIDATE = 'no-cache'
+
 /** The function's source (cloudfront-js-2.0). It overrides what the origin sent, drops `Server`,
- *  and names UTF-8 on text responses S3 serves without a charset (ADR 009: llms.txt, robots.txt). */
+ *  names UTF-8 on text responses S3 serves without a charset (ADR 009: llms.txt, robots.txt),
+ *  and sets Cache-Control on successful answers. */
 function headersFunctionCode(securityHeaders) {
   const headers = headerValues(securityHeaders)
   return `var HEADERS = ${JSON.stringify(headers)};
+var IMMUTABLE = ${JSON.stringify(IMMUTABLE)};
+var REVALIDATE = ${JSON.stringify(REVALIDATE)};
+function cacheControl(uri) {
+  if (uri.indexOf('/assets/') === 0) return IMMUTABLE;
+  var media = '/content/media/';
+  if (uri.indexOf(media) === 0 && /^[0-9a-f]{64}(-thumb)?[.]webp$/.test(uri.slice(media.length))) return IMMUTABLE;
+  return REVALIDATE;
+}
 function handler(event) {
   var response = event.response;
   var headers = response.headers;
@@ -33,8 +50,11 @@ function handler(event) {
   if (type && /^(text\\/|application\\/(xml|json|javascript))/.test(type.value) && type.value.indexOf('charset') < 0) {
     type.value = type.value + '; charset=utf-8';
   }
+  var status = response.statusCode;
+  if (status === 200 || status === 304) headers['cache-control'] = { value: cacheControl(event.request.uri) };
+  else delete headers['cache-control'];
   return response;
 }`
 }
 
-module.exports = { headerValues, headersFunctionCode }
+module.exports = { headerValues, headersFunctionCode, IMMUTABLE, REVALIDATE }
