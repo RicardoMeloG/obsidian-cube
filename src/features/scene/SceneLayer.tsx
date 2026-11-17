@@ -11,6 +11,8 @@ import { ErrorBoundary } from '@/lib/ErrorBoundary'
 import { CubeScene } from './CubeScene'
 import type { CubeIntroConfig, CubeSceneHandle } from './CubeScene'
 import { readDiagnosticFx } from './diagnosticFx'
+import { useSceneBusy, useSceneIdle } from './idleCadence'
+import { IdleTicker } from './IdleTicker'
 import type { IntroPhase } from './intro/introTimeline'
 
 type SceneLayerProps = {
@@ -27,6 +29,9 @@ const READY_TIMEOUT_MS = 3000
 // covered the page (ArtModeLayer, 520 ms), this canvas stops drawing, so only
 // one canvas runs. It resumes as soon as the mode ends, under the veil.
 const ART_PAUSE_MS = 600
+// After the rest ends, how long the density monitor waits before it judges the
+// frame rate again (it averages over a window that still holds idle frames).
+const MONITOR_SETTLE_MS = 2500
 
 // The 3D scene, wired to the experience: it reports where the cube lands and
 // what the visitor does with it, and turns the cube when a face is requested.
@@ -117,6 +122,19 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   const dprCeiling = Math.max(Math.min(screenDpr, 2), dprFloor)
   const [dpr, setDpr] = useState(() => Math.min(Math.max(screenDpr, dprFloor), 1.5))
 
+  // At rest the scene draws at 30 frames a second (idleCadence). The density
+  // monitor would read that as a slow machine and lower the density, so it
+  // ignores the rest and the first seconds after it, while its window still
+  // holds idle frames.
+  const idle = useSceneIdle(useSceneBusy())
+  const monitorQuietUntilRef = useRef(0)
+  const idleRef = useRef(idle)
+  useEffect(() => {
+    idleRef.current = idle
+    if (!idle) monitorQuietUntilRef.current = performance.now() + MONITOR_SETTLE_MS
+  }, [idle])
+  const monitorListens = () => !idleRef.current && performance.now() >= monitorQuietUntilRef.current
+
   const poster = <img className="cube-canvas__poster block size-full object-cover" src="/og-image.jpg" alt="" />
   if (!webglAvailable) return poster
 
@@ -125,17 +143,18 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
       <Canvas
         camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
         dpr={dpr}
-        frameloop={ready && !artPaused ? 'always' : 'never'}
+        frameloop={ready && !artPaused ? (idle ? 'demand' : 'always') : 'never'}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', stencil: true }}
         shadows={effects.shadows}
         onCreated={() => store.dispatch({ type: 'sceneMounted' })}
       >
         <PerformanceMonitor
           flipflops={3}
-          onIncline={() => setDpr((current) => Math.min(current + 0.25, dprCeiling))}
-          onDecline={() => setDpr((current) => Math.max(current - 0.25, dprFloor))}
-          onFallback={() => setDpr(dprFloor)}
+          onIncline={() => monitorListens() && setDpr((current) => Math.min(current + 0.25, dprCeiling))}
+          onDecline={() => monitorListens() && setDpr((current) => Math.max(current - 0.25, dprFloor))}
+          onFallback={() => monitorListens() && setDpr(dprFloor)}
         />
+        {ready && !artPaused && idle && <IdleTicker />}
         <Suspense fallback={null}>
           <CubeScene
             activeSectionId={activeFace}
