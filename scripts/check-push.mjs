@@ -5,11 +5,12 @@
 //   - an added or modified file matches an ignore rule, or is named like a key,
 //     database or environment file, or adds a line with a secret value;
 //   - code changed and no audit of that exact diff is recorded (audit:change);
-//   - a gate or the contract changed and no commit message names a spec or ADR.
+//   - a gate or the contract changed and no commit message names a spec or ADR;
+//   - a commit's author or committer is not GitHub's noreply address (dt-24).
 import { existsSync, readFileSync } from 'node:fs'
 import {
-  auditModels, changedPaths, classify, codeDiff, diffHash, fullDiff, ignoredPaths, messages, namesSpec, pushBase,
-  SECRET_NAME, secretLines, ZERO,
+  auditModels, changedPaths, classify, codeDiff, diffHash, fullDiff, identities, ignoredPaths, messages, namesSpec, privateIdentities,
+  pushBase, SECRET_NAME, secretLines, ZERO,
 } from './lib/push-gate.mjs'
 
 const remote = process.argv[2] || 'origin'
@@ -21,8 +22,12 @@ for (const line of input.split(/\r?\n/).filter(Boolean)) {
   if (!localSha || ZERO.test(localSha)) continue // a branch deletion carries nothing
   const base = pushBase(localSha, remote, remoteRef)
   const paths = changedPaths(base, localSha)
-  if (paths.length === 0) continue
   const where = `${remoteRef.replace(/^refs\/heads\//, '')}`
+  // Checked before the file list: a commit that changes no file still shows its author.
+  for (const identity of privateIdentities(identities(base, localSha))) {
+    problems.push(`${where}: a commit is signed by ${identity}; only the GitHub noreply address may sign a public commit. Set git config user.email in this repository and rewrite those commits`)
+  }
+  if (paths.length === 0) continue
 
   for (const path of ignoredPaths(paths)) problems.push(`${where}: ${path} matches an ignore rule (.gitignore or .git/info/exclude); remove it from the commits`)
   for (const path of paths.filter((p) => SECRET_NAME.test(p))) problems.push(`${where}: ${path} is named like a key, database or environment file`)

@@ -2,7 +2,7 @@
 // The proportional gates of a push (spec 012): each rule with a case that
 // breaks it and one that passes.
 import { describe, expect, it } from 'vitest'
-import { addedLines, classify, diffHash, namesSpec, SECRET_NAME, secretLines } from '../lib/push-gate.mjs'
+import { addedLines, classify, diffHash, namesSpec, privateIdentities, SECRET_NAME, secretLines } from '../lib/push-gate.mjs'
 
 describe('classify', () => {
   it('documentation only is an adjustment', () => {
@@ -71,6 +71,17 @@ describe('secret values', () => {
     ]) {
       expect(secretLines(diff('x.ts', line)), line).toHaveLength(0)
     }
+  })
+})
+
+describe('commit identities (dt-24)', () => {
+  it('lets only the GitHub noreply address sign a public commit', () => {
+    const noreply = 'Ricardo Melo <49494594+RicardoMeloG@users.noreply.github.com>'
+    expect(privateIdentities([noreply, 'Ada <ada@users.noreply.github.com>'])).toEqual([])
+    expect(privateIdentities([noreply, 'Ada <ada@gmail.com>', 'Ada <ada@users.noreply.github.com.evil.example>'])).toEqual([
+      'Ada <ada@gmail.com>',
+      'Ada <ada@users.noreply.github.com.evil.example>',
+    ])
   })
 })
 
