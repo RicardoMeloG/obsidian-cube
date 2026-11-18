@@ -52,4 +52,20 @@ describe('stage compositions', () => {
     expect(catalog).not.toContain('<img')
     expect(catalog).not.toContain('ca-shot')
   })
+
+  // dp-06: the site renders with the tolerant contract, so a content link the
+  // publish rules would refuse can still arrive. No template turns it into a
+  // clickable link.
+  it('never render a script target as a link, in any template or call to action', () => {
+    const hostile = (value: unknown): unknown => {
+      if (Array.isArray(value)) return value.map(hostile)
+      if (value === null || typeof value !== 'object') return value
+      return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, key === 'href' ? 'javascript:alert(1)' : hostile(child)]))
+    }
+    const faces = resolveSections(normalizeSections(getDefaultSiteContent('en').sections, 'en'), getDefaultVisualContent())
+    for (const face of faces) {
+      const html = renderToStaticMarkup(<StageComposition face={hostile(face) as typeof face} counter="01 / 06" onOpenDetail={() => {}} />)
+      expect(html, face.composition.template).not.toContain('javascript:')
+    }
+  })
 })

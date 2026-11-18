@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { Composition, TemplateId } from '@/kernel/compositions'
+import { safeHref } from '@/kernel/links'
 import type { FaceCta } from '@/kernel/siteContent'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import { RichText } from '@/features/content/RichText'
@@ -74,10 +75,11 @@ export function Cta({ cta, primary, icon, onOpenDetail }: { cta?: FaceCta; prima
       <ChevronRight aria-hidden size={16} strokeWidth={1.8} />
     </>
   )
-  if (cta.href) {
-    const external = /^https?:/.test(cta.href)
+  const href = safeHref(cta.href)
+  if (href) {
+    const external = /^https:/.test(href)
     return (
-      <a className={className} href={cta.href} target={external ? '_blank' : undefined} rel="noreferrer">
+      <a className={className} href={href} target={external ? '_blank' : undefined} rel="noreferrer">
         {inner}
       </a>
     )
@@ -102,9 +104,10 @@ export function FaceActions({ face, stack, onOpenDetail }: { face: ResolvedFace;
 
 // A link a template holds (a featured case, a proof, a document): an anchor
 // when it has a target, plain otherwise.
-export function MaybeLink({ href, className, children }: { href?: string; className: string; children: ReactNode }) {
+export function MaybeLink({ href: target, className, children }: { href?: string; className: string; children: ReactNode }) {
+  const href = safeHref(target)
   if (!href) return <div className={className}>{children}</div>
-  const external = /^https?:/.test(href)
+  const external = /^https:/.test(href)
   return (
     <a className={cx(className, 'focus-ring')} href={href} target={external ? '_blank' : undefined} rel="noreferrer">
       {children}

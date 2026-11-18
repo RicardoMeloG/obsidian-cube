@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowUpRight, ChevronRight } from 'lucide-react'
 import { RichText } from '@/features/content/RichText'
+import { safeHref } from '@/kernel/links'
 import { cx } from '@/ui/cx'
 import { Chips, FaceActions, Heading, SectionLabel } from '../blocks'
 import { rise } from '../motion'
@@ -80,14 +81,21 @@ export function Catalog({ composition, face, counter, onOpenDetail }: TemplatePr
         <Chips items={item.chips} />
         {item.links && item.links.length > 0 && (
           <ul className="ca-links">
-            {item.links.map((link) => (
-              <li key={link.href}>
-                <a className="focus-ring" href={link.href} target={/^https?:/.test(link.href) ? '_blank' : undefined} rel="noreferrer">
-                  {link.label}
-                  <ArrowUpRight aria-hidden size={15} strokeWidth={1.7} />
-                </a>
-              </li>
-            ))}
+            {item.links.map((link) => {
+              const href = safeHref(link.href)
+              return (
+                <li key={link.href}>
+                  {href ? (
+                    <a className="focus-ring" href={href} target={/^https:/.test(href) ? '_blank' : undefined} rel="noreferrer">
+                      {link.label}
+                      <ArrowUpRight aria-hidden size={15} strokeWidth={1.7} />
+                    </a>
+                  ) : (
+                    <span>{link.label}</span>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </article>

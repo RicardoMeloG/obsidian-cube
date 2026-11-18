@@ -11,6 +11,9 @@ import type { Composition, TemplateId } from './compositions'
 import { normalizeSections, SiteContentSchema } from './siteContent'
 import type { SiteContent } from './siteContent'
 import budgets from './layoutBudgets.json'
+import { isAllowedHref } from './links'
+
+export { isAllowedHref }
 
 // Longest text, in characters, each field of a face's heading may hold, and
 // the name, role and keywords of the top bar, shown on every face (audit-3
@@ -57,11 +60,6 @@ const PLACEHOLDERS = ['your-handle', 'your-project', 'Portfolio Owner']
 // The example labels its made-up data; owner content shows real data or leaves
 // the block out (the map and the images are optional, 2026-10-16).
 const ILLUSTRATIVE = /illustrative data|datos ilustrativos/i
-
-// Allowed link targets: the web over HTTPS, e-mail, or a path on this site.
-export function isAllowedHref(href: string): boolean {
-  return /^https:\/\/[^\s/]+\.[^\s]+$/i.test(href) || /^mailto:[^\s@]+@[^\s@]+$/i.test(href) || /^\/(?!\/)/.test(href) || /^#/.test(href)
-}
 
 // Rich text fields carry inline markup that takes no room on screen: count
 // what the visitor reads.

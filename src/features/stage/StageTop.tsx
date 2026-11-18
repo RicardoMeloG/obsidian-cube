@@ -1,4 +1,5 @@
 import { Expand, Rotate3d, X } from 'lucide-react'
+import { safeHref } from '@/kernel/links'
 import type { SiteContent, SiteLocale } from '@/kernel/siteContent'
 import type { InterfaceCopy } from '@/features/content/copy'
 import { SegmentedControl } from '@/ui/SegmentedControl'
@@ -21,7 +22,8 @@ type StageTopProps = {
 // forward, and the ways to reach the owner (CONTACT and the profiles in
 // `identity.links`, spec 011, AD-02).
 export function StageTop({ identity, copy, locale, localeOptions, onLocaleChange, explore, onExplore, onContemplate, onContact }: StageTopProps) {
-  const links = identity.links ?? {}
+  // Profiles that are not plain https links are left out (dp-06).
+  const links = { github: safeHref(identity.links?.github), linkedin: safeHref(identity.links?.linkedin) }
   return (
     <header className="stage-top">
       <div className="stage-identity">
