@@ -117,10 +117,10 @@ subscribing.
    for `PriceClass_100`, which a plan does not support (D-8).
 2. **IP rate limiting** in that web ACL (console → the web ACL → rules): block a
    client above 300 requests in 5 minutes. A first visit loads about 40 files.
-   `npm run check:live` run twice in a row can trip it from the owner's own IP;
-   the block shows as the home page with `X-Cache: Error from cloudfront` on
-   every file (the 403 error response maps to `/index.html`) and lifts within
-   a few minutes.
+   `npm run check:live` run twice in a row could trip it from the owner's own
+   IP: every file answers 403 and the block lifts within a few minutes. The
+   script now waits five minutes between live runs and stops with a clear
+   message at the first sign of the block (dt-01, `docs/live-use-cases.md`).
    The console created the web ACL with three AWS managed rule groups in
    *Count*. Since 2026-11-14 they block (owner's decision, after a sample of
    the traffic showed only scanners probing `/.env`, `/.git` and WordPress):
