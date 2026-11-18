@@ -635,7 +635,19 @@ async function checkBehaviour(noWebglBrowser) {
     // not shown. The way back and Esc bring everything back.
     await page.click('.stage-explore')
     await page.waitForSelector('.stage[data-explore]', { timeout: 5000 })
-    await page.waitForTimeout(700)
+    // Wait for the transitions to end rather than a fixed time: on CI the
+    // software WebGL keeps the main thread busy and a 700 ms pause sometimes
+    // measured mid-fade (dt-23). The checks below still report what is wrong.
+    await page
+      .waitForFunction(
+        () => {
+          const style = (selector) => getComputedStyle(document.querySelector(selector))
+          return style('.stage-content').visibility === 'hidden' && style('.stage-dock').visibility === 'hidden' && Number(style('.stage-explore').opacity) === 0
+        },
+        null,
+        { timeout: 10000 },
+      )
+      .catch(() => {})
     const opacity = (selector) => page.evaluate((s) => Number(getComputedStyle(document.querySelector(s)).opacity), selector)
     const exploring = await page.evaluate(() => {
       const hidden = (selector) => getComputedStyle(document.querySelector(selector)).visibility === 'hidden'
@@ -652,7 +664,13 @@ async function checkBehaviour(noWebglBrowser) {
     // From the next control, back to the way back with the keyboard: it shows.
     await page.keyboard.press('Tab')
     await page.keyboard.press('Shift+Tab')
-    await page.waitForTimeout(600)
+    await page
+      .waitForFunction(
+        () => document.activeElement?.classList.contains('stage-explore') && Number(getComputedStyle(document.activeElement).opacity) === 1,
+        null,
+        { timeout: 10000 },
+      )
+      .catch(() => {})
     const focused = await page.evaluate(() => document.activeElement?.classList.contains('stage-explore'))
     if (!focused || (await opacity('.stage-explore')) !== 1) fail('explore way-back-hidden-from-keyboard')
     await page.keyboard.press('Enter')
