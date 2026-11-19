@@ -18,6 +18,28 @@ export const POINTS_VERTEX_CREST_Z = /* glsl */ `
   }
 `
 
+// The same points, displaced on the GPU (plexusGpu.ts): the geometry holds the
+// flat grid and `displacementGlsl` defines plexusDisplacement(vec2).
+export function pointsVertexCrestDisplaced(displacementGlsl: string): string {
+  return /* glsl */ `
+  uniform float uPixelRatio;
+  uniform float uPointSizeFactor;
+  uniform float uCrestLow;
+  uniform float uCrestHigh;
+  varying float vDepth;
+  varying float vHeight;
+  ${displacementGlsl}
+  void main() {
+    vHeight = plexusDisplacement(position.xy);
+    vec4 mvPosition = modelViewMatrix * vec4(position.xy, vHeight, 1.0);
+    vDepth = -mvPosition.z;
+    float crestBoost = smoothstep(uCrestLow, uCrestHigh, vHeight);
+    gl_Position = projectionMatrix * mvPosition;
+    gl_PointSize = (uPointSizeFactor / vDepth) * uPixelRatio * (0.6 + crestBoost * 0.9);
+  }
+`
+}
+
 export const POINTS_FRAGMENT_CREST = /* glsl */ `
   uniform vec3 uColor;
   uniform sampler2D uMap;
