@@ -17,6 +17,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { auditModels, changedPaths, classify, codeDiff, diffHash, git, pushBase } from './lib/push-gate.mjs'
 import { fitsOnGpu, gpuMemory, gpuProcesses, modelSizeMb } from './lib/gpu-guard.mjs'
+import { CUT_MARK, diffChunks } from './lib/diff-chunks.mjs'
 
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback
 const remote = option('remote', 'origin')
@@ -34,45 +35,8 @@ const diff = codeDiff(base, head, code)
 const hash = diffHash(diff)
 
 // The diff goes in pieces small enough for both models to stay whole on the
-// GPU (gemma4:31b fits with an 8192 context): split by file, and a large file
-// by hunk, each piece keeping its file header.
-const CHUNK = 9000
-function chunks(text) {
-  const pieces = []
-  for (const file of text.split(/(?=^diff --git )/m).filter(Boolean)) {
-    if (file.length <= CHUNK) {
-      pieces.push(file)
-      continue
-    }
-    const [header, ...hunks] = file.split(/(?=^@@ )/m)
-    let piece = header
-    for (const hunk of hunks) {
-      if (piece.length + hunk.length > CHUNK && piece !== header) {
-        pieces.push(piece)
-        piece = header
-      }
-      // A single hunk over the limit is cut to fit beside its header, so no
-      // piece overflows the context.
-      const room = Math.max(CHUNK - header.length, 1000)
-      for (let at = 0; at < hunk.length; at += room) {
-        if (at > 0) {
-          pieces.push(piece)
-          piece = header
-        }
-        piece += hunk.slice(at, at + room)
-      }
-    }
-    pieces.push(piece)
-  }
-  // Pack small files together.
-  const packed = []
-  for (const piece of pieces) {
-    if (packed.length && packed.at(-1).length + piece.length <= CHUNK) packed[packed.length - 1] += piece
-    else packed.push(piece)
-  }
-  return packed
-}
-const pieces = chunks(diff)
+// GPU (gemma4:31b fits with an 8192 context): scripts/lib/diff-chunks.mjs.
+const pieces = diffChunks(diff)
 
 function section(text, start, end) {
   const from = text.indexOf(start)
@@ -99,6 +63,7 @@ Rules for your answer:
 - Quote the exact added line (starting with +) and give the file.
 - No style preferences, no hypothetical future features, nothing outside the diff.
 - If there is nothing, return an empty list.
+- The diff comes in parts: a part may start or end inside a hunk, and a line ending in "${CUT_MARK}" goes on in the next part. That is how the diff was cut for you, not a defect.
 Return ONLY JSON: {"findings":[{"file":"...","code":"exact quote","problem":"one sentence","severity":"high|medium|low"}]}
 
 RULES:
