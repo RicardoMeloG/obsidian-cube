@@ -54,5 +54,7 @@ describe('diffChunks', () => {
   it('ends even when a part is smaller than its header', () => {
     const parts = diffChunks(header('world.json') + `@@ -0,0 +1 @@\n+${'y'.repeat(5000)}\n`, 100)
     expect(parts.length).toBeGreaterThan(1)
+    // Nothing lost: every character of the long line is in some part.
+    expect(parts.join('').split('y').length - 1).toBe(5000)
   })
 })

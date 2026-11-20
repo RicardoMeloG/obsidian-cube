@@ -61,6 +61,8 @@ try {
   if (OUT === 'walkthrough') rmSync(OUT, { recursive: true, force: true })
   else if (existsSync(OUT) && readdirSync(OUT).length > 0) throw new Error('Custom review output must be empty; existing evidence is preserved')
   mkdirSync(OUT, { recursive: true })
+  // Read before the browser starts, so a changed address.ts leaves nothing running.
+  const ADMIN_BASE = process.argv.includes('--admin') ? adminBase() : null
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   for (const viewport of viewports) {
     const [width, height] = viewport.split('x').map(Number)
@@ -102,7 +104,7 @@ try {
   }
   if (process.argv.includes('--admin')) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
-    await page.goto(`${adminBase()}/`).catch((error) => errors.push(`admin: ${error.message}`))
+    await page.goto(`${ADMIN_BASE}/`).catch((error) => errors.push(`admin: ${error.message}`))
     await page.screenshot({ path: `${OUT}/admin-1440x900.png` })
   }
   await browser.close()

@@ -16,7 +16,7 @@ function splitFile(file, size) {
   // A file with no hunk (a binary patch, a long rename block) is cut by line
   // like a hunk, with no header, so none of it is lost.
   if (hunks.length === 0) [header, hunks] = ['', [header]]
-  const room = Math.max(size - header.length, 1000)
+  const room = Math.max(size - header.length, Math.min(size, 1000))
   const pieces = []
   let piece = header
   const flush = () => {

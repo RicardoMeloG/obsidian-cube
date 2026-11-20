@@ -228,6 +228,7 @@ export function VectorPlexusField({
 
   // R3F does not dispose objects passed as props: free each one when it is
   // replaced or the field unmounts (three.js uploads it again if reused).
+  useEffect(() => () => particleGeometry.dispose(), [particleGeometry])
   useEffect(() => () => pairGeometry?.dispose(), [pairGeometry])
   useEffect(() => () => lineGeometry?.dispose(), [lineGeometry])
   useEffect(() => () => pointMaterial.dispose(), [pointMaterial])
