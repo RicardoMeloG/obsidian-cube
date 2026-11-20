@@ -77,7 +77,7 @@ export function Cta({ cta, primary, icon, onOpenDetail }: { cta?: FaceCta; prima
   )
   const href = safeHref(cta.href)
   if (href) {
-    const external = /^https:/.test(href)
+    const external = /^https:/i.test(href)
     return (
       <a className={className} href={href} target={external ? '_blank' : undefined} rel="noreferrer">
         {inner}
@@ -107,7 +107,7 @@ export function FaceActions({ face, stack, onOpenDetail }: { face: ResolvedFace;
 export function MaybeLink({ href: target, className, children }: { href?: string; className: string; children: ReactNode }) {
   const href = safeHref(target)
   if (!href) return <div className={className}>{children}</div>
-  const external = /^https:/.test(href)
+  const external = /^https:/i.test(href)
   return (
     <a className={cx(className, 'focus-ring')} href={href} target={external ? '_blank' : undefined} rel="noreferrer">
       {children}

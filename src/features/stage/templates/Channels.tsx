@@ -34,7 +34,7 @@ export function Channels({ composition, face, counter, onOpenDetail }: TemplateP
           return href ? [{ channel, href, index }] : []
         }).map(({ channel, href, index }) => (
           <li key={index}>
-            <a className="focus-ring" href={href} target={/^https:/.test(href) ? '_blank' : undefined} rel="noreferrer">
+            <a className="focus-ring" href={href} target={/^https:/i.test(href) ? '_blank' : undefined} rel="noreferrer">
               <span className="st-tile">{CHANNEL_ICONS[channel.kind]}</span>
               <span>
                 <strong>{channel.label}</strong>

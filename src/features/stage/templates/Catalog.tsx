@@ -86,7 +86,7 @@ export function Catalog({ composition, face, counter, onOpenDetail }: TemplatePr
               return (
                 <li key={link.href}>
                   {href ? (
-                    <a className="focus-ring" href={href} target={/^https:/.test(href) ? '_blank' : undefined} rel="noreferrer">
+                    <a className="focus-ring" href={href} target={/^https:/i.test(href) ? '_blank' : undefined} rel="noreferrer">
                       {link.label}
                       <ArrowUpRight aria-hidden size={15} strokeWidth={1.7} />
                     </a>

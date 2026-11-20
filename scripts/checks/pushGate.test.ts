@@ -77,10 +77,11 @@ describe('secret values', () => {
 describe('commit identities (dt-24)', () => {
   it('lets only the GitHub noreply address sign a public commit', () => {
     const noreply = 'Ricardo Melo <49494594+RicardoMeloG@users.noreply.github.com>'
-    expect(privateIdentities([noreply, 'Ada <ada@users.noreply.github.com>'])).toEqual([])
-    expect(privateIdentities([noreply, 'Ada <ada@gmail.com>', 'Ada <ada@users.noreply.github.com.evil.example>'])).toEqual([
+    expect(privateIdentities([noreply, 'Ada <ada@users.noreply.github.com>', 'GitHub <noreply@github.com>'])).toEqual([])
+    expect(privateIdentities([noreply, 'Ada <ada@gmail.com>', 'Ada <ada@users.noreply.github.com.evil.example>', 'Ada <noreply@github.com>'])).toEqual([
       'Ada <ada@gmail.com>',
       'Ada <ada@users.noreply.github.com.evil.example>',
+      'Ada <noreply@github.com>',
     ])
   })
 })

@@ -130,10 +130,12 @@ export function identities(base, head) {
 
 // A public repository shows every commit's author and committer. Only GitHub's
 // noreply address may sign them (dt-24: 41 commits went out with a personal
-// address because the new clone had no identity of its own).
+// address because the new clone had no identity of its own). GitHub itself
+// commits a merge or an edit made on the web as `GitHub <noreply@github.com>`.
 const PUBLIC_EMAIL = /<[^<>@\s]+@users\.noreply\.github\.com>$/i
+const GITHUB_WEB = 'GitHub <noreply@github.com>'
 export function privateIdentities(list) {
-  return list.filter((identity) => !PUBLIC_EMAIL.test(identity))
+  return list.filter((identity) => identity !== GITHUB_WEB && !PUBLIC_EMAIL.test(identity))
 }
 
 // Ignore rules apply to the path even when the file was added with --force.

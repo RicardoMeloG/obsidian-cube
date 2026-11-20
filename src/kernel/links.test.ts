@@ -10,7 +10,7 @@ describe('allowed link targets (dp-06)', () => {
   })
 
   it('refuses script, data, plain http, protocol-relative and bare hosts', () => {
-    for (const href of ['javascript:alert(1)', 'JavaScript:alert(1)', ' javascript:alert(1)', 'data:text/html,x', 'vbscript:x', 'http://example.com', '//evil.example', 'example.com', 'https://', 'mailto:nobody']) {
+    for (const href of ['javascript:alert(1)', 'JavaScript:alert(1)', ' javascript:alert(1)', 'data:text/html,x', 'vbscript:x', 'http://example.com', '//evil.example', 'example.com', 'https://', 'mailto:nobody', '/\\evil.example', '/\t/evil.example', '/\n/evil.example', '/es\\..\\x']) {
       expect(safeHref(href)).toBeUndefined()
     }
   })

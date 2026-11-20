@@ -5,8 +5,10 @@
 // site itself checks every content link it turns into an anchor: anything
 // else (javascript:, data:, http:, a protocol-relative //host) is shown as
 // plain text, not as a link. The CSP and React 19 are the layers behind this.
+// A site path may hold no backslash and no white space: browsers read
+// `/\host` and `/<tab>/host` as the protocol-relative `//host`.
 export function isAllowedHref(href: string): boolean {
-  return /^https:\/\/[^\s/]+\.[^\s]+$/i.test(href) || /^mailto:[^\s@]+@[^\s@]+$/i.test(href) || /^\/(?!\/)/.test(href) || /^#/.test(href)
+  return /^https:\/\/[^\s/]+\.[^\s]+$/i.test(href) || /^mailto:[^\s@]+@[^\s@]+$/i.test(href) || /^\/(?![/\\])[^\\\s]*$/.test(href) || /^#/.test(href)
 }
 
 /** The link target when it is allowed, otherwise undefined: render it as text. */

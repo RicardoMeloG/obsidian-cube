@@ -26,14 +26,14 @@ const LIVE = BASE.startsWith('https://')
 const FORCE = process.argv.includes('--force')
 // The WAF's window, and where the last live run is stamped (outside the repo).
 const WAF_WINDOW_MS = 5 * 60 * 1000
-const STAMP = join(tmpdir(), 'obsidian-cube-check-live', `${new URL(BASE).host}.last-run`)
+const STAMP = join(tmpdir(), 'obsidian-cube-check-live', `${new URL(BASE).hostname}.last-run`)
 
 // The WAF refuses the client: the home page, which is public, answers 403, or
 // CloudFront answers it with its own error instead of the site.
 async function wafBlocked() {
   try {
     const response = await fetch(`${BASE}/`)
-    return response.status === 403 || /Error from cloudfront/i.test(response.headers.get('x-cache') ?? '')
+    return response.status === 403 || response.status === 429 || /Error from cloudfront/i.test(response.headers.get('x-cache') ?? '')
   } catch {
     return false
   }
@@ -56,7 +56,10 @@ if (LIVE) {
   }
   if (await wafBlocked()) stopForWaf('before starting')
   mkdirSync(join(tmpdir(), 'obsidian-cube-check-live'), { recursive: true })
+  // Stamped again on the way out, however the run ends: the WAF's window
+  // slides, so the next run waits five minutes from this run's last request.
   writeFileSync(STAMP, String(Date.now()))
+  process.on('exit', () => writeFileSync(STAMP, String(Date.now())))
 }
 const NO_WEBGL = ['--disable-webgl', '--disable-webgl2']
 const SOFTWARE_WEBGL = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
