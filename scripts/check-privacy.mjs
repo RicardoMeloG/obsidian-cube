@@ -16,10 +16,13 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g
-// Reserved example domains and their subdomains (RFC 2606), GitHub's noreply
-// addresses (a user's, and GitHub's own for web merges) and Claude's co-author.
+// Domains reserved for examples and tests (RFC 2606): example.com, .org and
+// .net with their subdomains, and anything under .test, .example, .invalid or
+// .localhost. Then GitHub's noreply addresses (a user's, and GitHub's own for
+// web merges) and Claude's co-author.
 const ALLOWED_EMAIL = [
-  /@([a-z0-9-]+\.)*example\.(com|org|net|local)$/i,
+  /@([a-z0-9-]+\.)*example\.(com|org|net)$/i,
+  /@([a-z0-9-]+\.)+(test|example|invalid|localhost)$/i,
   /@users\.noreply\.github\.com$/i,
   /^noreply@github\.com$/i,
   /^noreply@anthropic\.com$/i,
@@ -83,4 +86,10 @@ const scope = `${files.length} files${process.argv.includes('--history') ? ' and
 const source = values.length > 0 ? `${values.length} private values` : 'no private values configured'
 for (const problem of problems) console.log(problem)
 console.log(`Privacy check: ${problems.length} findings in ${scope} (${source}).`)
-process.exitCode = problems.length > 0 ? 1 : 0
+// On CI an empty list means the PRIVACY_DENYLIST secret did not arrive: from
+// 12-11 to 19-11 CI ran without it and checked only e-mails (dt-26). A pull
+// request from a fork never gets secrets, so there it is only a warning.
+const listMissing = process.env.GITHUB_ACTIONS === 'true' && values.length === 0
+const fork = process.env.GITHUB_EVENT_NAME === 'pull_request' && process.env.GITHUB_HEAD_REPO !== process.env.GITHUB_REPOSITORY
+if (listMissing) console.log(`::${fork ? 'warning' : 'error'}::check:privacy ran without the PRIVACY_DENYLIST secret; only e-mails were checked.`)
+process.exitCode = problems.length > 0 || (listMissing && !fork) ? 1 : 0

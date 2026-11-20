@@ -52,6 +52,8 @@ jobs:
         env:
           # Owner's private values, one per line; never committed.
           PRIVACY_DENYLIST: ${{ secrets.PRIVACY_DENYLIST }}
+          # A pull request from a fork gets no secrets: only a warning there.
+          GITHUB_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
       - run: npm run check:docs
       - run: npm run check:tokens
 

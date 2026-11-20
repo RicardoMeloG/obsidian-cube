@@ -40,7 +40,7 @@ async function wafBlocked() {
 }
 
 function stopForWaf(when) {
-  console.log(`\nSTOPPED ${when}: the WAF is refusing this IP (the home page answers 403).`)
+  console.log(`\nSTOPPED ${when}: the WAF is refusing this IP (the home page answers 403 or 429).`)
   console.log('This is the rate limit of 300 requests in 5 minutes, not a failure of the site: it lifts by itself in a few minutes.')
   console.log('Wait at least 5 minutes before running check:live again.')
   process.exit(2)
@@ -58,8 +58,18 @@ if (LIVE) {
   mkdirSync(join(tmpdir(), 'obsidian-cube-check-live'), { recursive: true })
   // Stamped again on the way out, however the run ends: the WAF's window
   // slides, so the next run waits five minutes from this run's last request.
-  writeFileSync(STAMP, String(Date.now()))
-  process.on('exit', () => writeFileSync(STAMP, String(Date.now())))
+  // A failed write only loses the wait, so it never replaces the exit code.
+  const stamp = () => {
+    try {
+      writeFileSync(STAMP, String(Date.now()))
+    } catch (error) {
+      console.warn(`Could not stamp ${STAMP}: ${error.message}`)
+    }
+  }
+  stamp()
+  process.on('exit', stamp)
+  // Ctrl+C or a kill skips 'exit' unless the process leaves through it.
+  for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exit(130))
 }
 const NO_WEBGL = ['--disable-webgl', '--disable-webgl2']
 const SOFTWARE_WEBGL = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
@@ -269,11 +279,17 @@ try {
     await idle(page, 'systems')
     await page.click('.stage-explore')
     await page.waitForSelector('.stage[data-explore]', { timeout: 5000 })
-    await page.waitForTimeout(700)
+    // Wait for the fade to end, not a fixed time: software WebGL keeps the
+    // main thread busy and 700 ms sometimes measured mid-fade (dt-23).
+    const contentHidden = (want) =>
+      page
+        .waitForFunction((hidden) => (getComputedStyle(document.querySelector('.stage-content')).visibility === 'hidden') === hidden, want, { timeout: 10000 })
+        .catch(() => {})
+    await contentHidden(true)
     expect(problems, !(await visible(page, '.stage-content')), 'content still shows in cube mode')
     await page.keyboard.press('Escape')
     await page.waitForSelector('.stage:not([data-explore])', { timeout: 5000 }).catch(() => problems.push('Esc did not leave cube mode'))
-    await page.waitForTimeout(700)
+    await contentHidden(false)
     expect(problems, await visible(page, '.stage-content'), 'content did not come back')
     await close()
   })
