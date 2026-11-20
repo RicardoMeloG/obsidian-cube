@@ -12,7 +12,7 @@ import { MatchLogReceiver } from './match-log-receiver'
 // built site under the same policy (spec 010, 5.13). CloudFront sets them with
 // a viewer-response function, because the flat-rate Free plan does not allow
 // custom response headers policies (spec 014, D-7).
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- a CommonJS module shared with edgeHeaders.test.ts; a CommonJS package loads it with require
 const { headersFunctionCode } = require('../edge/security-headers.cjs') as { headersFunctionCode: (headers: unknown) => string }
 const securityHeaders = JSON.parse(readFileSync(join(__dirname, '..', 'security-headers.json'), 'utf8')) as unknown
 
