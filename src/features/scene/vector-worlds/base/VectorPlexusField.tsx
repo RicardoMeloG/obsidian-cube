@@ -1,8 +1,10 @@
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, BufferAttribute, BufferGeometry } from 'three'
 import type { Group, LineSegments, Points } from 'three'
 import { createCrestPointMaterial, createVectorLineMaterial } from './materials'
+import { buildPlexusPairs, createPlexusLineMaterial, createPlexusPairGeometry } from './plexusGpu'
+import type { PlexusGpuDisplacement } from './plexusGpu'
 import { createDotTexture, createHorizonGlowTexture, makeSeededRandom } from './textures'
 import { VECTOR_WORLD_THEME } from './theme'
 
@@ -43,6 +45,11 @@ export type VectorPlexusFieldProps = {
   // For an animated wave: sum of sin octaves over time.
   // For a static terrain: heightmap sampled at (x, y), time ignored.
   displacement: PlexusDisplacementFn
+
+  // The same surface for the shaders (plexusGpu.ts). An animated field that
+  // has it is displaced and linked on the GPU; without it, or when static,
+  // the CPU computes it.
+  gpuDisplacement?: PlexusGpuDisplacement
 
   // Grid layout — defaults match the wave. Override for larger/denser fields.
   cols?: number
@@ -88,6 +95,7 @@ export type VectorPlexusFieldProps = {
 
 export function VectorPlexusField({
   displacement,
+  gpuDisplacement,
   cols = PLEXUS_DEFAULTS.cols,
   rows = PLEXUS_DEFAULTS.rows,
   width = PLEXUS_DEFAULTS.width,
@@ -118,6 +126,7 @@ export function VectorPlexusField({
   const lineDistance = cellSize * lineDistanceRatio
   const lineDistanceSq = lineDistance * lineDistance
   const invLineDistance = 1 / lineDistance
+  const gpu = animated ? gpuDisplacement : undefined
 
   // ── Stable jittered base grid (never changes after mount) ─────────────────
   const baseXY = useMemo(() => {
@@ -192,22 +201,39 @@ export function VectorPlexusField({
     return geo
   }, [baseXY, particleCount])
 
+  // GPU: every candidate link, uploaded once. CPU: room for the links found
+  // each update.
+  const pairGeometry = useMemo(
+    () => (gpu ? createPlexusPairGeometry(buildPlexusPairs({ baseXY, cols, rows, neighborRadiusCells, lineDistance })) : null),
+    [gpu, baseXY, cols, rows, neighborRadiusCells, lineDistance],
+  )
+
   const lineGeometry = useMemo(() => {
+    if (gpu) return null
     const geo = new BufferGeometry()
     geo.setAttribute('position', new BufferAttribute(new Float32Array(maxLineSegments * 2 * 3), 3))
     geo.setAttribute('color',    new BufferAttribute(new Float32Array(maxLineSegments * 2 * 3), 3))
     geo.setDrawRange(0, 0)
     return geo
-  }, [maxLineSegments])
+  }, [gpu, maxLineSegments])
 
   // ── Materials ──────────────────────────────────────────────────────────────
   const dotTexture          = useMemo(() => createDotTexture(), [])
   const horizonGlowTexture  = useMemo(() => createHorizonGlowTexture(), [])
-  const pointMaterial       = useMemo(() => createCrestPointMaterial({ dotTexture }), [dotTexture])
+  const pointMaterial       = useMemo(() => createCrestPointMaterial({ dotTexture, displacement: gpu }), [dotTexture, gpu])
   const lineMaterial        = useMemo(
-    () => createVectorLineMaterial({ fog: true, depthTest: true, depthWrite: false }),
-    [],
+    () => (gpu ? createPlexusLineMaterial(gpu, lineDistance) : createVectorLineMaterial({ fog: true, depthTest: true, depthWrite: false })),
+    [gpu, lineDistance],
   )
+
+  // R3F does not dispose objects passed as props: free each one when it is
+  // replaced or the field unmounts (three.js uploads it again if reused).
+  useEffect(() => () => particleGeometry.dispose(), [particleGeometry])
+  useEffect(() => () => pairGeometry?.dispose(), [pairGeometry])
+  useEffect(() => () => lineGeometry?.dispose(), [lineGeometry])
+  useEffect(() => () => pointMaterial.dispose(), [pointMaterial])
+  useEffect(() => () => lineMaterial.dispose(), [lineMaterial])
+  useEffect(() => () => { dotTexture?.dispose(); horizonGlowTexture?.dispose() }, [dotTexture, horizonGlowTexture])
 
   // ── Refs ───────────────────────────────────────────────────────────────────
   const groupRef  = useRef<Group>(null)
@@ -218,12 +244,30 @@ export function VectorPlexusField({
   const staticInitialized = useRef(false)
   const frameParity = useRef(0)
 
+  // Parallax — subtle group tilt following pointer.
+  function applyParallax(pointer: { x: number; y: number }) {
+    if (!parallax) return
+    const group = groupRef.current
+    if (!group) return
+    const px = pointer.x * parallaxXFactor
+    const py = pointer.y * parallaxZFactor
+    group.rotation.z  = px
+    group.position.x  = position[0] + px * 0.6
+    group.position.z  = position[2] - py * 0.4
+  }
+
   // ── Frame loop ─────────────────────────────────────────────────────────────
   useFrame(({ clock, pointer }) => {
     if (paused) return
     const pointsObj = pointsRef.current
     const linesObj  = linesRef.current
     if (!pointsObj || !linesObj) return
+
+    if (gpu) {
+      gpu.update(clock.getElapsedTime())
+      applyParallax(pointer)
+      return
+    }
 
     // A static field is computed once: points and links do not change after
     // the first frame. An animated one moves slowly, so it is recomputed every
@@ -327,18 +371,9 @@ export function VectorPlexusField({
     linePositionAttr.needsUpdate = true
     lineColorAttr.needsUpdate    = true
 
-    // Parallax — subtle group tilt following pointer.
-    if (parallax) {
-      const group = groupRef.current
-      if (group) {
-        const px = pointer.x * parallaxXFactor
-        const py = pointer.y * parallaxZFactor
-        group.rotation.z  = px
-        group.position.x  = position[0] + px * 0.6
-        group.position.z  = position[2] - py * 0.4
-      }
-    }
+    applyParallax(pointer)
   })
+
 
   return (
     <group ref={groupRef} position={position} rotation={rotation}>
@@ -355,8 +390,10 @@ export function VectorPlexusField({
           />
         </mesh>
       )}
-      <points    ref={pointsRef} geometry={particleGeometry} material={pointMaterial} />
-      <lineSegments ref={linesRef}  geometry={lineGeometry}    material={lineMaterial}  />
+      {/* On the GPU the geometry is flat, so its bounds are not the field's:
+          never cull it (the field fills the background anyway). */}
+      <points    ref={pointsRef} geometry={particleGeometry} material={pointMaterial} frustumCulled={!gpu} />
+      <lineSegments ref={linesRef}  geometry={pairGeometry ?? lineGeometry ?? undefined} material={lineMaterial} frustumCulled={!gpu} />
     </group>
   )
 }

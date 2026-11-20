@@ -5,7 +5,7 @@
 //
 //   npm run build && node scripts/walkthrough.mjs
 //   node scripts/walkthrough.mjs --viewport=1440x900 --lang=es
-//   node scripts/walkthrough.mjs --admin     also the admin page (server on 5182)
+//   node scripts/walkthrough.mjs --admin     also the admin page (npm run server first)
 //   node scripts/walkthrough.mjs --content=stress   every slot at its budget
 //   node scripts/walkthrough.mjs --content=example  the committed example (safe to share)
 //   --out-dir=<private build> --output=<empty private directory> photographs
@@ -20,6 +20,15 @@ import { chromium } from 'playwright'
 import { buildStressContent } from './checks/stressContent.mjs'
 
 const PORT = 4181
+// The admin's own address, read from its single source rather than copied
+// (dt-05, D-4). server/ is CommonJS for ts-node, so it is read, not imported.
+function adminBase() {
+  const source = readFileSync(fileURLToPath(new URL('../server/address.ts', import.meta.url)), 'utf8')
+  const host = /HOST = ['"]([^'"]+)['"]/.exec(source)?.[1]
+  const port = /PORT = (\d+)/.exec(source)?.[1]
+  if (!host || !port) throw new Error('server/address.ts no longer declares HOST and PORT as literals: update walkthrough.mjs')
+  return `http://${host}:${port}`
+}
 const BASE = `http://127.0.0.1:${PORT}`
 const OUT = process.argv.find(arg => arg.startsWith('--output='))?.slice('--output='.length) ?? 'walkthrough'
 const outputPath = resolve(OUT)
@@ -52,6 +61,8 @@ try {
   if (OUT === 'walkthrough') rmSync(OUT, { recursive: true, force: true })
   else if (existsSync(OUT) && readdirSync(OUT).length > 0) throw new Error('Custom review output must be empty; existing evidence is preserved')
   mkdirSync(OUT, { recursive: true })
+  // Read before the browser starts, so a changed address.ts leaves nothing running.
+  const ADMIN_BASE = process.argv.includes('--admin') ? adminBase() : null
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
   for (const viewport of viewports) {
     const [width, height] = viewport.split('x').map(Number)
@@ -93,7 +104,7 @@ try {
   }
   if (process.argv.includes('--admin')) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
-    await page.goto('http://127.0.0.1:5182/').catch((error) => errors.push(`admin: ${error.message}`))
+    await page.goto(`${ADMIN_BASE}/`).catch((error) => errors.push(`admin: ${error.message}`))
     await page.screenshot({ path: `${OUT}/admin-1440x900.png` })
   }
   await browser.close()

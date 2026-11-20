@@ -8,7 +8,9 @@ import {
   POINTS_FRAGMENT_DEPTH,
   POINTS_VERTEX_CREST_Z,
   POINTS_VERTEX_HEIGHT_Y,
+  pointsVertexCrestDisplaced,
 } from './shaders'
+import type { PlexusGpuDisplacement } from './plexusGpu'
 
 function readPixelRatio() {
   if (typeof window === 'undefined') return 1
@@ -25,6 +27,8 @@ type CrestPointMaterialOptions = {
   depthFar?: number
   crestLow?: number
   crestHigh?: number
+  // Displaced on the GPU (plexusGpu.ts); the geometry then holds the flat grid.
+  displacement?: PlexusGpuDisplacement
 }
 
 export function createCrestPointMaterial({
@@ -37,9 +41,10 @@ export function createCrestPointMaterial({
   depthFar = VECTOR_WORLD_THEME.depthFadeFar,
   crestLow = VECTOR_WORLD_THEME.crestBoostLow,
   crestHigh = VECTOR_WORLD_THEME.crestBoostHigh,
+  displacement,
 }: CrestPointMaterialOptions) {
   return new ShaderMaterial({
-    vertexShader: POINTS_VERTEX_CREST_Z,
+    vertexShader: displacement ? pointsVertexCrestDisplaced(displacement.glsl) : POINTS_VERTEX_CREST_Z,
     fragmentShader: POINTS_FRAGMENT_CREST,
     transparent: true,
     depthWrite: false,
@@ -55,6 +60,8 @@ export function createCrestPointMaterial({
       uDepthFar: { value: depthFar },
       uCrestLow: { value: crestLow },
       uCrestHigh: { value: crestHigh },
+      // Shared objects: the field's per-frame update reaches every material.
+      ...displacement?.uniforms,
     },
   })
 }

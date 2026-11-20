@@ -163,6 +163,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), seoPages(), machineLayer(), preloadLatinFont()],
   // `@/` is src/: imports across top-level modules use it (ADR 006).
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  // iOS Safari before 16.4 ignores range media queries (width <= 720px), so
+  // every width refinement was lost on those phones (pending item dt-33).
+  // Targeting Safari 16.0 makes the CSS minifier write min-/max-width.
+  build: { cssTarget: ['chrome111', 'edge111', 'firefox114', 'safari16'] },
   // A port of its own, so it does not clash with other projects on 5173;
   // strictPort fails instead of moving silently to another port.
   server: {

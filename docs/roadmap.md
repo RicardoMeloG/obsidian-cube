@@ -60,7 +60,7 @@ It is bound to 127.0.0.1 and is never exposed, which is why it has no login rate
 
 - No backend tests beyond the units in `server/` (`pg-mem` is installed and unused) and no end-to-end test of the admin.
 - Performance measured on an integrated AMD GPU (88 fps at 1600×900, DPR 1.5, 2026-10-14), not on a phone.
-- Vite emits range media queries (`width <= 720px`), which iOS Safari 16.0–16.3 ignores.
+- iOS Safari 16.0–16.3: the build writes media queries as `min-`/`max-width` since 2026-11-19 (`build.cssTarget`); the `or` and `not` combinations of the layout modes have not been tried on a real device of that range.
 - Contrast of eyebrows and footer against the obsidian field is calculated, not measured; the name and the role are measured by `npm run check:layout`, over every world with `--worlds`.
 
 ## Security baseline
