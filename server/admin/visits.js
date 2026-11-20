@@ -144,7 +144,8 @@
 
   function render(container, data, w) {
     const hint = container.querySelector('.vz-hint');
-    hint.textContent = 'del ' + data.from + ' al ' + data.to + ' · ' + (data.source === 's3' ? 'CloudFront (S3)' : 'datos de ejemplo');
+    hint.textContent = 'del ' + data.from + ' al ' + data.to + ' · ' + (data.source === 's3' ? 'CloudFront (S3)' : 'datos de ejemplo') +
+      (data.skipped ? ' · ' + data.skipped + ' archivos de registro ilegibles omitidos' : '');
     const cc = data.countries.filter(c => c.key !== 'ZZ').length;
     const tiles = el('div', 'vz-tiles');
     [['Visitas', data.visits], ['Países', cc], ['Rastreadores', data.crawlers], ['Otras rutas', data.otherPaths]].forEach(function (pair) {

@@ -1,7 +1,7 @@
 // Counts human and crawler page views from CloudFront access logs.
 // Only the whitelisted keys are read; no IP or other PII is ever copied.
 
-import { readPagePath } from '../../src/kernel/sitePaths'
+import { pagePath, readPagePath } from '../../src/kernel/sitePaths'
 
 export type Agent = 'human' | 'crawler'
 export type PageView = { date: string; country: string; page: string; agent: Agent }
@@ -36,8 +36,11 @@ export function pagePathOf(stem: string): string | null {
   if (path.length > 1 && path.endsWith('/')) {
     path = path.slice(0, -1)
   }
-  if (readPagePath(path) !== null) return path
   if (MACHINE_PAGES.has(path)) return path
+  // Counted under the page's own path: `//security`, `/%2Fsecurity` and
+  // `/security//` name the same page and must not fill the list with variants.
+  const page = readPagePath(path)
+  if (page !== null) return page.locale === null ? '/' : pagePath({ locale: page.locale, face: page.face })
   return null
 }
 

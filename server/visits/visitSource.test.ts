@@ -163,6 +163,38 @@ describe('forEachS3Line', () => {
       '{"date":"2025-06-15","hits":7}',
       '{"date":"2025-06-15","hits":3}',
     ])
-    expect(count).toBe(2)
+    expect(count).toEqual({ read: 2, skipped: 0 })
+  })
+
+  it('skips an unreadable object and counts it, but throws when every object fails', async () => {
+    const since = new Date('2025-06-15T00:00:00Z')
+    const objects: S3Object[] = [
+      { key: 'logs/good', lastModified: new Date('2025-06-15T12:00:00Z') },
+      { key: 'logs/truncated.gz', lastModified: new Date('2025-06-15T13:00:00Z') },
+    ]
+    const bodies = new Map<string, Uint8Array>([
+      ['logs/good', Buffer.from('{"date":"2025-06-15"}\n')],
+      ['logs/truncated.gz', gzipSync(Buffer.from('{"date":"2025-06-15"}\n')).subarray(0, 12)],
+    ])
+    const collected: string[] = []
+    const count = await forEachS3Line(makeFakeReader(objects, bodies), 'logs/', since, (line) => collected.push(line))
+    expect(collected).toEqual(['{"date":"2025-06-15"}'])
+    expect(count).toEqual({ read: 1, skipped: 1 })
+
+    await expect(forEachS3Line(makeFakeReader(objects.slice(1), bodies), 'logs/', since, () => {})).rejects.toThrow()
+  })
+
+  it('stops at once on an error of the session', async () => {
+    const reader: S3Reader = {
+      async *list() {
+        yield { key: 'a', lastModified: new Date('2025-06-15T12:00:00Z') }
+        yield { key: 'b', lastModified: new Date('2025-06-15T12:00:00Z') }
+      },
+      async read(key: string) {
+        if (key === 'a') return Buffer.from('{"x":1}\n')
+        throw Object.assign(new Error('expired'), { name: 'ExpiredTokenException' })
+      },
+    }
+    await expect(forEachS3Line(reader, '', new Date('2025-06-15T00:00:00Z'), () => {})).rejects.toThrow('expired')
   })
 })

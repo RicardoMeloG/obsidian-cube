@@ -95,31 +95,63 @@ export type S3Reader = {
   read(key: string): Promise<Uint8Array>
 }
 
+// Read 8 objects at a time: CloudFront delivers many small objects, and one
+// at a time a 90-day view took minutes (audit of 2026-11-19).
+const READ_AT_ONCE = 8
+// An error that no other object will escape: stop and say so.
+const FATAL_ERROR = /Credential|Token|SSO|Expired|AccessDenied|NoSuchBucket/i
+
+export type S3ReadCount = { read: number; skipped: number }
+
+// One unreadable object (a truncated gzip, a failed GET) is skipped and
+// counted, so it does not hide the whole summary until it expires. Errors of
+// the session or the bucket, or every object failing, still throw.
 export async function forEachS3Line(
   reader: S3Reader,
   prefix: string,
   since: Date,
   onLine: (line: string) => void,
-): Promise<number> {
+): Promise<S3ReadCount> {
   const cutoff = new Date(since.getTime() - 86400000)
-  let objectsRead = 0
+  const count: S3ReadCount = { read: 0, skipped: 0 }
+  let firstError: unknown
 
-  for await (const obj of reader.list(prefix)) {
-    if (obj.lastModified < cutoff) continue
-    const bytes = await reader.read(obj.key)
+  const readLines = async (key: string): Promise<string[]> => {
+    const bytes = await reader.read(key)
     const data: Buffer =
       bytes[0] === 0x1f && bytes[1] === 0x8b
         ? gunzipSync(Buffer.from(bytes))
         : Buffer.from(bytes)
-    const text = data.toString('utf-8')
-    const lines = text.split(/\r?\n/).filter((l) => l.length > 0)
-    for (const line of lines) {
-      onLine(line)
-    }
-    objectsRead++
+    return data.toString('utf-8').split(/\r?\n/).filter((l) => l.length > 0)
   }
 
-  return objectsRead
+  const flush = async (keys: string[]) => {
+    const results = await Promise.allSettled(keys.map(readLines))
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        for (const line of result.value) onLine(line)
+        count.read++
+        continue
+      }
+      if (FATAL_ERROR.test((result.reason as Error)?.name ?? '')) throw result.reason
+      firstError ??= result.reason
+      count.skipped++
+    }
+  }
+
+  let batch: string[] = []
+  for await (const obj of reader.list(prefix)) {
+    if (obj.lastModified < cutoff) continue
+    batch.push(obj.key)
+    if (batch.length === READ_AT_ONCE) {
+      await flush(batch)
+      batch = []
+    }
+  }
+  await flush(batch)
+
+  if (count.read === 0 && count.skipped > 0) throw firstError
+  return count
 }
 
 export function createS3Reader(config: { bucket: string; profile: string; region: string }): S3Reader {

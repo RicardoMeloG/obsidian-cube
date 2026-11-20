@@ -2,14 +2,19 @@ import { BadRequestException, Injectable, Logger, ServiceUnavailableException } 
 import { summarize, createTally, type VisitSummary } from './visitLog'
 import { createS3Reader, fixtureLines, forEachS3Line, visitsConfig, VisitsConfigError } from './visitSource'
 
+type Summary = VisitSummary & { source: 'fixture' | 's3'; skipped?: number }
+
 // Counts only, in memory, five-minute cache (spec 013, D-4 and D-5).
 // No persistence: the admin is a local tool, not a reporting service.
 @Injectable()
 export class VisitsService {
   private readonly logger = new Logger(VisitsService.name)
-  private readonly cache = new Map<string, { at: number; value: VisitSummary & { source: 'fixture' | 's3' } }>()
+  private readonly cache = new Map<string, { at: number; value: Summary }>()
+  // A read already under way: a second tab or a quick click on 7, 30, 7 waits
+  // for it instead of scanning the bucket again.
+  private readonly inFlight = new Map<string, Promise<Summary>>()
 
-  async summary(days: number, now: Date = new Date()): Promise<VisitSummary & { source: 'fixture' | 's3' }> {
+  async summary(days: number, now: Date = new Date()): Promise<Summary> {
     const today = now.toISOString().slice(0, 10)
     const config = this.readConfig()
     const key = `${config.source}:${days}:${today}`
@@ -18,8 +23,23 @@ export class VisitsService {
     if (cached && now.getTime() - cached.at < 5 * 60 * 1000) {
       return cached.value
     }
+    const running = this.inFlight.get(key)
+    if (running) return running
 
-    let value: VisitSummary & { source: 'fixture' | 's3' }
+    const read = this.read(config, days, today).then((value) => {
+      this.cache.set(key, { at: now.getTime(), value })
+      return value
+    })
+    this.inFlight.set(key, read)
+    try {
+      return await read
+    } finally {
+      this.inFlight.delete(key)
+    }
+  }
+
+  private async read(config: ReturnType<typeof visitsConfig>, days: number, today: string): Promise<Summary> {
+    let value: Summary
 
     if (config.source === 'fixture') {
       const lines = await fixtureLines(today)
@@ -27,8 +47,9 @@ export class VisitsService {
     } else {
       const since = new Date(Date.parse(`${today}T00:00:00.000Z`) - (days - 1) * 86_400_000)
       const tally = createTally(days, today)
+      let skipped: number
       try {
-        await forEachS3Line(this.reader(config), config.prefix, since, (line) => tally.add(line))
+        skipped = (await forEachS3Line(this.reader(config), config.prefix, since, (line) => tally.add(line))).skipped
       } catch (err) {
         const name = (err as Error)?.name ?? 'Error'
         this.logger.warn(`S3 read failed: ${name}: ${(err as Error)?.message}`)
@@ -39,10 +60,9 @@ export class VisitsService {
           `No se pudieron leer los registros de visitas en S3 (${name}). ${hint}`,
         )
       }
-      value = { ...tally.result(), source: 's3' as const }
+      if (skipped > 0) this.logger.warn(`S3: ${skipped} unreadable log objects skipped`)
+      value = { ...tally.result(), source: 's3' as const, skipped }
     }
-
-    this.cache.set(key, { at: now.getTime(), value })
     return value
   }
 

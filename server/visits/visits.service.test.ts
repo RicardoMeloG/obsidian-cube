@@ -164,4 +164,31 @@ describe('VisitsService', () => {
 
     await expect(svc.summary(7, now)).rejects.toThrow(BadRequestException)
   })
+  it('s3: two requests while a read is under way share it', async () => {
+    process.env.VISITS_SOURCE = 's3'
+    process.env.VISITS_BUCKET = 'b'
+    process.env.VISITS_PROFILE = 'p'
+    process.env.VISITS_PREFIX = 'logs/'
+    const now = new Date('2025-06-15T12:00:00.000Z')
+    let lists = 0
+
+    class CountingService extends VisitsService {
+      protected reader() {
+        return {
+          async *list() {
+            lists++
+            yield { key: 'log.json', lastModified: now }
+          },
+          async read() {
+            return new Uint8Array()
+          },
+        }
+      }
+    }
+
+    const svc = new CountingService()
+    const [first, second] = await Promise.all([svc.summary(7, now), svc.summary(7, now)])
+    expect(second).toBe(first)
+    expect(lists).toBe(1)
+  })
 })
