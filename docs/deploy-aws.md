@@ -1,32 +1,43 @@
 # AWS deployment (static site)
 
-Infrastructure-as-code for hosting the **public** Obsidian Cube frontend on AWS.
-Scope of this slice: the static site only (S3 + CloudFront) plus CI/CD. The admin
-backend and Postgres are **not** deployed here — they run locally today (see
-`docker-compose.yml` / `server/`) and are a future slice.
+Infrastructure-as-code for hosting the **public** Obsidian Cube frontend on AWS,
+live at `ricardomelog.com` since 2026-11-12. Scope: the static site (S3 +
+CloudFront) and its cost guardrails (spec 014). The admin backend and Postgres
+are **not** deployed here: they run locally (see `docker-compose.yml` /
+`server/`), and the cloud admin is ADR 004 (Cognito).
 
 ## Architecture
 
 ```
-GitHub Actions ──(OIDC)──> AWS
-   build dist/  ──►  S3 (private bucket)  ──(OAC)──►  CloudFront  ──►  viewers
-                     └── content synced by deploy.yml
+owner's machine (SSO) ──► S3 (private bucket) ──(OAC)──► CloudFront ──► viewers
+                                                          ▲
+                        DNS in Cloudflare (CNAMEs, grey cloud) ──┘
 ```
 
 - **S3**: private bucket (all public access blocked, SSE-S3, TLS enforced). Never
   served directly.
 - **CloudFront**: fronts the bucket via Origin Access Control; redirects to HTTPS;
-  serves `index.html` for 403/404 so client-side routing works (to be removed in
-  the release stage, spec 010 AD-09, when a viewer-request function starts
-  serving each clean path from its page, `/es/seguridad` from
-  `es/seguridad.html`, ADR 009); adds the security headers of
-  `infra/security-headers.json` (content security policy report-only until it
-  has run clean in production; set `reportOnly` to `false` to enforce it).
+  a viewer-request function serves each clean path from its page
+  (`/es/seguridad` from `es/seguridad.html`, ADR 009); an unknown path gets
+  the static `404.html` with status 404 (spec 010, AD-09), and a 403 (a WAF
+  block, a refusal of the match log receiver) is passed through as is. The
+  security headers of `infra/security-headers.json` are enforced, CSP included;
+  from spec 014 a viewer-response function sets them (D-7). The same function
+  sets `Cache-Control` on successful answers (spec 018): a year and
+  `immutable` for names with a content hash (`/assets/*`, the admin's
+  `/content/media/<sha256>.webp`), `no-cache` for everything else, so pages and
+  content documents are revalidated with their ETag on every visit. It governs
+  the browser only; the edge cache follows the cache policy.
+- **Domain**: `ricardomelog.com` and `www`, registered and resolved in
+  Cloudflare, not Route 53. The ACM certificate (us-east-1) was requested and
+  validated by hand with CNAME records in Cloudflare; its ARN and the domains
+  reach the stack through the context in `infra/cdk.json`. Both names are
+  CNAMEs with the grey cloud (DNS only) to the distribution's domain.
 - **CI/CD**: `.github/workflows/ci.yml` (every gate listed in
-  `docs/architecture.md`), `infra.yml` (`cdk synth`, when `infra/` changes)
-  and `deploy.yml` (on demand only since 2026-10-16: build → `aws s3 sync` →
-  CloudFront invalidation), authenticating with a short-lived **OIDC role**,
-  with no long-lived AWS keys in GitHub.
+  `docs/architecture.md`) and `infra.yml` (`cdk synth`, when `infra/` changes).
+  `deploy.yml` (build → `aws s3 sync` → invalidation, over a short-lived OIDC
+  role) exists but is not wired yet: the OIDC role is not created, so today
+  releases go out from the owner's machine (below).
 
 Defined in `infra/` with the **AWS CDK (TypeScript)**.
 
@@ -90,6 +101,55 @@ goes out from the owner's machine with an SSO profile, never the root account.
    panel next to the content, so a formatted machine loses neither. Every
    content publish ends with this step.
 
+## Cost guardrails (spec 014)
+
+The account has a ceiling of about 20 USD a month, in four layers. The Free
+plan does not allow custom response headers policies, so the security headers
+are set by a viewer-response CloudFront Function from `infra/security-headers.json`
+(spec 014, D-7); deploy that change, and check the live headers, before
+subscribing.
+
+1. **Flat-rate Free plan.** The owner subscribes the distribution in the
+   CloudFront console (distribution → *Pricing plan*), which creates the web
+   ACL the plan requires. Copy that web ACL's ARN into `infra/cdk.json` as
+   `webAclArn` before the next `cdk deploy` of `ObsidianCubeStaticSite`, or the
+   deploy would remove the association. With it the stack also stops asking
+   for `PriceClass_100`, which a plan does not support (D-8).
+2. **IP rate limiting** in that web ACL (console → the web ACL → rules): block a
+   client above 300 requests in 5 minutes. A first visit loads about 40 files.
+   `npm run check:live` run twice in a row can trip it from the owner's own IP;
+   the block shows as the home page with `X-Cache: Error from cloudfront` on
+   every file (the 403 error response maps to `/index.html`) and lifts within
+   a few minutes.
+   The console created the web ACL with three AWS managed rule groups in
+   *Count*. Since 2026-11-14 they block (owner's decision, after a sample of
+   the traffic showed only scanners probing `/.env`, `/.git` and WordPress):
+   `AmazonIpReputationList`, `KnownBadInputsRuleSet` and `CommonRuleSet`,
+   with one override: `SizeRestrictions_BODY` stays in *Count*, because the
+   match log receiver (`/api/iron-bastion/*`, spec 015) has a body limit of
+   512 KB and that rule's limit is 8 KB. Checked on 2026-11-14 after the change:
+   a blocked path (`/.env.bak`), a 20 KB POST reaching the function (2026-11-14), and
+   `check:live`. The web ACL is not in CDK; to go back, set each managed
+   group's override action to *Count* in the console (one minute).
+3. **Kill switch** (`ObsidianCubeCostGuard`): a 20 USD monthly budget publishes
+   to SNS and a function disables the distribution. Deploy it with
+   `npx cdk deploy ObsidianCubeCostGuard -c alertEmail=<owner email> --profile <profile>`
+   from `infra/`; the email is never committed. The site stays down until it is
+   turned on again:
+   ```bash
+   aws cloudfront get-distribution-config --id <distribution> --profile <profile> > dist.json
+   # set DistributionConfig.Enabled to true, keep the rest, then:
+   aws cloudfront update-distribution --id <distribution> --if-match <ETag from dist.json> \
+     --distribution-config file://<only the DistributionConfig object> --profile <profile>
+   ```
+   Tested on 2026-11-14: the function disabled the distribution, the site
+   stopped resolving, and the commands above turned it on again in about three
+   minutes. Resolvers that cached the outage (the visitor's provider) keep
+   answering "no such name" until the negative TTL of the Cloudflare zone runs
+   out, about 30 minutes; public resolvers (1.1.1.1) recover at once.
+4. **Alerts:** the budgets for any spend and 5 USD a month, and the default
+   cost anomaly monitor, by email.
+
 ## Local verification (no AWS account needed)
 
 ```bash
@@ -101,6 +161,5 @@ npm run synth   # generates CloudFormation into cdk.out/ — fully offline
 
 ## Not yet included
 
-- Custom domain + ACM certificate (CloudFront currently serves its default domain; decision D-7, release stage).
-- Cognito-authenticated admin (HTTP API + Lambda + S3, no database in the cloud), decided in ADR 004, built after the release.
-- WAF.
+- Deploys from GitHub with the OIDC role (spec 010, D-6; steps 3 and 4 of the setup above).
+- Cognito-authenticated admin (HTTP API + Lambda + S3, no database in the cloud), decided in ADR 004.

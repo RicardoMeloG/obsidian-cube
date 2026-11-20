@@ -15,6 +15,7 @@ Every file served from `public/` (except the content documents in `public/conten
 | `favicon.svg` | Drawn for this site on 2026-10-15: the obsidian cube seen almost front-on, with the double-diamond frame every face carries; replaced Vite's logo left by the project template | Same as the repository |
 | `js-flag.js` | Written for this site: marks the page as running JavaScript before it paints | Same as the repository |
 | `og-image.jpg` | Rendered from this site (the cube on the AGENTIC face, interface hidden), 2026-10-12; rendered again with the new reflection environment on 2026-10-13 | Same as the repository |
+| `404.html` | Written for this site: the static page CloudFront serves with status 404 for unknown paths (spec 010, AD-09) | Same as the repository |
 | `seo-fallback.css` | Written for this site: the style of the plain HTML fallback for clients without JavaScript | Same as the repository |
 
 Bundled from npm (not in `public/`, so not in the table the test reads):

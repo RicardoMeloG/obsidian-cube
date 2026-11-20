@@ -1,12 +1,12 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { MathUtils, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
+import { Canvas } from '@react-three/fiber'
 import { useSiteContent } from '@/features/content/useSiteContent'
 import { VECTOR_WORLD_THEME } from '@/features/scene/vector-worlds/base/theme'
 import { isWorldId, WORLD_REGISTRY } from '@/features/scene/vector-worlds/registry'
 import { WORLD_IDS } from '@/kernel/worlds'
 import type { WorldId } from '@/kernel/worlds'
-import type { WorldComposition } from '@/features/scene/vector-worlds/types'
+import { ShowcaseCamera, ShowcaseLookAt } from '@/features/scene/vector-worlds/showcaseFraming'
+import { showcaseExtraProps } from '@/features/scene/vector-worlds/showcaseProps'
 import './VectorWorldShowcase.css'
 
 type ProductTuneState = {
@@ -37,69 +37,6 @@ const PRODUCT_TUNE_DEFAULTS: ProductTuneState = {
   pitch: 0.48,
   posY: -0.62,
   posZ: -1.2,
-}
-
-function ResponsiveCameraLookAt({
-  target,
-  composition,
-}: {
-  target: readonly [number, number, number]
-  composition?: WorldComposition
-}) {
-  const vec = useMemo(() => new Vector3(target[0], target[1], target[2]), [target])
-  useFrame(({ camera, size }) => {
-    if (!composition) {
-      camera.lookAt(vec)
-      return
-    }
-    const aspect = Math.max(0.4, size.width / Math.max(1, size.height))
-    const aspectDelta = aspect - composition.targetAspect
-    const yAdjust = MathUtils.clamp(-aspectDelta * 0.26, -0.16, 0.28)
-    vec.set(target[0], target[1] + yAdjust, target[2])
-    camera.lookAt(vec)
-  })
-  return null
-}
-
-type ResponsiveShowcaseCameraProps = {
-  worldId: WorldId
-  baseCamera: { position: readonly [number, number, number]; fov: number; near: number; far: number }
-  composition?: WorldComposition
-}
-
-function ResponsiveShowcaseCamera({ worldId, baseCamera, composition }: ResponsiveShowcaseCameraProps) {
-  useFrame(({ camera, size }) => {
-    if (!(camera instanceof ThreePerspectiveCamera)) return
-
-    const aspect = Math.max(0.4, size.width / Math.max(1, size.height))
-    const referenceAspect = composition?.targetAspect ?? 16 / 9
-    const baseVerticalFovRad = MathUtils.degToRad(baseCamera.fov)
-    const baseHorizontalFovRad = 2 * Math.atan(Math.tan(baseVerticalFovRad * 0.5) * referenceAspect)
-    const adaptedVerticalFovRad = 2 * Math.atan(Math.tan(baseHorizontalFovRad * 0.5) / aspect)
-    const adaptedFov = MathUtils.clamp(
-      MathUtils.radToDeg(adaptedVerticalFovRad),
-      baseCamera.fov * 0.84,
-      baseCamera.fov * 1.38,
-    )
-
-    let y = baseCamera.position[1]
-    let z = baseCamera.position[2]
-    if (worldId === 'research' && composition) {
-      const narrower = Math.max(0, referenceAspect - aspect)
-      const wider = Math.max(0, aspect - referenceAspect)
-      z += narrower * 2.1 - Math.min(0.76, wider * 0.6)
-      y += narrower * 0.46 - Math.min(0.2, wider * 0.16)
-    }
-
-    camera.position.set(baseCamera.position[0], y, z)
-    camera.near = baseCamera.near
-    camera.far = baseCamera.far
-    if (Math.abs(camera.fov - adaptedFov) > 0.01) {
-      camera.fov = adaptedFov
-      camera.updateProjectionMatrix()
-    }
-  })
-  return null
 }
 
 function readWorldId(): WorldId {
@@ -167,8 +104,7 @@ export function VectorWorldShowcase() {
       rotation: [productTune.pitch, productTune.yaw, 0] as [number, number, number],
     }
   }, [isProducts, productTune.pitch, productTune.posY, productTune.posZ, productTune.yaw, showcase.props])
-  // Systems world owns its CameraLookAt; expose it via prop when previewed standalone.
-  const extraProps = worldId === 'systems' ? { controlsCamera: true, fogLines: true, skylineDepthTest: false } : {}
+  const extraProps = showcaseExtraProps(worldId)
   const adjustProductTune = (key: keyof ProductTuneState, delta: number) => {
     setProductTune((current) => ({
       ...current,
@@ -189,13 +125,13 @@ export function VectorWorldShowcase() {
             <color attach="background" args={[VECTOR_WORLD_THEME.background]} />
             <fog attach="fog" args={[VECTOR_WORLD_THEME.background, showcase.fog.near, showcase.fog.far]} />
             <ambientLight intensity={0.18} />
-            <ResponsiveShowcaseCamera
+            <ShowcaseCamera
               worldId={worldId}
               baseCamera={effectiveCamera}
               composition={showcase.composition}
             />
             {effectiveLookAt && (
-              <ResponsiveCameraLookAt target={effectiveLookAt} composition={showcase.composition} />
+              <ShowcaseLookAt target={effectiveLookAt} composition={showcase.composition} />
             )}
             <Suspense fallback={null}>
               <Component {...effectiveShowcaseProps} {...extraProps} />

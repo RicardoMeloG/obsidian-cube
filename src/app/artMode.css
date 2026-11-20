@@ -1,0 +1,162 @@
+/* The fullscreen art mode (ADR 001, spec 017): the face's world alone, the
+   owner's name in the corner, and a veil in the site's dark that it dips
+   through to enter and to leave. */
+@reference "../index.css";
+
+@layer components {
+  .art-mode {
+    --ink: var(--color-ink-50);
+    --ink-2: color-mix(in srgb, var(--color-ink-200) 74%, transparent);
+    --hair-accent: color-mix(in srgb, var(--accent) 30%, transparent);
+
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    outline: none;
+    background: transparent;
+  }
+
+  .art-mode__canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  .art-mode__canvas canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* The veil: it covers before the world shows and before the site returns.
+     @starting-style lets it fade in from clear on the frame it appears. */
+  .art-mode__veil {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: var(--color-abyss);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--art-veil-ms) var(--ease-obsidian);
+  }
+
+  .art-mode__veil--dark {
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  /* Discreet, as the showcase signature: the name keeps the authorship on the art. */
+  .art-mode__signature {
+    position: absolute;
+    right: clamp(1rem, 2.4vw, 1.6rem);
+    bottom: clamp(1rem, 2.4vw, 1.6rem);
+    z-index: 2;
+    margin: 0;
+    color: color-mix(in srgb, var(--ink) 50%, transparent);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* The top bar: the way back, the world's name, and the menu of worlds with
+     the names the owner gave them, as in the dev showcase. It shows when the
+     pointer moves and fades when it rests. */
+  .art-mode__chrome {
+    position: absolute;
+    top: clamp(1rem, 2.4vw, 1.6rem);
+    right: clamp(1rem, 2.4vw, 1.6rem);
+    left: clamp(1rem, 2.4vw, 1.6rem);
+    z-index: 2;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.2rem;
+    transition: opacity 420ms var(--ease-obsidian);
+  }
+
+  .art-mode__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    height: 2.4rem;
+    padding: 0 1em;
+    border: 1px solid var(--hair-accent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-night-950) 50%, transparent);
+    color: var(--ink-2);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: color 180ms, border-color 180ms;
+  }
+
+  .art-mode__back:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .art-mode__title {
+    margin: 0;
+    color: color-mix(in srgb, var(--color-violet-300) 92%, transparent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .art-mode__worlds {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.3rem;
+  }
+
+  .art-mode__worlds button {
+    padding: 0.42rem 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-violet-500) 22%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-night-950) 65%, transparent);
+    color: color-mix(in srgb, var(--color-ink-200) 58%, transparent);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: color 180ms, border-color 180ms, background 180ms;
+  }
+
+  .art-mode__worlds button:hover {
+    border-color: color-mix(in srgb, var(--color-violet-300) 60%, transparent);
+    color: var(--ink);
+  }
+
+  .art-mode__worlds button[aria-current='true'] {
+    border-color: color-mix(in srgb, var(--color-violet-300) 92%, transparent);
+    background: color-mix(in srgb, var(--color-violet-500) 22%, var(--color-night-950));
+    color: var(--ink);
+  }
+
+  .art-mode:not([data-phase='on']) .art-mode__chrome,
+  .art-mode:not([data-phase='on']) .art-mode__signature {
+    opacity: 0;
+  }
+
+  .art-mode--idle {
+    cursor: none;
+  }
+
+  .art-mode--idle .art-mode__chrome:not(:focus-within) {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

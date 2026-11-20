@@ -216,6 +216,7 @@ export function VectorPlexusField({
 
   // ── If static (terrain), compute displacement once after mount ────────────
   const staticInitialized = useRef(false)
+  const frameParity = useRef(0)
 
   // ── Frame loop ─────────────────────────────────────────────────────────────
   useFrame(({ clock, pointer }) => {
@@ -224,8 +225,13 @@ export function VectorPlexusField({
     const linesObj  = linesRef.current
     if (!pointsObj || !linesObj) return
 
-    // Skip displacement update for static fields after first frame.
-    const shouldUpdate = animated || !staticInitialized.current
+    // A static field is computed once: points and links do not change after
+    // the first frame. An animated one moves slowly, so it is recomputed every
+    // other frame (30 Hz), which halves the CPU work and the buffer uploads
+    // without a visible difference (dt-03).
+    if (!animated && staticInitialized.current) return
+    if (animated && staticInitialized.current && (frameParity.current++ & 1) === 1) return
+    const shouldUpdate = true
     const t = clock.getElapsedTime()
 
     const positionAttr = pointsObj.geometry.attributes.position as BufferAttribute

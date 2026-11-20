@@ -16,6 +16,7 @@ import { useLayoutMode } from '@/styles/layoutModes'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import type { DiagnosticFx } from './diagnosticFx'
 import { loadReflection } from './reflection'
+import { PlatformTicks } from './PlatformTicks'
 import { PremiumCube } from './PremiumCube'
 import { VectorWorldStage } from './vector-worlds/VectorWorldStage'
 import { IntroSparks } from './intro/IntroSparks'
@@ -161,40 +162,6 @@ function createBeamTexture() {
   texture.magFilter = LinearFilter
   texture.minFilter = LinearFilter
   return texture
-}
-
-type PlatformTicksProps = {
-  radius: number
-  count: number
-  faint?: boolean
-}
-
-function PlatformTicks({ radius, count, faint = false }: PlatformTicksProps) {
-  const ticks = Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * Math.PI * 2
-    const isMajor = i % 6 === 0
-    const length = (isMajor ? 0.085 : 0.04) * (faint ? 0.7 : 1)
-    const opacity = (isMajor ? 0.55 : 0.22) * (faint ? 0.5 : 1)
-    return { angle, length, opacity, isMajor }
-  })
-
-  return (
-    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.41, 0]}>
-      {ticks.map((tick, i) => (
-        <mesh key={i} rotation={[0, 0, tick.angle]} position={[Math.cos(tick.angle) * radius, Math.sin(tick.angle) * radius, 0]}>
-          <planeGeometry args={[tick.length, 0.0085]} />
-          <meshBasicMaterial
-            color={tick.isMajor ? '#dcd6ff' : '#8d82ff'}
-            transparent
-            opacity={tick.opacity}
-            depthWrite={false}
-            blending={AdditiveBlending}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
-    </group>
-  )
 }
 
 export function CubeScene({

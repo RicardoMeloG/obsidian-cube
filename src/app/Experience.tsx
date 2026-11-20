@@ -5,7 +5,6 @@ import { resolveSections } from '@/kernel/visualContent'
 import { interfaceCopy } from '@/features/content/copy'
 import { useSiteContent } from '@/features/content/useSiteContent'
 import { useVisualContent } from '@/features/content/useVisualContent'
-import { openWorldShowcase } from '@/features/dev/openWorldShowcase'
 import { createExperienceStore, ExperienceProvider, initialExperience, useExperience, useExperienceStore } from '@/features/experience/experienceStore'
 import { readInitialFace, urlNamesFace, useFaceUrl } from '@/features/experience/faceUrl'
 import { readIntroPlan } from '@/features/experience/introPlan'
@@ -22,6 +21,8 @@ import { hasWebGL } from '@/lib/hasWebGL'
 import { useViewportSize } from '@/lib/useViewportSize'
 import { LAYOUT_QUERIES, useLayoutMode } from '@/styles/layoutModes'
 import { cx } from '@/ui/cx'
+import { ArtModeLayer } from './ArtModeLayer'
+import type { ArtWorld } from './ArtModeLayer'
 import './intro.css'
 import './shell.css'
 
@@ -30,6 +31,11 @@ const CURSOR = { default: 'cursor-default', grab: 'cursor-grab', grabbing: 'curs
 
 // Desktop shows the stage, stacked screens the hero (spec 011, E-1).
 const startsStacked = () => typeof window !== 'undefined' && window.matchMedia(LAYOUT_QUERIES.stacked).matches
+
+// A double-click on the background, not on the interface, opens the art mode
+// (spec 017, D-2).
+const INTERFACE = '.stage-top, .stage-content > *, .stage-dock, dialog, button, a'
+const isInterfaceTarget = (target: EventTarget) => target instanceof Element && target.closest(INTERFACE) !== null
 
 const LOCALE_OPTIONS = [
   { value: 'en', label: 'EN' },
@@ -78,6 +84,7 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const cursor = useExperience((state) => state.cursor)
   const explore = useExperience((state) => state.explore)
   const nudge = useExperience((state) => state.nudge)
+  const artMode = useExperience((state) => state.artMode)
   const { content, ready, locale, sections, setLocale } = useSiteContent()
   const visual = useVisualContent()
   const copy = interfaceCopy(locale)
@@ -97,6 +104,10 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   useFaceUrl(activeFace, explore, content, ready)
 
   const resolvedSections = useMemo(() => resolveSections(sections, visual), [sections, visual])
+  const artWorlds = useMemo(
+    () => resolvedSections.flatMap((section): ArtWorld[] => (section.worldId ? [{ face: section.id, worldId: section.worldId }] : [])),
+    [resolvedSections],
+  )
   const activeSection = resolvedSections.find((section) => section.id === activeFace) ?? null
   const displayedSection = resolvedSections.find((section) => section.id === displayedFace) ?? activeSection
 
@@ -121,6 +132,16 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   )
   const closeDetail = useCallback(() => store.dispatch({ type: 'detailClosed' }), [store])
   const requestFace = useCallback((face: FaceId) => store.dispatch({ type: 'faceRequested', face }), [store])
+  const startArtMode = useCallback(() => store.dispatch({ type: 'artModeStarted' }), [store])
+  // Leaving the art mode on another world's face turns the cube to it, so the
+  // content always matches the background the visitor was looking at.
+  const endArtMode = useCallback(
+    (face: FaceId) => {
+      store.dispatch({ type: 'artModeEnded' })
+      store.dispatch({ type: 'faceRequested', face })
+    },
+    [store],
+  )
 
   // In the stacked layout the page scrolls and the cube hero takes its height
   // from CSS, so the shell and canvas stop being pinned to the viewport height.
@@ -134,7 +155,9 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
       )}
       aria-label={copy.experienceLabel}
       data-intro={intro !== 'done' ? intro : undefined}
-      onDoubleClick={import.meta.env.DEV ? (event) => openWorldShowcase(event, activeFace) : undefined}
+      onDoubleClick={(event) => {
+        if (!isInterfaceTarget(event.target)) startArtMode()
+      }}
       style={pinned}
     >
       <div
@@ -162,8 +185,18 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
           onRequestFace={requestFace}
           onExplore={(next) => store.dispatch({ type: next ? 'exploreStarted' : 'exploreEnded' })}
           onOpenDetail={openDetail}
+          onContemplate={startArtMode}
         />
       )}
+
+      <ArtModeLayer
+        active={artMode}
+        worlds={artWorlds}
+        face={activeFace}
+        fullName={content.identity.fullName}
+        copy={copy}
+        onExit={endArtMode}
+      />
 
       {detail.open && dialogDetail && (
         <DetailDialog

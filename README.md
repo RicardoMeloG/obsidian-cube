@@ -13,6 +13,7 @@ A single-screen experience built around a persistent obsidian cube.
 - All content per face fits a single desktop viewport without scrolling; the layout treats each face as a poster, not a page.
 - Each face opens its long form in a detail dialog.
 - Bilingual (English / Spanish), driven by structured JSON content with Zod validation.
+- An art mode for visitors (spec 017): a double click, or «Contemplate», shows the face's world alone, full screen, with its own name; the arrows or the top menu move through the six worlds, and leaving lands on the face of the last one seen.
 
 ## Stack
 
@@ -22,7 +23,8 @@ A single-screen experience built around a persistent obsidian cube.
 - Zod for content schema validation (schemas shared with the admin)
 - Web Audio API (gesture-driven, no auto-play)
 - NestJS admin API + vanilla admin page (`server/`), Postgres for drafts, versions and admin users
-- AWS CDK for static hosting (`infra/`: private S3 + CloudFront with OAC), GitHub Actions over OIDC
+- AWS CDK (`infra/`): private S3 behind CloudFront with OAC, CloudFront Functions for clean paths and security headers, a match log receiver (Lambda) for Iron Bastion, and a cost kill switch
+- GitHub Actions for CI; deploys run from my machine with AWS SSO and MFA (the OIDC workflow is written, not yet in use)
 
 ## Architecture
 
@@ -30,8 +32,8 @@ Four parts, one repository (`docs/architecture.md` has the module map, the flows
 
 - **The site** (`src/`): React and React Three Fiber, organised by feature (`app`, `features/{experience,scene,faces,navigation,content,audio,dev}`, `ui`, `styles`, `lib`). The 3D scene and the DOM interface never import each other; they meet in one experience store, a pure reducer with typed events. Styling is Tailwind v4 over the tokens and layout-mode variants of `src/styles/tokens.css`; without WebGL the page shows a poster and keeps working.
 - **The content kernel** (`src/kernel/`): the Zod contract for the content, the publish rules (layout budgets, safe links, one artifact per face) and the static SEO. No DOM and no React, so the site, the Vite build and the admin share it.
-- **The local admin** (`server/`): NestJS on 127.0.0.1, MFA, writes the same content files; it imports only the kernel. Its cloud form is ADR 004, after the release.
-- **The infrastructure** (`infra/`): AWS CDK, private S3 behind CloudFront with the security headers of `infra/security-headers.json`; for now I deploy from my machine with the private content (spec 010, D-6); the GitHub Actions workflow over OIDC runs on demand.
+- **The local admin** (`server/`): NestJS on 127.0.0.1, MFA, writes the same content files; it imports only the kernel. Its cloud form (Cognito, Lambda and S3, no database) is planned in ADR 004.
+- **The infrastructure** (`infra/`): AWS CDK, private S3 behind CloudFront with the security headers of `infra/security-headers.json`, real 404s, and the CloudFront flat-rate Free plan with its web ACL (a per-IP rate limit and AWS managed rules that block). Spend has layered ceilings: budgets, anomaly alerts and a kill switch that disables the distribution at 20 USD a month (spec 014). For now I deploy from my machine with AWS SSO and MFA, because the private content lives there (spec 010, D-6); the GitHub Actions workflow over OIDC is written but its role is not created yet.
 
 Module boundaries are lint rules, and each rule is proved by a test that feeds it a violating file (`scripts/checks/boundaries.test.ts`).
 
@@ -110,9 +112,9 @@ Addresses and language: one page per language and face, English at the root (`/`
 
 Obsidian Interface System: dark, premium, technical, sober. Violet volumetric ambient is the signature; obsidian black is the surface. No `Bloom` in production, no auto-playing audio, no generic SaaS gradients. See `docs/visual-direction.md` for tokens, materials, motion, and layout rules.
 
-## Status (2026-11-12)
+## Status (2026-11-15)
 
-Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy and an A+ on Mozilla Observatory and SSL Labs. This is the first release. Still open, in order (`docs/roadmap.md`): the contact form and the CV request of the security stage, real 404s, and the Cognito admin of ADR 004.
+Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy, an A+ on Mozilla Observatory (2026-11-14) and an A+ on SSL Labs on all twelve edge addresses (2026-11-15). Since the first release (2026-11-12): the art mode and its gallery of worlds (spec 017), a lighter scene on dense and integrated-GPU screens, layered cost ceilings with a tested kill switch (spec 014), the WAF's managed rules blocking, the Iron Bastion match log receiver with a capped concurrency (spec 015), and real 404s; `npm run check:live` passes its twelve use cases on the live site. Still open (`docs/roadmap.md`): the scene's cost at rest and the intro that hides the name for a few seconds, cache headers, the contact form and the CV request of the security stage, and the Cognito admin of ADR 004.
 
 ## Orientation for Contributors
 

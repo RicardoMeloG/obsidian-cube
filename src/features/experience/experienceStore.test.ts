@@ -108,3 +108,33 @@ describe('store', () => {
     expect(store.getState().hintVisible).toBe(false)
   })
 })
+
+describe('art mode (spec 017)', () => {
+  const stage = (overrides: Partial<ExperienceState> = {}) => start({ layout: 'stage', sceneReady: true, ...overrides })
+
+  it('starts on the desktop stage with a scene, and ends', () => {
+    const on = run(stage({ explore: true }), { type: 'artModeStarted' })
+    expect(on).toMatchObject({ artMode: true, explore: false })
+    expect(run(on, { type: 'artModeEnded' }).artMode).toBe(false)
+  })
+
+  it('does not start on stacked screens, without a scene, during the intro, a dialog or a face change', () => {
+    expect(run(start({ layout: 'hero', sceneReady: true }), { type: 'artModeStarted' }).artMode).toBe(false)
+    expect(run(stage({ sceneReady: false }), { type: 'artModeStarted' }).artMode).toBe(false)
+    expect(run(stage({ intro: 'reveal' }), { type: 'artModeStarted' }).artMode).toBe(false)
+    expect(run(stage({ detail: { open: true } }), { type: 'artModeStarted' }).artMode).toBe(false)
+    expect(run(stage({ transition: 'exiting' }), { type: 'artModeStarted' }).artMode).toBe(false)
+    expect(run(stage({ requestedFace: 'research' }), { type: 'artModeStarted' }).artMode).toBe(false)
+  })
+
+  it('keeps the face while on: a requested face is ignored', () => {
+    const state = run(stage(), { type: 'artModeStarted' }, { type: 'faceRequested', face: 'research' })
+    expect(state).toMatchObject({ artMode: true, activeFace: 'agentic', requestedFace: null })
+  })
+
+  it('ends when the layout becomes stacked or the scene fails', () => {
+    const on = run(stage(), { type: 'artModeStarted' })
+    expect(run(on, { type: 'layoutChanged', layout: 'hero' }).artMode).toBe(false)
+    expect(run(on, { type: 'sceneFailed' }).artMode).toBe(false)
+  })
+})

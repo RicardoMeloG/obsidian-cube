@@ -31,5 +31,5 @@ npm run check:live -- --only=CU-09,CU-10
 
 - **Software WebGL.** The runs use SwiftShader. Three.js warns once that it lacks `KHR_parallel_shader_compile`, an extension real GPU drivers have; only that line is excused, and only in software runs. Checked on 2026-11-12 in Edge with a real GPU: the warning does not appear.
 - **THREE.Clock.** `@react-three/fiber` 9 (up to 9.8.2) still creates a `THREE.Clock`, deprecated in three r183, so every visit printed a warning. `src/features/scene/threeConsole.ts` drops that one message through three's own console hook; remove it when fiber moves to `THREE.Timer`.
-- **Unknown paths.** Until real 404s exist (spec 010, AD-09) an unknown or private path answers with the home page; CU-10 checks that no private content is served, not the status.
+- **Unknown paths.** An unknown or private path answers 404 with the static `404.html` (spec 010, AD-09); CU-10 checks the status, the page and that no private content is served.
 - **Published content.** `/content/site.*.json` and `/content/profile.*.json` are the published content the page reads; they are public by design (ADR 004).

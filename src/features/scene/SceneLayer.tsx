@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { PerformanceMonitor } from '@react-three/drei'
 import './threeConsole'
 import type { ResolvedFace } from '@/kernel/visualContent'
 import { playCubeNudgeSound } from '@/features/audio/cubeAudio'
@@ -10,6 +11,8 @@ import { ErrorBoundary } from '@/lib/ErrorBoundary'
 import { CubeScene } from './CubeScene'
 import type { CubeIntroConfig, CubeSceneHandle } from './CubeScene'
 import { readDiagnosticFx } from './diagnosticFx'
+import { useSceneBusy, useSceneIdle } from './idleCadence'
+import { IdleTicker } from './IdleTicker'
 import type { IntroPhase } from './intro/introTimeline'
 
 type SceneLayerProps = {
@@ -22,6 +25,13 @@ type SceneLayerProps = {
 // comes (a stalled compile, a lost context), it draws anyway after this long,
 // compiling on the first frames as it did before.
 const READY_TIMEOUT_MS = 3000
+// The art mode (spec 017) draws the world in its own canvas; once its veil has
+// covered the page (ArtModeLayer, 520 ms), this canvas stops drawing, so only
+// one canvas runs. It resumes as soon as the mode ends, under the veil.
+const ART_PAUSE_MS = 600
+// After the rest ends, how long the density monitor waits before it judges the
+// frame rate again (it averages over a window that still holds idle frames).
+const MONITOR_SETTLE_MS = 2500
 
 // The 3D scene, wired to the experience: it reports where the cube lands and
 // what the visitor does with it, and turns the cube when a face is requested.
@@ -33,6 +43,16 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
   const requestedFace = useExperience((state) => state.requestedFace)
   const introSkipped = useExperience((state) => state.introSkipped)
   const nudged = useExperience((state) => state.nudge === 'shown')
+  const artMode = useExperience((state) => state.artMode)
+  const [artPaused, setArtPaused] = useState(false)
+  useEffect(() => {
+    if (!artMode) return
+    const timer = window.setTimeout(() => setArtPaused(true), ART_PAUSE_MS)
+    return () => {
+      window.clearTimeout(timer)
+      setArtPaused(false)
+    }
+  }, [artMode])
   // Stage layout: the cube recedes while the visitor reads, and comes forward
   // during the intro, a face change, or when the visitor takes it.
   const recede = useExperience(
@@ -89,6 +109,32 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
     return () => window.clearTimeout(timeout)
   }, [])
 
+  // Pixel budget (dt-03): the scene is fill-bound on integrated GPUs, so it
+  // starts at the screen's density capped at 1.5, climbs to 2 only while the
+  // frame rate holds, and drops to 1 when it falls. MSAA stays on: the canvas
+  // is drawn below the screen's density and stretched, so without it the thin
+  // bright rings of the pedestal showed stair-stepped edges (owner, 2026-11-14).
+  const screenDpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1
+  // It moves in steps of 0.25 and never below 1.25 on a high-density screen:
+  // loading a world dips the frame rate for a moment, and a jump to 1 made the
+  // new face look blurred until it climbed back (owner, 2026-11-14).
+  const dprFloor = screenDpr >= 2 ? 1.25 : 1
+  const dprCeiling = Math.max(Math.min(screenDpr, 2), dprFloor)
+  const [dpr, setDpr] = useState(() => Math.min(Math.max(screenDpr, dprFloor), 1.5))
+
+  // At rest the scene draws at 30 frames a second (idleCadence). The density
+  // monitor would read that as a slow machine and lower the density, so it
+  // ignores the rest and the first seconds after it, while its window still
+  // holds idle frames.
+  const idle = useSceneIdle(useSceneBusy())
+  const monitorQuietUntilRef = useRef(0)
+  const idleRef = useRef(idle)
+  useEffect(() => {
+    idleRef.current = idle
+    if (!idle) monitorQuietUntilRef.current = performance.now() + MONITOR_SETTLE_MS
+  }, [idle])
+  const monitorListens = () => !idleRef.current && performance.now() >= monitorQuietUntilRef.current
+
   const poster = <img className="cube-canvas__poster block size-full object-cover" src="/og-image.jpg" alt="" />
   if (!webglAvailable) return poster
 
@@ -96,12 +142,19 @@ export function SceneLayer({ sections, plan, webglAvailable }: SceneLayerProps) 
     <ErrorBoundary label="3D scene" fallback={poster} onError={() => store.dispatch({ type: 'sceneFailed' })}>
       <Canvas
         camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
-        dpr={[1.5, 2]}
-        frameloop={ready ? 'always' : 'never'}
+        dpr={dpr}
+        frameloop={ready && !artPaused ? (idle ? 'demand' : 'always') : 'never'}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', stencil: true }}
         shadows={effects.shadows}
         onCreated={() => store.dispatch({ type: 'sceneMounted' })}
       >
+        <PerformanceMonitor
+          flipflops={3}
+          onIncline={() => monitorListens() && setDpr((current) => Math.min(current + 0.25, dprCeiling))}
+          onDecline={() => monitorListens() && setDpr((current) => Math.max(current - 0.25, dprFloor))}
+          onFallback={() => monitorListens() && setDpr(dprFloor)}
+        />
+        {ready && !artPaused && idle && <IdleTicker />}
         <Suspense fallback={null}>
           <CubeScene
             activeSectionId={activeFace}

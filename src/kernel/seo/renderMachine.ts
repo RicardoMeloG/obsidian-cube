@@ -11,6 +11,7 @@ import type { SiteContent, SiteLocale } from '../siteContent'
 import { pagePath } from '../sitePaths'
 import { faceLinks, faceText } from './faceText'
 import type { FaceLink, FaceText, TextEntry } from './faceText'
+import { renderRobotsTxt, renderSitemap, ROBOTS_FILE, SITEMAP_FILE } from './crawlFiles'
 import { LLMS_FILE, PROFILE_PAGES } from './machineFiles'
 import { absoluteUrl, escapeHtml, isProfileUrl, jsonForScript, keywordList, toPlainText } from './renderSeo'
 
@@ -304,11 +305,15 @@ export function renderProfilePage(content: MachineInput): string {
 export type MachineFile = { contentType: string; body: string }
 
 // Every file of the layer, by its path under the site root. llms.txt is one
-// file by convention, in the site's primary language.
+// file by convention, in the site's primary language. robots.txt always;
+// sitemap.xml only with the site's public address, which it is made of.
 export function renderMachineFiles(documents: Record<SiteLocale, MachineInput>): Record<string, MachineFile> {
+  const siteUrl = documents.en.seo.siteUrl
   return {
     [LLMS_FILE]: { contentType: 'text/plain; charset=utf-8', body: renderLlmsTxt(documents.en) },
     [PROFILE_PAGES.en]: { contentType: 'text/html; charset=utf-8', body: renderProfilePage(documents.en) },
     [PROFILE_PAGES.es]: { contentType: 'text/html; charset=utf-8', body: renderProfilePage(documents.es) },
+    [ROBOTS_FILE]: { contentType: 'text/plain; charset=utf-8', body: renderRobotsTxt(siteUrl) },
+    ...(siteUrl ? { [SITEMAP_FILE]: { contentType: 'application/xml; charset=utf-8', body: renderSitemap(siteUrl) } } : {}),
   }
 }
