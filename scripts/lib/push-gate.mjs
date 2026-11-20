@@ -33,7 +33,8 @@ const MAJOR = [
   /^docs\/decisions\//,
 ]
 // Lockfiles change with every dependency update; the audit reads package.json.
-export const AUDIT_EXCLUDE = ['package-lock.json', 'infra/package-lock.json']
+// server/admin/world.json is generated data (spec 013, D-10); its generator is audited.
+export const AUDIT_EXCLUDE = ['package-lock.json', 'infra/package-lock.json', 'server/admin/world.json']
 
 export function classify(paths) {
   const major = paths.filter((path) => MAJOR.some((rule) => rule.test(path)))

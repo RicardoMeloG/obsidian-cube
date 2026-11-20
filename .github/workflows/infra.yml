@@ -31,3 +31,6 @@ jobs:
       - run: npm audit --audit-level=low
       # Offline synth: validates the infra compiles to CloudFormation.
       - run: npm run synth
+      # And with the visit logs on (spec 013, criterion 3): the delivery to S3
+      # is only built under this context key, so the plain synth never sees it.
+      - run: npm run synth -- -c visitLogs=true

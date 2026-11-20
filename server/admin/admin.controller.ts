@@ -13,9 +13,16 @@ export class AdminController {
   }
 
   // The scripts of the generated form, by exact name: no path reaches the disk.
-  @Get(['form.js', 'form-kit.js', 'form-media.js'])
+  @Get(['form.js', 'form-kit.js', 'form-media.js', 'visits.js'])
   @Header('Content-Type', 'text/javascript; charset=utf-8')
   form(@Req() request: { path: string }): Promise<string> {
     return fs.readFile(path.join(__dirname, path.basename(request.path)), 'utf8')
+  }
+
+  // The world shapes of the visits map (spec 013, D-7), drawn locally.
+  @Get('world.json')
+  @Header('Content-Type', 'application/json; charset=utf-8')
+  world(): Promise<string> {
+    return fs.readFile(path.join(__dirname, 'world.json'), 'utf8')
   }
 }

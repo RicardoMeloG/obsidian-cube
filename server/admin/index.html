@@ -117,6 +117,46 @@
     .sf-pick { padding: 0; border-radius: 6px; overflow: hidden; }
     .sf-pick img { display: block; width: 96px; height: 60px; object-fit: cover; }
     .sf-error > input, .sf-error > textarea, .sf-error > select, .sf-group.sf-error { border-color: var(--err) !important; }
+    /* Visits view (spec 013): written by the local model, server/admin/visits.js */
+    #visitsPane{overflow-y:auto;flex:1;min-height:0;padding-bottom:24px}
+    .vz-error{color:var(--err);padding:10px 16px}
+    .vz-error:empty{display:none}
+    .vz-hint{color:var(--muted);font-size:12px;padding:0 16px;margin:8px 0}
+    .vz-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
+    .vz-tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column}
+    .vz-tile-label{color:var(--muted);font-size:12px}
+    .vz-tile-num{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+    .vz-map-wrap{padding:0 16px}
+    .vz-map-wrap svg{width:100%;height:auto;display:block;max-height:520px}
+    .vz-0{fill:var(--panel-2)}
+    .vz-1{fill:color-mix(in srgb, var(--accent) 22%, var(--panel))}
+    .vz-2{fill:color-mix(in srgb, var(--accent) 41%, var(--panel))}
+    .vz-3{fill:color-mix(in srgb, var(--accent) 61%, var(--panel))}
+    .vz-4{fill:color-mix(in srgb, var(--accent) 80%, var(--panel))}
+    .vz-5{fill:color-mix(in srgb, var(--accent) 100%, var(--panel))}
+    .vz-map-wrap svg path{stroke:var(--bg);stroke-width:.5}
+    .vz-map-wrap svg path:hover{stroke:var(--text)}
+    .vz-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:8px 0;color:var(--muted);font-size:12px}
+    .vz-sw{width:14px;height:10px;display:inline-block;border-radius:2px}
+    .vz-sw.vz-1{background:color-mix(in srgb, var(--accent) 22%, var(--panel))}
+    .vz-sw.vz-2{background:color-mix(in srgb, var(--accent) 41%, var(--panel))}
+    .vz-sw.vz-3{background:color-mix(in srgb, var(--accent) 61%, var(--panel))}
+    .vz-sw.vz-4{background:color-mix(in srgb, var(--accent) 80%, var(--panel))}
+    .vz-sw.vz-5{background:color-mix(in srgb, var(--accent) 100%, var(--panel))}
+    .vz-legend-lbl{margin-right:4px}
+    .vz-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px}
+    @media(max-width:1100px){.vz-cols{grid-template-columns:1fr}}
+    .vz-col{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+    .vz-col-title{font-size:13px;font-weight:600;margin:4px 0 10px}
+    .vz-bar{fill:var(--accent)}
+    .vz-baseline{stroke:var(--line)}
+    .vz-chart-lbl{fill:var(--muted);font-size:10px}
+    .vz-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .vz-row{display:grid;grid-template-columns:1fr 2fr 40px;gap:10px;align-items:center;font-size:13px}
+    .vz-row-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .vz-row-bar-wrap{height:6px;background:var(--panel-2);border-radius:3px}
+    .vz-row-bar{height:100%;background:var(--accent);border-radius:3px}
+    .vz-row-num{font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -168,7 +208,8 @@
         <button id="togglePreview">Vista previa</button>
       </header>
 
-      <div class="content">
+      <div id="visitsPane" class="hidden"></div>
+      <div class="content" id="editorPane">
         <section class="editor">
           <div class="toolbar">
             <button id="reload">Recargar</button>
@@ -204,6 +245,7 @@
   <script src="/form-kit.js"></script>
   <script src="/form-media.js"></script>
   <script src="/form.js"></script>
+  <script src="/visits.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const ta = $('content'), status = $('status'), source = $('source');
@@ -223,6 +265,7 @@
     // ---- Icons ----
     const ICONS = {
       doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/></svg>',
+      globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>',
       layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 9l10 6 10-6-10-6z"/><path d="m2 15 10 6 10-6"/></svg>',
     };
 
@@ -336,12 +379,27 @@
       html += `<button class="nav-item" data-kind="profile">${ICONS.doc}<span>Perfil para máquinas</span></button>`;
       html += '<div class="nav-group">Presentación</div>';
       html += `<button class="nav-item" data-kind="visual">${ICONS.layers}<span>Fondos y acentos</span></button>`;
+      html += '<div class="nav-group">Analítica</div>';
+      html += `<button class="nav-item" data-kind="visits">${ICONS.globe}<span>Visitas</span></button>`;
       $('nav').innerHTML = html;
       $('nav').querySelectorAll('.nav-item').forEach((b) =>
-        b.addEventListener('click', () => selectTarget({ kind: b.dataset.kind, id: b.dataset.id })));
+        b.addEventListener('click', () => b.dataset.kind === 'visits' ? showVisits() : selectTarget({ kind: b.dataset.kind, id: b.dataset.id })));
+    }
+
+    // The visits view (spec 013) replaces the editor while it is open; the
+    // editor's own controls are hidden, not torn down.
+    const EDITOR_ONLY = ['editorPane', 'langSwitch', 'source', 'togglePreview'];
+    function showVisits() {
+      $('nav').querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.kind === 'visits'));
+      $('docTitle').textContent = 'Visitas';
+      EDITOR_ONLY.forEach((id) => $(id).classList.add('hidden'));
+      $('visitsPane').classList.remove('hidden');
+      window.VisitsView.mount($('visitsPane'));
     }
 
     async function selectTarget(target) {
+      $('visitsPane').classList.add('hidden');
+      ['editorPane', 'source', 'togglePreview'].forEach((id) => $(id).classList.remove('hidden'));
       currentTarget = target;
       $('nav').querySelectorAll('.nav-item').forEach((b) =>
         b.classList.toggle('active', b.dataset.kind === target.kind && (b.dataset.id || '') === (target.id || '')));
