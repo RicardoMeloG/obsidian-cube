@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, BufferAttribute, BufferGeometry } from 'three'
 import type { Group, LineSegments, Points } from 'three'
 import { createCrestPointMaterial, createVectorLineMaterial } from './materials'
@@ -225,6 +225,14 @@ export function VectorPlexusField({
     () => (gpu ? createPlexusLineMaterial(gpu, lineDistance) : createVectorLineMaterial({ fog: true, depthTest: true, depthWrite: false })),
     [gpu, lineDistance],
   )
+
+  // R3F does not dispose objects passed as props: free each one when it is
+  // replaced or the field unmounts (three.js uploads it again if reused).
+  useEffect(() => () => pairGeometry?.dispose(), [pairGeometry])
+  useEffect(() => () => lineGeometry?.dispose(), [lineGeometry])
+  useEffect(() => () => pointMaterial.dispose(), [pointMaterial])
+  useEffect(() => () => lineMaterial.dispose(), [lineMaterial])
+  useEffect(() => () => { dotTexture?.dispose(); horizonGlowTexture?.dispose() }, [dotTexture, horizonGlowTexture])
 
   // ── Refs ───────────────────────────────────────────────────────────────────
   const groupRef  = useRef<Group>(null)

@@ -22,8 +22,13 @@ import { buildStressContent } from './checks/stressContent.mjs'
 const PORT = 4181
 // The admin's own address, read from its single source rather than copied
 // (dt-05, D-4). server/ is CommonJS for ts-node, so it is read, not imported.
-const adminAddress = readFileSync(fileURLToPath(new URL('../server/address.ts', import.meta.url)), 'utf8')
-const ADMIN_BASE = `http://${/HOST = '([^']+)'/.exec(adminAddress)[1]}:${/PORT = (\d+)/.exec(adminAddress)[1]}`
+function adminBase() {
+  const source = readFileSync(fileURLToPath(new URL('../server/address.ts', import.meta.url)), 'utf8')
+  const host = /HOST = ['"]([^'"]+)['"]/.exec(source)?.[1]
+  const port = /PORT = (\d+)/.exec(source)?.[1]
+  if (!host || !port) throw new Error('server/address.ts no longer declares HOST and PORT as literals: update walkthrough.mjs')
+  return `http://${host}:${port}`
+}
 const BASE = `http://127.0.0.1:${PORT}`
 const OUT = process.argv.find(arg => arg.startsWith('--output='))?.slice('--output='.length) ?? 'walkthrough'
 const outputPath = resolve(OUT)
@@ -97,7 +102,7 @@ try {
   }
   if (process.argv.includes('--admin')) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
-    await page.goto(`${ADMIN_BASE}/`).catch((error) => errors.push(`admin: ${error.message}`))
+    await page.goto(`${adminBase()}/`).catch((error) => errors.push(`admin: ${error.message}`))
     await page.screenshot({ path: `${OUT}/admin-1440x900.png` })
   }
   await browser.close()

@@ -12,7 +12,10 @@ export const CONTINUED_MARK = '[continued from the previous part]'
 const lines = (text) => text.match(/[^\n]*\n|[^\n]+$/g) ?? []
 
 function splitFile(file, size) {
-  const [header, ...hunks] = file.split(/(?=^@@ )/m)
+  let [header, ...hunks] = file.split(/(?=^@@ )/m)
+  // A file with no hunk (a binary patch, a long rename block) is cut by line
+  // like a hunk, with no header, so none of it is lost.
+  if (hunks.length === 0) [header, hunks] = ['', [header]]
   const room = Math.max(size - header.length, 1000)
   const pieces = []
   let piece = header
@@ -40,7 +43,9 @@ function splitFile(file, size) {
         const prefix = at > 0 ? `${sign}${CONTINUED_MARK} ` : ''
         const space = () => size - piece.length - prefix.length - CUT_MARK.length - 2
         if (space() < 200) flush()
-        const end = at + space()
+        // At least 200 characters a step, so a part smaller than its header
+        // still advances (it then runs over the size instead of looping).
+        const end = at + Math.max(space(), 200)
         const more = line.slice(end) !== '' && line.slice(end) !== '\n'
         piece += `${prefix}${line.slice(at, end).replace(/\n$/, '')}${more ? ` ${CUT_MARK}` : ''}\n`
         at = end

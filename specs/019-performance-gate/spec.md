@@ -12,7 +12,7 @@
 - how busy the main thread is at rest and with the pointer moving;
 - frames drawn at rest, draw calls per frame, the canvas size.
 
-Every one of these regressed or improved during the last month without a gate noticing: the idle scene of spec 018 took the main thread at rest from 99.3 % to 24.6 % with the CPU slowed 4×, the GPU plexus took the moving case from 38.6 % to 16.5 % (both measured by hand with scratch scripts), and nothing stops a later change from undoing either.
+Every one of these regressed or improved during the last month without a gate noticing: the idle scene of spec 018 took the main thread at rest from 99.3 % to 24.6 % with the CPU slowed 4× (6.7 % once the plexus moved to the GPU, P-5), the GPU plexus took the moving case from 38.6 % to 16.5 % (both measured by hand with scratch scripts), and nothing stops a later change from undoing either.
 
 ## 2. Outcome
 

@@ -42,4 +42,17 @@ describe('diffChunks', () => {
     const text = bodies.replaceAll(` ${CUT_MARK}\n`, '').replaceAll(`+${CONTINUED_MARK} `, '')
     expect(text).toBe(`@@ -0,0 +1 @@\n${long}`)
   })
+
+  it('keeps a large file with no hunk instead of dropping it', () => {
+    const body = Array.from({ length: 400 }, (_, i) => `literal ${i} ${'z'.repeat(60)}\n`).join('')
+    const diff = `diff --git a/x.bin b/x.bin\nGIT binary patch\n${body}`
+    const parts = diffChunks(diff, 4000)
+    expect(parts.length).toBeGreaterThan(1)
+    expect(parts.join('')).toBe(diff)
+  })
+
+  it('ends even when a part is smaller than its header', () => {
+    const parts = diffChunks(header('world.json') + `@@ -0,0 +1 @@\n+${'y'.repeat(5000)}\n`, 100)
+    expect(parts.length).toBeGreaterThan(1)
+  })
 })
