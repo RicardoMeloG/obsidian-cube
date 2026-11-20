@@ -16,7 +16,14 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g
-const ALLOWED_EMAIL = [/@example\.(com|org|net|local)$/i, /@users\.noreply\.github\.com$/i, /^noreply@anthropic\.com$/i]
+// Reserved example domains and their subdomains (RFC 2606), GitHub's noreply
+// addresses (a user's, and GitHub's own for web merges) and Claude's co-author.
+const ALLOWED_EMAIL = [
+  /@([a-z0-9-]+\.)*example\.(com|org|net|local)$/i,
+  /@users\.noreply\.github\.com$/i,
+  /^noreply@github\.com$/i,
+  /^noreply@anthropic\.com$/i,
+]
 const BINARY = /\.(png|jpe?g|gif|webp|ico|woff2?|ttf|glb|hdr|exr|mp3|ogg|wav|mp4)$/i
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
