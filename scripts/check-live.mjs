@@ -69,7 +69,8 @@ if (LIVE) {
   stamp()
   process.on('exit', stamp)
   // Ctrl+C or a kill skips 'exit' unless the process leaves through it.
-  for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exit(130))
+  process.on('SIGINT', () => process.exit(130))
+  process.on('SIGTERM', () => process.exit(143))
 }
 const NO_WEBGL = ['--disable-webgl', '--disable-webgl2']
 const SOFTWARE_WEBGL = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']

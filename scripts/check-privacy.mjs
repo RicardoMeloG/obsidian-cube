@@ -88,8 +88,11 @@ for (const problem of problems) console.log(problem)
 console.log(`Privacy check: ${problems.length} findings in ${scope} (${source}).`)
 // On CI an empty list means the PRIVACY_DENYLIST secret did not arrive: from
 // 12-11 to 19-11 CI ran without it and checked only e-mails (dt-26). A pull
-// request from a fork never gets secrets, so there it is only a warning.
+// request from a fork never gets secrets, nor does a Dependabot run (it gets
+// Dependabot secrets instead), so there it is only a warning.
 const listMissing = process.env.GITHUB_ACTIONS === 'true' && values.length === 0
-const fork = process.env.GITHUB_EVENT_NAME === 'pull_request' && process.env.GITHUB_HEAD_REPO !== process.env.GITHUB_REPOSITORY
+const fork =
+  (process.env.GITHUB_EVENT_NAME === 'pull_request' && process.env.GITHUB_HEAD_REPO !== process.env.GITHUB_REPOSITORY) ||
+  process.env.GITHUB_ACTOR === 'dependabot[bot]'
 if (listMissing) console.log(`::${fork ? 'warning' : 'error'}::check:privacy ran without the PRIVACY_DENYLIST secret; only e-mails were checked.`)
 process.exitCode = problems.length > 0 || (listMissing && !fork) ? 1 : 0
