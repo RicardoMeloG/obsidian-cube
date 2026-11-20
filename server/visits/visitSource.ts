@@ -99,7 +99,7 @@ export type S3Reader = {
 // at a time a 90-day view took minutes (audit of 2026-11-19).
 const READ_AT_ONCE = 8
 // An error that no other object will escape: stop and say so.
-const FATAL_ERROR = /Credential|Token|SSO|Expired|AccessDenied|NoSuchBucket/i
+const FATAL_ERROR = /Credential|Token|SSO|Expired|AccessDenied|NoSuchBucket|InvalidAccessKeyId|SignatureDoesNotMatch/i
 
 export type S3ReadCount = { read: number; skipped: number }
 

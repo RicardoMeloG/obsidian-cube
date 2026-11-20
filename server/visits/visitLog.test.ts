@@ -80,6 +80,16 @@ describe('agentOf', () => {
     expect(agentOf('ClaudeBot/1.0; +https://claude.ai/bot')).toBe('crawler')
   })
 
+  it('classifies link previews (Facebook, WhatsApp, Embedly) as crawlers', () => {
+    for (const ua of [
+      'facebookexternalhit/1.1%20(+http://www.facebook.com/externalhit_uatext.php)',
+      'WhatsApp/2.23.20.0',
+      'Mozilla/5.0%20(compatible;%20Embedly/0.2;%20+http://support.embed.ly/)',
+    ]) {
+      expect(agentOf(ua), ua).toBe('crawler')
+    }
+  })
+
   it('classifies - as crawler', () => {
     expect(agentOf('-')).toBe('crawler')
   })

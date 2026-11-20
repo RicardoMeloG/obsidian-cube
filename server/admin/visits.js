@@ -144,8 +144,8 @@
 
   function render(container, data, w) {
     const hint = container.querySelector('.vz-hint');
-    hint.textContent = 'del ' + data.from + ' al ' + data.to + ' · ' + (data.source === 's3' ? 'CloudFront (S3)' : 'datos de ejemplo') +
-      (data.skipped ? ' · ' + data.skipped + ' archivos de registro ilegibles omitidos' : '');
+    hint.textContent = 'del ' + data.from + ' al ' + data.to + ' (días UTC) · ' + (data.source === 's3' ? 'CloudFront (S3)' : 'datos de ejemplo') +
+      (data.skipped ? ' · ' + data.skipped + (data.skipped === 1 ? ' archivo de registro ilegible omitido' : ' archivos de registro ilegibles omitidos') : '');
     const cc = data.countries.filter(c => c.key !== 'ZZ').length;
     const tiles = el('div', 'vz-tiles');
     [['Visitas', data.visits], ['Países', cc], ['Rastreadores', data.crawlers], ['Otras rutas', data.otherPaths]].forEach(function (pair) {
@@ -181,7 +181,8 @@
     try {
       const results = await Promise.all([
         fetch('/api/visits?days=' + days, { credentials: 'same-origin' }),
-        getWorld()
+        // A failed map must not hide the server's message (a 503 says why).
+        getWorld().catch(function (e) { return e instanceof Error ? e : new Error(String(e)); })
       ]);
       if (run !== seq) return;
       const res = results[0], w = results[1];
@@ -189,6 +190,10 @@
         const body = await res.json().catch(function () { return {}; });
         if (run !== seq) return;
         errEl.textContent = body.message || 'No se pudieron cargar las visitas.';
+        return;
+      }
+      if (w instanceof Error) {
+        errEl.textContent = 'No se pudo cargar el mapa (world.json).';
         return;
       }
       const data = await res.json();

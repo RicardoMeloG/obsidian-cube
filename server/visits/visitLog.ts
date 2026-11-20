@@ -18,7 +18,7 @@ const ASSET_EXTENSIONS: readonly string[] = [
   '.json', '.xml', '.txt', '.webmanifest',
 ]
 const CRAWLER_RE =
-  /bot|crawl|spider|slurp|fetch|scrape|preview|curl|wget|python|httpx|go-http|java\/|okhttp|axios|node-fetch|headless|lighthouse|monitor|uptime|scan|archive/i
+  /bot|crawl|spider|slurp|fetch|scrape|preview|curl|wget|python|httpx|go-http|java\/|okhttp|axios|node-fetch|headless|lighthouse|monitor|uptime|scan|archive|facebookexternalhit|whatsapp|embedly/i
 
 export function pagePathOf(stem: string): string | null {
   let path: string

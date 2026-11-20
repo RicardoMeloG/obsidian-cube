@@ -197,4 +197,20 @@ describe('forEachS3Line', () => {
     }
     await expect(forEachS3Line(reader, '', new Date('2025-06-15T00:00:00Z'), () => {})).rejects.toThrow('expired')
   })
+
+  it('stops at once on a wrong key or signature', async () => {
+    for (const name of ['InvalidAccessKeyId', 'SignatureDoesNotMatch']) {
+      const reader: S3Reader = {
+        async *list() {
+          yield { key: 'a', lastModified: new Date('2025-06-15T12:00:00Z') }
+          yield { key: 'b', lastModified: new Date('2025-06-15T12:00:00Z') }
+        },
+        async read(key: string) {
+          if (key === 'a') return Buffer.from('{"x":1}\n')
+          throw Object.assign(new Error(name), { name })
+        },
+      }
+      await expect(forEachS3Line(reader, '', new Date('2025-06-15T00:00:00Z'), () => {}), name).rejects.toThrow(name)
+    }
+  })
 })
