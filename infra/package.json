@@ -13,7 +13,7 @@
     "bootstrap": "cdk bootstrap",
     "prepare:cdk": "node scripts/prepare-cdk.mjs"
   },
-  "//": "Self-contained CDK project: its own node_modules + TypeScript (pinned to 5.x, independent of the app's TS 6). Run `npm run prepare:cdk` then `npm ci` inside infra/.",
+  "//": "Self-contained CDK project: its own node_modules + TypeScript (6.0, like the app, but its own copy). Run `npm run prepare:cdk` then `npm ci` inside infra/.",
   "devDependencies": {
     "@types/node": "~22.20.5",
     "aws-cdk": "^2.1149.0",
