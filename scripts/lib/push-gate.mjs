@@ -122,6 +122,22 @@ export function messages(base, head) {
   return git('log', '--format=%B%x00', range).split('\0').map((message) => message.trim()).filter(Boolean)
 }
 
+// The author and committer of every commit the push adds, as "Name <e-mail>".
+export function identities(base, head) {
+  const range = base === EMPTY_TREE ? head : `${base}..${head}`
+  return [...new Set(git('log', '--format=%an <%ae>%n%cn <%ce>', range).split('\n').filter(Boolean))]
+}
+
+// A public repository shows every commit's author and committer. Only GitHub's
+// noreply address may sign them (dt-24: 41 commits went out with a personal
+// address because the new clone had no identity of its own). GitHub itself
+// commits a merge or an edit made on the web as `GitHub <noreply@github.com>`.
+const PUBLIC_EMAIL = /<[^<>@\s]+@users\.noreply\.github\.com>$/i
+const GITHUB_WEB = 'GitHub <noreply@github.com>'
+export function privateIdentities(list) {
+  return list.filter((identity) => identity !== GITHUB_WEB && !PUBLIC_EMAIL.test(identity))
+}
+
 // Ignore rules apply to the path even when the file was added with --force.
 export function ignoredPaths(paths) {
   if (paths.length === 0) return []

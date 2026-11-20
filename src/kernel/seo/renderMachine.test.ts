@@ -155,3 +155,12 @@ describe('the files of the layer', () => {
     expect(body).toContain(`<a href="/${LLMS_FILE}">`)
   })
 })
+
+describe('links the machine files refuse (dp-06)', () => {
+  it('never writes a script or data target as a link, in llms.txt or the profile page', () => {
+    const [first, ...rest] = en.sections
+    const hostile: MachineInput = { ...en, sections: [{ ...first, ctaPrimary: { label: 'Hostile', href: 'javascript:alert(1)' } }, ...rest] }
+    expect(renderLlmsTxt(hostile)).not.toContain('javascript:')
+    expect(renderProfilePage(hostile)).not.toContain('javascript:')
+  })
+})

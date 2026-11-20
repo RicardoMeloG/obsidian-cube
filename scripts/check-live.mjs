@@ -6,13 +6,72 @@
 //   node scripts/check-live.mjs                       https://ricardomelog.com
 //   node scripts/check-live.mjs --url=http://127.0.0.1:5181   a local preview
 //   node scripts/check-live.mjs --only=CU-03,CU-09
+//   node scripts/check-live.mjs --force               skip the five-minute pause
 //
 // Read-only: it opens pages and reads headers, it never posts anything.
+//
+// The WAF blocks a client above 300 requests in 5 minutes, and one full run
+// makes about 150 to 200 (dt-01). Two runs in a row block the owner's own IP
+// and the site looks down. So a run on the live site waits five minutes after
+// the previous one, and stops at the first sign of the block, saying so,
+// instead of reporting every later use case as a failure of the site.
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { chromium } from 'playwright'
 
 const BASE = (process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'https://ricardomelog.com').replace(/\/$/, '')
 const ONLY = process.argv.find((arg) => arg.startsWith('--only='))?.slice(7).split(',')
 const LIVE = BASE.startsWith('https://')
+const FORCE = process.argv.includes('--force')
+// The WAF's window, and where the last live run is stamped (outside the repo).
+const WAF_WINDOW_MS = 5 * 60 * 1000
+const STAMP = join(tmpdir(), 'obsidian-cube-check-live', `${new URL(BASE).hostname}.last-run`)
+
+// The WAF refuses the client: the home page, which is public, answers 403, or
+// CloudFront answers it with its own error instead of the site.
+async function wafBlocked() {
+  try {
+    const response = await fetch(`${BASE}/`)
+    return response.status === 403 || response.status === 429 || /Error from cloudfront/i.test(response.headers.get('x-cache') ?? '')
+  } catch {
+    return false
+  }
+}
+
+function stopForWaf(when) {
+  console.log(`\nSTOPPED ${when}: the WAF is refusing this IP (the home page answers 403 or 429).`)
+  console.log('This is the rate limit of 300 requests in 5 minutes, not a failure of the site: it lifts by itself in a few minutes.')
+  console.log('Wait at least 5 minutes before running check:live again.')
+  process.exit(2)
+}
+
+if (LIVE) {
+  const last = existsSync(STAMP) ? Number(readFileSync(STAMP, 'utf8')) : 0
+  const wait = last + WAF_WINDOW_MS - Date.now()
+  if (wait > 0 && !FORCE) {
+    console.log(`The last run on ${BASE} was ${Math.round((Date.now() - last) / 1000)} s ago. Another one now could trip the WAF's limit`)
+    console.log(`(300 requests in 5 minutes) and block this IP. Try again in ${Math.ceil(wait / 1000)} s, or pass --force.`)
+    process.exit(2)
+  }
+  if (await wafBlocked()) stopForWaf('before starting')
+  mkdirSync(join(tmpdir(), 'obsidian-cube-check-live'), { recursive: true })
+  // Stamped again on the way out, however the run ends: the WAF's window
+  // slides, so the next run waits five minutes from this run's last request.
+  // A failed write only loses the wait, so it never replaces the exit code.
+  const stamp = () => {
+    try {
+      writeFileSync(STAMP, String(Date.now()))
+    } catch (error) {
+      console.warn(`Could not stamp ${STAMP}: ${error.message}`)
+    }
+  }
+  stamp()
+  process.on('exit', stamp)
+  // Ctrl+C or a kill skips 'exit' unless the process leaves through it.
+  process.on('SIGINT', () => process.exit(130))
+  process.on('SIGTERM', () => process.exit(143))
+}
 const NO_WEBGL = ['--disable-webgl', '--disable-webgl2']
 const SOFTWARE_WEBGL = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
 // Software WebGL lacks an extension every real GPU driver has; three.js says so
@@ -27,6 +86,21 @@ const launch = (args) => chromium.launch({ executablePath: process.env.PW_CHROMI
 async function watchedPage(browser, problems, options = {}) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US', ...options })
   const page = await context.newPage()
+  // A request the browser drops because the page moved on (a new address, a
+  // face change) or the test closed it is not a failure of the site: the
+  // console shows nothing, only the network panel marks it cancelled. One cut
+  // short on a page that stayed put still counts (dt-01).
+  let navigations = 0
+  let closing = false
+  const startedAt = new WeakMap()
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) navigations += 1
+  })
+  page.on('request', (request) => startedAt.set(request, navigations))
+  const close = async () => {
+    closing = true
+    await context.close()
+  }
   const excused = options.softwareWebgl ? SOFTWARE_ONLY : []
   page.on('console', (message) => {
     if (!['error', 'warning'].includes(message.type())) return
@@ -37,23 +111,35 @@ async function watchedPage(browser, problems, options = {}) {
   page.on('pageerror', (error) => problems.push(`page error: ${error.message.slice(0, 200)}`))
   page.on('requestfailed', (request) => {
     // A navigation the test itself cuts short is not a failure of the site.
-    if (request.failure()?.errorText === 'net::ERR_ABORTED' && request.resourceType() === 'document') return
+    if (request.failure()?.errorText === 'net::ERR_ABORTED') {
+      if (request.resourceType() === 'document' || closing || (startedAt.get(request) ?? navigations) < navigations) return
+    }
     problems.push(`request failed: ${request.url()} ${request.failure()?.errorText}`)
   })
   page.on('response', (response) => {
     if (response.status() >= 400) problems.push(`HTTP ${response.status()}: ${response.url()}`)
   })
-  return { context, page }
+  return { context, page, close }
 }
+
+let blocked = false
 
 async function useCase(id, title, run) {
   if (ONLY && !ONLY.includes(id)) return
+  if (blocked) return
   const problems = []
   const started = Date.now()
   try {
     await run(problems)
   } catch (error) {
     problems.push(`stopped: ${error.message.split('\n')[0].slice(0, 200)}`)
+  }
+  // A failure may be the WAF's block rather than the site: check once, and
+  // if so, report it as such and run nothing more.
+  if (problems.length && LIVE && (await wafBlocked())) {
+    blocked = true
+    console.log(`WAF  ${id} ${title}: the WAF started refusing this IP during the case; its problems are not counted.`)
+    return
   }
   results.push({ id, title, problems, seconds: ((Date.now() - started) / 1000).toFixed(1) })
   console.log(`${problems.length ? 'FAIL' : 'ok  '} ${id} ${title} (${results.at(-1).seconds} s)`)
@@ -77,7 +163,7 @@ console.log(`Use cases on ${BASE}`)
 try {
   // CU-01: a recruiter clicks the link on the CV, on a desktop, browser in English.
   await useCase('CU-01', 'Recruiter from the CV: first visit, intro, name in seconds, picks a face', async (problems) => {
-    const { context, page } = await watchedPage(softwareBrowser, problems, { viewport: { width: 1366, height: 768 }, softwareWebgl: true })
+    const { context, page, close } = await watchedPage(softwareBrowser, problems, { viewport: { width: 1366, height: 768 }, softwareWebgl: true })
     context.setDefaultTimeout(120000)
     const response = await page.goto(`${BASE}/`)
     expect(problems, response.status() === 200, `home answered ${response.status()}`)
@@ -107,12 +193,12 @@ try {
       expect(problems, await visible(page, '.stage-content'), 'the face content is hidden after the pick')
       expect(problems, /^\/[a-z]+$/.test(new URL(page.url()).pathname), `address did not follow the face: ${page.url()}`)
     }
-    await context.close()
+    await close()
   })
 
   // CU-02: a visitor whose browser is in Spanish arrives at the bare address.
   await useCase('CU-02', 'Spanish visitor: lands in Spanish and moves through the faces with the dock', async (problems) => {
-    const { context, page } = await watchedPage(noWebglBrowser, problems, { locale: 'es-CL' })
+    const { context, page, close } = await watchedPage(noWebglBrowser, problems, { locale: 'es-CL' })
     await page.goto(`${BASE}/?intro=0`)
     await idle(page)
     await page.waitForFunction(() => location.pathname === '/es', null, { timeout: 5000 }).catch(() => problems.push(`stayed on ${page.url()}`))
@@ -125,12 +211,12 @@ try {
       titles.add(await page.title())
     }
     expect(problems, titles.size === 3, 'faces share a title')
-    await context.close()
+    await close()
   })
 
   // CU-03: someone receives a shared link to a face and switches the language.
   await useCase('CU-03', 'Shared link to a face: opens on it, the language switch keeps the face', async (problems) => {
-    const { context, page } = await watchedPage(noWebglBrowser, problems, { locale: 'es-CL' })
+    const { context, page, close } = await watchedPage(noWebglBrowser, problems, { locale: 'es-CL' })
     await page.goto(`${BASE}/es/productos?intro=0`)
     await idle(page, 'products')
     expect(problems, (await page.title()) !== '', 'empty title')
@@ -145,12 +231,12 @@ try {
     await idle(page)
     await page.waitForTimeout(500)
     expect(problems, new URL(page.url()).pathname === '/', `the bare address moved to ${page.url()}`)
-    await context.close()
+    await close()
   })
 
   // CU-04: the same link opened on a phone, from LinkedIn or WhatsApp.
   await useCase('CU-04', 'Phone (390 px): the face reads without sideways scrolling and the dock works', async (problems) => {
-    const { context, page } = await watchedPage(softwareBrowser, problems, {
+    const { context, page, close } = await watchedPage(softwareBrowser, problems, {
       viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: 'es-CL', softwareWebgl: true,
     })
     context.setDefaultTimeout(120000)
@@ -162,12 +248,12 @@ try {
     await page.tap('.stage-dock a[data-section-id="systems"]')
     await idle(page, 'systems')
     expect(problems, new URL(page.url()).pathname === '/es/sistemas', `dock tap left the address at ${page.url()}`)
-    await context.close()
+    await close()
   })
 
   // CU-05: a keyboard user opens a face's detail and leaves it.
   await useCase('CU-05', 'Keyboard: opens a detail, Tab stays inside, Esc closes and returns focus', async (problems) => {
-    const { context, page } = await watchedPage(noWebglBrowser, problems)
+    const { context, page, close } = await watchedPage(noWebglBrowser, problems)
     await page.goto(`${BASE}/agentic?intro=0`)
     await idle(page, 'agentic')
     const trigger = page.locator('.stage-content button.st-button').first()
@@ -183,45 +269,51 @@ try {
     await page.waitForSelector('dialog[open]', { state: 'detached', timeout: 5000 }).catch(() => problems.push('Esc did not close the dialog'))
     const back = await page.evaluate(() => document.activeElement?.classList.contains('st-button') ?? false)
     expect(problems, back, 'focus did not return to the button that opened the detail')
-    await context.close()
+    await close()
   })
 
   // CU-06: a curious visitor plays with the cube and comes back.
   await useCase('CU-06', 'Cube mode: the interface steps aside and Esc brings it back', async (problems) => {
-    const { context, page } = await watchedPage(softwareBrowser, problems, { softwareWebgl: true })
+    const { context, page, close } = await watchedPage(softwareBrowser, problems, { softwareWebgl: true })
     context.setDefaultTimeout(120000)
     await page.goto(`${BASE}/systems?intro=0`)
     await idle(page, 'systems')
     await page.click('.stage-explore')
     await page.waitForSelector('.stage[data-explore]', { timeout: 5000 })
-    await page.waitForTimeout(700)
+    // Wait for the fade to end, not a fixed time: software WebGL keeps the
+    // main thread busy and 700 ms sometimes measured mid-fade (dt-23).
+    const contentHidden = (want) =>
+      page
+        .waitForFunction((hidden) => (getComputedStyle(document.querySelector('.stage-content')).visibility === 'hidden') === hidden, want, { timeout: 10000 })
+        .catch(() => {})
+    await contentHidden(true)
     expect(problems, !(await visible(page, '.stage-content')), 'content still shows in cube mode')
     await page.keyboard.press('Escape')
     await page.waitForSelector('.stage:not([data-explore])', { timeout: 5000 }).catch(() => problems.push('Esc did not leave cube mode'))
-    await page.waitForTimeout(700)
+    await contentHidden(false)
     expect(problems, await visible(page, '.stage-content'), 'content did not come back')
-    await context.close()
+    await close()
   })
 
   // CU-07: an old laptop, a locked-down corporate browser: no WebGL.
   await useCase('CU-07', 'No WebGL: a still of the cube, the whole interface, no errors', async (problems) => {
-    const { context, page } = await watchedPage(noWebglBrowser, problems)
+    const { context, page, close } = await watchedPage(noWebglBrowser, problems)
     await page.goto(`${BASE}/research?intro=0`)
     await idle(page, 'research')
     expect(problems, await visible(page, '.stage-content'), 'content hidden without WebGL')
     expect(problems, !(await page.$('canvas')), 'a canvas was created without WebGL')
-    await context.close()
+    await close()
   })
 
   // CU-08: a visitor who asked the system for less motion.
   await useCase('CU-08', 'Reduced motion: no intro, the site opens ready to read', async (problems) => {
-    const { context, page } = await watchedPage(softwareBrowser, problems, { reducedMotion: 'reduce', softwareWebgl: true })
+    const { context, page, close } = await watchedPage(softwareBrowser, problems, { reducedMotion: 'reduce', softwareWebgl: true })
     context.setDefaultTimeout(120000)
     await page.goto(`${BASE}/`)
     await idle(page)
     expect(problems, !(await page.$('[data-intro="pending"]')), 'the intro played despite reduced motion')
     expect(problems, await visible(page, '.stage-top'), 'the top is hidden')
-    await context.close()
+    await close()
   })
 
   // CU-09: machines: answer engines, crawlers and link previews read the raw HTML.
@@ -283,7 +375,7 @@ try {
 
   // CU-11: the owner's rules: the CV is never on the site, no tracking.
   await useCase('CU-11', 'Owner rules: no CV to download, no third-party trackers, no cookies', async (problems) => {
-    const { context, page } = await watchedPage(noWebglBrowser, problems)
+    const { context, page, close } = await watchedPage(noWebglBrowser, problems)
     const hosts = new Set()
     page.on('request', (request) => hosts.add(new URL(request.url()).host))
     for (const path of ['/contact?intro=0', '/es/contacto?intro=0']) {
@@ -297,12 +389,12 @@ try {
     const foreign = [...hosts].filter((host) => host !== own)
     expect(problems, foreign.length === 0, `requests to other hosts: ${foreign.join(', ')}`)
     expect(problems, (await context.cookies()).length === 0, 'the site set cookies')
-    await context.close()
+    await close()
   })
 
   // CU-12: every address in both languages opens clean, on a desktop.
   await useCase('CU-12', 'Every page in both languages opens with a clean console', async (problems) => {
-    const { context, page } = await watchedPage(softwareBrowser, problems, { softwareWebgl: true })
+    const { context, page, close } = await watchedPage(softwareBrowser, problems, { softwareWebgl: true })
     context.setDefaultTimeout(120000)
     const faces = { en: ['', 'agentic', 'products', 'systems', 'security', 'research', 'contact'], es: ['', 'agentico', 'productos', 'sistemas', 'seguridad', 'investigacion', 'contacto'] }
     for (const [locale, slugs] of Object.entries(faces)) {
@@ -314,12 +406,14 @@ try {
         await page.waitForTimeout(1200)
       }
     }
-    await context.close()
+    await close()
   })
 } finally {
   await softwareBrowser.close()
   await noWebglBrowser.close()
 }
+
+if (blocked) stopForWaf(`after ${results.length} use cases (${results.filter((result) => !result.problems.length).length} passed)`)
 
 const failed = results.filter((result) => result.problems.length)
 console.log(`\n${results.length - failed.length} of ${results.length} use cases passed on ${BASE}`)

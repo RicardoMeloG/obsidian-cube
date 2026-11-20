@@ -8,6 +8,7 @@ The layout check proves the build before it ships; these use cases prove the pub
 npm run check:live                                 # https://ricardomelog.com
 npm run check:live -- --url=http://127.0.0.1:5181  # a local preview, before a deploy
 npm run check:live -- --only=CU-09,CU-10
+npm run check:live -- --force                      # skip the five-minute pause
 ```
 
 ## Use cases
@@ -32,4 +33,7 @@ npm run check:live -- --only=CU-09,CU-10
 - **Software WebGL.** The runs use SwiftShader. Three.js warns once that it lacks `KHR_parallel_shader_compile`, an extension real GPU drivers have; only that line is excused, and only in software runs. Checked on 2026-11-12 in Edge with a real GPU: the warning does not appear.
 - **THREE.Clock.** `@react-three/fiber` 9 (up to 9.8.2) still creates a `THREE.Clock`, deprecated in three r183, so every visit printed a warning. `src/features/scene/threeConsole.ts` drops that one message through three's own console hook; remove it when fiber moves to `THREE.Timer`.
 - **Unknown paths.** An unknown or private path answers 404 with the static `404.html` (spec 010, AD-09); CU-10 checks the status, the page and that no private content is served.
+- **The WAF's rate limit.** The web ACL blocks a client above 300 requests in 5 minutes, and one full run makes about 150 to 200, so two runs in a row block the owner's own IP and the whole site answers 403 for a few minutes (dt-01). A run on the live site therefore refuses to start within five minutes of the previous one (`--force` overrides it; the stamp lives in the system's temporary folder), checks the home page before starting, and when a use case fails it checks again: if the WAF is refusing the IP, the run stops there with exit code 2 and says so, instead of reporting the rest as failures of the site.
+- **Cancelled requests.** A request the browser drops because the page moved to another address or face, or because the test closed it, is not counted: the console shows nothing and only the network panel marks it cancelled. One cut short on a page that stayed put still fails the case.
+- **Local preview.** `vite preview` answers the home page for any path, so CU-10's unknown and private paths fail on a local run; that case is meaningful on the published site only.
 - **Published content.** `/content/site.*.json` and `/content/profile.*.json` are the published content the page reads; they are public by design (ADR 004).

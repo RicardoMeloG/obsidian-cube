@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ArrowUpRight, Globe } from 'lucide-react'
 import type { ChannelKind } from '@/kernel/compositions'
+import { safeHref } from '@/kernel/links'
 import { FaceActions, Heading } from '../blocks'
 import { rise } from '../motion'
 import type { TemplateProps } from '../blocks'
@@ -27,9 +28,13 @@ export function Channels({ composition, face, counter, onOpenDetail }: TemplateP
         </p>
       )}
       <ul className="ch-channels">
-        {composition.channels.map((channel, index) => (
+        {/* A channel is its link: one whose target is not allowed is left out (dp-06). */}
+        {composition.channels.flatMap((channel, index) => {
+          const href = safeHref(channel.href)
+          return href ? [{ channel, href, index }] : []
+        }).map(({ channel, href, index }) => (
           <li key={index}>
-            <a className="focus-ring" href={channel.href} target={/^https?:/.test(channel.href) ? '_blank' : undefined} rel="noreferrer">
+            <a className="focus-ring" href={href} target={/^https:/i.test(href) ? '_blank' : undefined} rel="noreferrer">
               <span className="st-tile">{CHANNEL_ICONS[channel.kind]}</span>
               <span>
                 <strong>{channel.label}</strong>

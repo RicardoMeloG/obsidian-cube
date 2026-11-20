@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { MouseEvent, RefObject } from 'react'
+import { safeHref } from '@/kernel/links'
 import type { FaceDetail } from '@/kernel/siteContent'
 import { RichText } from '@/features/content/RichText'
 import { cx } from '@/ui/cx'
@@ -129,8 +130,8 @@ export function DetailDialog({ detail, faceLabel, closeLabel, onClose, restoreFo
           // background, so an empty cell would show as a violet block.
           <div className="mt-[1.4rem] grid grid-cols-2 gap-px border border-violet-500/18 bg-violet-500/18 narrow:grid-cols-1 [&>*:last-child:nth-child(odd)]:col-span-full">
             {detail.links.map((link) =>
-              link.href ? (
-                <a className={cx(LINK_TILE, 'focus-ring')} href={link.href} key={link.label} rel="noreferrer" target="_blank">
+              safeHref(link.href) ? (
+                <a className={cx(LINK_TILE, 'focus-ring')} href={safeHref(link.href)} key={link.label} rel="noreferrer" target="_blank">
                   <strong className={LINK_LABEL}>{link.label}</strong>
                   {link.description && <RichText as="span" className={LINK_NOTE} html={link.description} />}
                 </a>

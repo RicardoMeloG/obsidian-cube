@@ -6,6 +6,7 @@
 // recognised title and skill is named once: repeating keywords is stuffing.
 //
 // Pure and DOM-free, like renderSeo.ts.
+import { isAllowedHref } from '../links'
 import type { ProfileContent } from '../profileContent'
 import type { SiteContent, SiteLocale } from '../siteContent'
 import { pagePath } from '../sitePaths'
@@ -62,9 +63,10 @@ function hostOf(href: string): string | undefined {
 const isWeb = (href: string) => /^https:\/\//i.test(href)
 
 // An in-page anchor means nothing outside the page; a path on this site
-// becomes absolute when the site's address is known.
+// becomes absolute when the site's address is known. A target that is not
+// allowed (dp-06, links.ts) is not written as a link.
 function resolveHref(href: string, siteUrl?: string): string | undefined {
-  if (href.startsWith('#')) return undefined
+  if (href.startsWith('#') || !isAllowedHref(href)) return undefined
   return href.startsWith('/') ? absoluteUrl(href, siteUrl) : href
 }
 
