@@ -459,11 +459,19 @@ try {
     // double-click there lands on the world, not on the interface.
     // The mode opens only once the scene is ready (spec 017), which on
     // software WebGL comes a few seconds after the stage: try again until then.
-    let shown = false
-    for (let attempt = 0; attempt < 8 && !shown; attempt++) {
+    // A double-click on the opening layer would close it again, so another
+    // one is sent only while the mode has not started.
+    const phase = () => page.evaluate(() => document.querySelector('.art-mode')?.getAttribute('data-phase') ?? 'off')
+    let started = false
+    for (let attempt = 0; attempt < 8 && !started; attempt++) {
       await page.mouse.dblclick(800, 450)
-      shown = await page.waitForSelector('.art-mode[data-phase="on"]', { timeout: 8000 }).then(() => true).catch(() => false)
+      started = await page
+        .waitForFunction(() => ['covering', 'on'].includes(document.querySelector('.art-mode')?.getAttribute('data-phase') ?? 'off'), null, { timeout: 8000 })
+        .then(() => true)
+        .catch(() => false)
     }
+    const shown = started && (await page.waitForSelector('.art-mode[data-phase="on"]', { timeout: 90000 }).then(() => true).catch(() => false))
+    if (started && !shown) problems.push(`art mode started but never showed (phase ${await phase()})`)
     expect(problems, shown, 'art mode did not open on a double-click')
     if (shown) {
       const signature = (await page.locator('.art-mode__signature').textContent())?.trim() ?? ''

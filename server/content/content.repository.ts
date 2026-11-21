@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common'
 import type { Pool } from 'pg'
 
 // Plain (no Nest decorator) so it stays trivially testable with an injected
-// pg-mem pool. The DB is optional: if it can't be reached, the repository marks
+// pool. The DB is optional: if it can't be reached, the repository marks
 // itself unavailable and the service degrades to file-only mode.
 
 const DDL = `
