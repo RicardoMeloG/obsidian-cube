@@ -86,6 +86,20 @@ describe('match-log receiver', () => {
     expect(res.json).not.toContain('https://ricardomelog.github.io')
   })
 
+  it('a match that crosses midnight UTC keeps the day it started (dt-07)', () => {
+    const clave = '3f2b8c1e-4d5a-4b6c-8d7e-9f0a1b2c3d4e'
+    expect(objectKey(clave, new Date('2026-01-03T00:10:00Z'), '2026-01-02T23:55:00.000Z')).toBe(`partidas/2026-01-02/${clave}.json`)
+  })
+
+  it('a start far from the server clock or unreadable falls back to the day of arrival', () => {
+    const clave = '3f2b8c1e-4d5a-4b6c-8d7e-9f0a1b2c3d4e'
+    const now = new Date('2026-01-03T00:10:00Z')
+    expect(objectKey(clave, now, '2019-05-01T10:00:00Z')).toBe(`partidas/2026-01-03/${clave}.json`)
+    expect(objectKey(clave, now, '2026-01-05T10:00:00Z')).toBe(`partidas/2026-01-03/${clave}.json`)
+    expect(objectKey(clave, now, 'yesterday')).toBe(`partidas/2026-01-03/${clave}.json`)
+    expect(objectKey(clave, now, 1767225600000)).toBe(`partidas/2026-01-03/${clave}.json`)
+  })
+
   it('objectKey builds the expected path', () => {
     expect(objectKey('3f2b8c1e-4d5a-4b6c-8d7e-9f0a1b2c3d4e', new Date('2026-01-02T23:59:59Z'))).toBe('partidas/2026-01-02/3f2b8c1e-4d5a-4b6c-8d7e-9f0a1b2c3d4e.json')
   })

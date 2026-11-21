@@ -122,7 +122,7 @@ export function faceText(section: SiteSection): FaceText {
       ],
     })
   }
-  const ctas = [section.ctaPrimary, section.ctaSecondary, ...(section.links ?? [])].flatMap((cta) => (cta ? (link(cta.label, cta.href) ?? []) : []))
+  const ctas = [section.ctaPrimary, section.ctaSecondary].flatMap((cta) => (cta ? (link(cta.label, cta.href) ?? []) : []))
   return {
     label: section.label,
     title: toPlainText(section.title),

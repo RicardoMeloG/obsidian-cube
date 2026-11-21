@@ -124,11 +124,9 @@ describe('publish rules', () => {
     expect(issues.some((issue) => issue.message.startsWith('Usa un enlace https:'))).toBe(true)
   })
 
-  it('check the links of the older field too: links (audit-2 B-11; `cta` retired 2026-10-18)', () => {
-    const section = { ...example.sections[0], links: [{ label: 'Old', href: 'http://plain.example.com' }] }
-    const paths = publishIssues({ ...example, sections: [section, ...example.sections.slice(1)] })
-      .filter((issue) => issue.message.startsWith('Usa un enlace https:'))
-      .map((issue) => issue.path.join('.'))
-    expect(paths).toEqual(['sections.0.links.0.href'])
+  it('drops the retired long-form fields of a face, links included (dt-42, 2026-11-21)', () => {
+    const section = { ...example.sections[0], intro: 'Old', highlights: ['Old'], proofPoints: ['Old'], links: [{ label: 'Old', href: 'http://plain.example.com' }] }
+    const parsed = SiteContentSchema.parse({ ...example, sections: [section, ...example.sections.slice(1)] })
+    for (const key of ['intro', 'highlights', 'proofPoints', 'links']) expect(parsed.sections[0], key).not.toHaveProperty(key)
   })
 })

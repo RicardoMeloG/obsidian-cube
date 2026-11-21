@@ -17,12 +17,15 @@ import { WafSampleCollector } from './waf-sample-collector'
 // custom response headers policies (spec 014, D-7).
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- a CommonJS module shared with edgeHeaders.test.ts; a CommonJS package loads it with require
 const { headersFunctionCode } = require('../edge/security-headers.cjs') as { headersFunctionCode: (headers: unknown) => string }
+const { CLEAN_PATHS_CODE } = require('../edge/clean-paths.cjs') as { CLEAN_PATHS_CODE: string }
 const securityHeaders = JSON.parse(readFileSync(join(__dirname, '..', 'security-headers.json'), 'utf8')) as unknown
 
 // Static hosting for the public Obsidian Cube site: a private S3 bucket fronted
 // by CloudFront (Origin Access Control — the bucket is never public). Content is
 // pushed by the deploy workflow (aws s3 sync), so this stack stays pure infra
 // and `cdk synth` runs offline without needing a build.
+const SITE_VERSION_DAYS = 30
+
 export class StaticSiteStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props)
@@ -33,6 +36,17 @@ export class StaticSiteStack extends cdk.Stack {
       enforceSSL: true,
       // Keep the bucket if the stack is deleted — content is recoverable.
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      // A bad sync or a published document overwritten by mistake can be
+      // rolled back for a month (ADR 004, slice 1; dt-32). Old versions then
+      // expire, so the bucket cannot grow without bound (spec 014).
+      versioned: true,
+      lifecycleRules: [
+        {
+          noncurrentVersionExpiration: cdk.Duration.days(SITE_VERSION_DAYS),
+          expiredObjectDeleteMarker: true,
+          abortIncompleteMultipartUploadAfter: cdk.Duration.days(1),
+        },
+      ],
     })
 
     const securityHeadersFunction = new cloudfront.Function(this, 'SecurityHeadersFunction', {
@@ -41,26 +55,11 @@ export class StaticSiteStack extends cdk.Stack {
       code: cloudfront.FunctionCode.fromInline(headersFunctionCode(securityHeaders)),
     })
 
-    // Clean paths (ADR 009): a path with no extension is served from
-    // its page, `/es/seguridad` from `es/seguridad.html` and `/es` from
-    // `es.html`, so each address gets its own language, title and share
-    // preview. A trailing slash is dropped first. The root becomes
-    // `/index.html` here, not by the default root object: since S3 grants
-    // CloudFront s3:ListBucket (AD-09), a bare `/` reaching the origin would
-    // be a bucket listing, so no path (`//` included) may arrive as `/`.
+    // www to the bare domain, and clean paths (ADR 009): infra/edge/clean-paths.cjs.
     const cleanPaths = new cloudfront.Function(this, 'CleanPaths', {
-      comment: 'Serves each clean path from its .html page (ADR 009)',
+      comment: 'Redirects www to the bare domain; serves each clean path from its .html page (ADR 009)',
       runtime: cloudfront.FunctionRuntime.JS_2_0,
-      code: cloudfront.FunctionCode.fromInline(`function handler(event) {
-  var request = event.request;
-  // Empty segments out: '//' and a trailing slash collapse, no backslash
-  // needed inside this template string.
-  var uri = '/' + request.uri.split('/').filter(function (part) { return part !== ''; }).join('/');
-  if (uri === '/') uri = '/index.html';
-  else if (uri.lastIndexOf('.') <= uri.lastIndexOf('/')) uri = uri + '.html';
-  request.uri = uri;
-  return request;
-}`),
+      code: cloudfront.FunctionCode.fromInline(CLEAN_PATHS_CODE),
     })
 
     // Custom domain (D-7, decided 2026-11-12): the DNS lives in Cloudflare, not

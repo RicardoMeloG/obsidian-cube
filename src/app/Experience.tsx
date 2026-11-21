@@ -111,16 +111,10 @@ function ExperienceView({ plan, webglAvailable }: { plan: IntroPlan; webglAvaila
   const activeSection = resolvedSections.find((section) => section.id === activeFace) ?? null
   const displayedSection = resolvedSections.find((section) => section.id === displayedFace) ?? activeSection
 
-  // The dialog shows the face's `detail`, otherwise its long-form fields.
+  // The dialog shows the face's `detail`, otherwise its title and summary.
   const dialogDetail = useMemo<FaceDetail | null>(() => {
     if (!activeSection) return null
-    if (activeSection.detail) return activeSection.detail
-    return {
-      title: activeSection.title,
-      summary: activeSection.intro ?? activeSection.summary,
-      points: [...(activeSection.highlights ?? []), ...(activeSection.proofPoints ?? [])],
-      links: activeSection.links,
-    }
+    return activeSection.detail ?? { title: activeSection.title, summary: activeSection.summary }
   }, [activeSection])
 
   const openDetail = useCallback(

@@ -4,8 +4,21 @@
 export const MAX_BYTES = 512 * 1024
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 
-export function objectKey(clave, now = new Date()) {
-  return `partidas/${now.toISOString().slice(0, 10)}/${clave}.json`
+const DAY_MS = 24 * 60 * 60 * 1000
+
+// The day of a match is the day it started (its `inicio`), so a match that
+// crosses midnight UTC lands in one object, not one per day (dt-07). A start
+// more than a day off the server's clock is not trusted, or a client could
+// write under any date: the key then takes the day of arrival.
+export function matchDay(inicio, now = new Date()) {
+  const started = typeof inicio === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(inicio) ? Date.parse(inicio) : Number.NaN
+  if (!Number.isFinite(started) || Math.abs(now.getTime() - started) > DAY_MS) return now.toISOString().slice(0, 10)
+  return new Date(started).toISOString().slice(0, 10)
+}
+
+/** @param {string} clave @param {Date} [now] @param {unknown} [inicio] */
+export function objectKey(clave, now = new Date(), inicio) {
+  return `partidas/${matchDay(inicio, now)}/${clave}.json`
 }
 
 export function validateLog(log) {
@@ -49,5 +62,5 @@ export function handleRequest({ method, headers, body, isBase64Encoded }, { allo
   if (reason) return { status: 400, reason }
 
   // re-serialise from the parsed object so no header value is ever stored
-  return { status: 204, key: objectKey(log.clave, now), json: JSON.stringify(log) }
+  return { status: 204, key: objectKey(log.clave, now, log.inicio), json: JSON.stringify(log) }
 }

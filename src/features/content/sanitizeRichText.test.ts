@@ -35,6 +35,16 @@ describe('sanitizeRichText', () => {
     expect(out).toContain('rel="noopener noreferrer"')
   })
 
+  it('keeps only the link schemes of the rest of the content (dp-06)', () => {
+    for (const href of ['http://x.com', 'ftp://x.com/f', 'tel:+56900000000', '//evil.example/x']) {
+      const out = sanitizeRichText(`<a href="${href}">x</a>`)
+      expect(out, href).not.toContain('href=')
+      expect(out).toContain('x')
+    }
+    expect(sanitizeRichText('<a href="mailto:a@example.com">m</a>')).toContain('href="mailto:a@example.com"')
+    expect(sanitizeRichText('<a href="/es/seguridad">s</a>')).toContain('href="/es/seguridad"')
+  })
+
   it('returns plain text unchanged', () => {
     const input = 'texto plano sin etiquetas'
     expect(sanitizeRichText(input)).toBe(input)

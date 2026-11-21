@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react'
+import { safeHref } from '@/kernel/links'
 import { cx } from './cx'
 import './ornaments.css'
 
@@ -16,10 +17,13 @@ const PILL =
   'pill focus-ring inline-flex cursor-pointer items-center gap-[0.55rem] rounded-full border border-[color-mix(in_srgb,var(--accent)_50%,transparent)] px-4 py-[0.62rem] text-cta text-ink-100/92 uppercase no-underline transition-[border-color,background,transform] duration-180 hover:-translate-y-px hover:border-(--accent)'
 
 // A call to action: a link when it has a target, otherwise a button.
-// External links open in a new tab.
+// External links open in a new tab. A target outside the allowed schemes
+// (https, mailto, a site path, dp-06) renders as plain text, never a link.
 export function PillButton(props: PillButtonProps) {
   if (props.href !== undefined) {
-    const { children, className, href, ...rest } = props
+    const { children, className, href: raw, ...rest } = props
+    const href = safeHref(raw)
+    if (!href) return <span className={cx(PILL, className)}>{children}</span>
     return (
       <a className={cx(PILL, className)} href={href} rel="noreferrer" target={href.startsWith('http') ? '_blank' : undefined} {...rest}>
         <span>{children}</span>

@@ -43,7 +43,12 @@ owner's machine (SSO: content/, fallback deploys) ──────┴─► S3
   Cloudflare, not Route 53. The ACM certificate (us-east-1) was requested and
   validated by hand with CNAME records in Cloudflare; its ARN and the domains
   reach the stack through the context in `infra/cdk.json`. Both names are
-  CNAMEs with the grey cloud (DNS only) to the distribution's domain.
+  CNAMEs with the grey cloud (DNS only) to the distribution's domain. ACM
+  renews the certificate on its own only while its validation CNAMEs stay in
+  Cloudflare: never delete them (dt-32). `www` answers a 301 to the bare
+  domain from the viewer-request function (`infra/edge/clean-paths.cjs`,
+  dt-34). The site bucket is versioned; old versions expire after 30 days
+  (ADR 004, slice 1).
 - **CI/CD**: `.github/workflows/ci.yml` (every gate listed in
   `docs/architecture.md`) and `infra.yml` (`cdk synth`, when `infra/` changes).
   `deploy.yml` (published content read from the live site → build, in a job
@@ -165,6 +170,10 @@ subscribing.
    a blocked path (`/.env.bak`), a 20 KB POST reaching the function (2026-11-14), and
    `check:live`. The web ACL is not in CDK; to go back, set each managed
    group's override action to *Count* in the console (one minute).
+   Its rules are kept as data in `infra/web-acl.expected.json` (spec 016,
+   P-2): `npm run check:waf` compares them with the live web ACL, read-only,
+   under the SSO profile; run it after any console change, and after a change
+   that is meant to stay, `npm run check:waf -- --update` and commit the diff.
 3. **Kill switch** (`ObsidianCubeCostGuard`): a 20 USD monthly budget publishes
    to SNS and a function disables the distribution. Deploy it with
    `npx cdk deploy ObsidianCubeCostGuard -c alertEmail=<owner email> --profile <profile>`

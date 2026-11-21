@@ -81,3 +81,15 @@ test('every log group expires its logs', () => {
     assert.ok(Number.isInteger(group.Properties?.RetentionInDays), `${group.id} keeps logs forever`)
   }
 })
+
+test('the site bucket keeps old versions for a bounded time (ADR 004 slice 1, dt-32)', () => {
+  const site = resources.find((resource) => resource.stack === 'Site' && resource.Type === 'AWS::S3::Bucket' && resource.id.startsWith('SiteBucket'))
+  assert.equal(site.Properties.VersioningConfiguration?.Status, 'Enabled')
+  const rule = site.Properties.LifecycleConfiguration?.Rules?.find((r) => r.NoncurrentVersionExpiration)
+  assert.ok(rule && rule.NoncurrentVersionExpiration.NoncurrentDays <= 90, 'old versions must expire')
+})
+
+test('www answers a redirect to the bare domain on the default behaviour (dt-34)', () => {
+  const fn = resources.find((resource) => resource.Type === 'AWS::CloudFront::Function' && resource.id.startsWith('CleanPaths'))
+  assert.match(fn.Properties.FunctionCode, /statusCode: 301/)
+})

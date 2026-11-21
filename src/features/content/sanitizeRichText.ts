@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify'
 import { RICH_TEXT_TAGS } from '@/kernel/fields'
+import { isAllowedHref } from '@/kernel/links'
 
 // Single security boundary for admin-authored rich content: every rich field
 // renders through this allow-list, in the browser. It needs the DOM, so it
@@ -11,7 +12,9 @@ import { RICH_TEXT_TAGS } from '@/kernel/fields'
 const ALLOWED_TAGS = RICH_TEXT_TAGS
 
 // Only anchors carry attributes. `javascript:`/`data:` URIs are blocked by
-// DOMPurify's default URI policy; we do not add ALLOW_UNKNOWN_PROTOCOLS.
+// DOMPurify's default URI policy, and the hook below narrows links to the
+// same schemes as every other link of the content (https, mailto, a site
+// path, #: dp-06), so a rich text cannot link where a card could not.
 const ALLOWED_ATTR = ['href', 'target', 'rel']
 
 let hookInstalled = false
@@ -20,6 +23,8 @@ function ensureHook() {
   if (hookInstalled) return
   // Harden any link that opens a new tab against reverse-tabnabbing.
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    const href = node.getAttribute('href')
+    if (node.tagName === 'A' && href !== null && !isAllowedHref(href.trim())) node.removeAttribute('href')
     if (node.tagName === 'A' && node.getAttribute('target') === '_blank') {
       node.setAttribute('rel', 'noopener noreferrer')
     }

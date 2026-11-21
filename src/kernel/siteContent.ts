@@ -27,10 +27,10 @@ const SiteSectionSchema = z.object({
   ctaSecondary: z.optional(CtaSchema).clone().register(z.globalRegistry, { title: 'Llamado secundario' }),
   // The face's composition in the stage layout (spec 011, AD-01).
   composition: z.optional(CompositionSchema),
-  intro: z.optional(RichTextSchema).clone().register(z.globalRegistry, { title: 'Introducción (diálogo)' }),
-  highlights: z.optional(z.array(RichTextSchema)).clone().register(z.globalRegistry, { title: 'Destacados (diálogo)' }),
-  proofPoints: z.optional(z.array(RichTextSchema)).clone().register(z.globalRegistry, { title: 'Pruebas (diálogo)' }),
-  links: z.optional(z.array(LinkSchema)).clone().register(z.globalRegistry, { title: 'Enlaces (diálogo)' }),
+  // `intro`, `highlights`, `proofPoints` and `links` were retired on
+  // 2026-11-21 (drift audit, dt-42): no content filled them and no budget
+  // bounded them; the dialog reads `detail`. Older documents that still have
+  // the keys parse, and the keys are dropped.
   detail: z.optional(z
     .object({
       title: z.string().check(z.minLength(1)).clone().register(z.globalRegistry, { title: 'Título' }),
@@ -120,10 +120,6 @@ export function normalizeSections(sections: SiteSection[], locale: SiteLocale): 
       title: section?.title ?? fallback.title,
       eyebrow: section?.eyebrow ?? fallback.eyebrow ?? '',
       summary: section?.summary ?? fallback.summary,
-      intro: section?.intro,
-      highlights: section?.highlights,
-      proofPoints: section?.proofPoints,
-      links: section?.links,
       ctaPrimary: section?.ctaPrimary ?? fallback.ctaPrimary,
       ctaSecondary: section?.ctaSecondary ?? fallback.ctaSecondary,
       detail: section?.detail ?? fallback.detail,

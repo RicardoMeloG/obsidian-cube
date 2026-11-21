@@ -21,7 +21,8 @@
     "server": "ts-node --project server/tsconfig.json server/main.ts",
     "backup:content": "node scripts/backup-content.mjs",
     "audit:change": "node scripts/audit-change.mjs",
-    "prepare": "node scripts/enable-hooks.mjs"
+    "prepare": "node scripts/enable-hooks.mjs",
+    "check:waf": "node scripts/check-waf.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1160.0",

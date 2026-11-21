@@ -133,7 +133,7 @@ The runtime content contracts use `zod/mini`; the admin server uses Zod's full J
 | No resource billed by the hour or outside the flat-rate plan (NAT gateway, EC2, RDS, KMS key, Secrets Manager, Kinesis, load balancer, a second web ACL), no Lambda in a VPC, every Lambda with a reserved concurrency (the cost guard's excepted) and a bounded timeout, every log group with a retention (spec 014; dt-35) | In force since 2026-11-21 | `infra/scripts/forbidden-resources.test.mjs`, which synthesises every stack with every switch on, in the infrastructure CI job |
 | Colours only from tokens (no default palette, no literals, no unused token); base type only from type roles | In force | `npm run check:tokens` (H-08b) |
 | Module boundaries; no locale comparisons or lazy loading in interface code | In force | `npm run lint`, rules tested by `scripts/checks/boundaries.test.ts` (H-04) |
-| DOM-layer files ≤ 250 lines | In force | `scripts/checks/fileSize.test.ts` (H-16) |
+| DOM-layer TypeScript and JavaScript files ≤ 250 lines (stylesheets and the admin's HTML page are not measured) | In force | `scripts/checks/fileSize.test.ts` (H-16) |
 | The served font is the one measured (Inter) | In force | `font-not-loaded` in `npm run check:layout` (AD-10) |
 | Living docs carry no undated measurements | In force | `npm run check:docs` (H-11) |
 | Architecture doc updated with boundary changes | Unchecked | PR template |
