@@ -75,7 +75,10 @@ for (const [locale, content] of Object.entries(documents)) {
       }
       const code = await status(link.href)
       console.log(`  ${locale} ${section.id.padEnd(8)} #${index + 1}  ${host.padEnd(22)} ${code}`)
-      if (code !== 200) (LINKS_WARN ? warnings : problems).push(`${locale} ${section.id} #${index + 1} (${host}) answered ${code}`)
+      // Only an outage is downgraded (no answer, a network error, a 5xx); a
+      // 404 or 410 is a broken link of the owner's and still fails.
+      const outage = typeof code === 'string' || code >= 500
+      if (code !== 200) (LINKS_WARN && outage ? warnings : problems).push(`${locale} ${section.id} #${index + 1} (${host}) answered ${code}`)
     }
   }
 }
@@ -124,5 +127,6 @@ console.log(`Layer for machines: ${LLMS_FILE} and the profile pages checked.`)
 
 for (const line of problems) console.log(`- ${line}`)
 for (const warning of warnings) console.log(`::warning::${warning}`)
-console.log(problems.length === 0 ? 'Objective report: nothing missing.' : `Objective report: ${problems.length} things missing.`)
+const warned = warnings.length ? ` (${warnings.length} links of other sites did not answer: warnings)` : ''
+console.log(problems.length === 0 ? `Objective report: nothing missing${warned}.` : `Objective report: ${problems.length} things missing${warned}.`)
 process.exitCode = problems.length > 0 ? 1 : 0

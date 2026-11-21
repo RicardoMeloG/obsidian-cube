@@ -56,6 +56,10 @@ describe('deploy workflow', () => {
     expect(job('build')).toMatch(/^ {4}if: github\.ref == 'refs\/heads\/main'$/m)
   })
 
+  it('lets another site outage warn, not fail, the objective report (2026-11-21)', () => {
+    expect(job('build')).toContain('run: npm run report:objective -- --links=warn')
+  })
+
   it('pins every action by commit', () => {
     for (const [, ref] of workflow.matchAll(/uses: [\w./-]+@(\S+)/g)) expect(ref).toMatch(/^[0-9a-f]{40}$/)
   })
