@@ -1,0 +1,68 @@
+{
+  "DefaultAction": {
+    "Allow": {}
+  },
+  "Rules": [
+    {
+      "Name": "AWS-AWSManagedRulesAmazonIpReputationList",
+      "OverrideAction": {
+        "None": {}
+      },
+      "Priority": 0,
+      "Statement": {
+        "ManagedRuleGroupStatement": {
+          "Name": "AWSManagedRulesAmazonIpReputationList",
+          "VendorName": "AWS"
+        }
+      }
+    },
+    {
+      "Name": "AWS-AWSManagedRulesCommonRuleSet",
+      "OverrideAction": {
+        "None": {}
+      },
+      "Priority": 1,
+      "Statement": {
+        "ManagedRuleGroupStatement": {
+          "Name": "AWSManagedRulesCommonRuleSet",
+          "RuleActionOverrides": [
+            {
+              "ActionToUse": {
+                "Count": {}
+              },
+              "Name": "SizeRestrictions_BODY"
+            }
+          ],
+          "VendorName": "AWS"
+        }
+      }
+    },
+    {
+      "Name": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+      "OverrideAction": {
+        "None": {}
+      },
+      "Priority": 2,
+      "Statement": {
+        "ManagedRuleGroupStatement": {
+          "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+          "VendorName": "AWS"
+        }
+      }
+    },
+    {
+      "Action": {
+        "Block": {}
+      },
+      "Name": "ip-rate-limit-300-5min",
+      "Priority": 3,
+      "Statement": {
+        "RateBasedStatement": {
+          "AggregateKeyType": "IP",
+          "EvaluationWindowSec": 300,
+          "Limit": 300
+        }
+      }
+    }
+  ]
+}
