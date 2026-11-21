@@ -47,7 +47,8 @@ export class WafSampleCollector extends Construct {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(join(__dirname, '..', 'lambda', 'waf-samples')),
-      memorySize: 128,
+      // 107 MB used by the first run (2026-11-21); room for a catch-up.
+      memorySize: 256,
       // A run is 30 calls; a catch-up after failures, with retries, can be
       // more than twice that.
       timeout: cdk.Duration.seconds(180),
