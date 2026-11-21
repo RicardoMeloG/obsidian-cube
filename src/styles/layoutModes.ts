@@ -4,14 +4,14 @@ import { useSyncExternalStore } from 'react'
 // The CSS repeats these exact strings in its @media rules; layoutModes.test.ts
 // fails if they drift. Components never compare widths themselves.
 //
-//   stacked        cube on top, rails below, the page scrolls
+//   stacked        cube on top, the composition below, the page scrolls
 //   narrow         phone-sized stacked layout
-//   desktop        cube in the centre, rails left and right, strip at the bottom
-//   desktop-short  desktop on a short screen: the rails compact
+//   desktop        the stage over the world, the dock at the bottom
+//   desktop-short  desktop on a short screen
 //   stacked-wide   stacked on a wide but squarish screen (tablet landscape)
-//   tight          any layout up to 1100px wide: narrower rail columns
-//   phone          phones up to 680px: the face strip takes two rows
-//   phone-small    phones up to 389px: research concepts in one column
+//   tight          any layout up to 1100px wide: narrower columns
+//   phone          phones up to 680px: the top bar shows icons
+//   phone-small    phones up to 389px: a smaller dock label
 //   tiny           phones up to 340px: the tightest face strip
 // tokens.css turns each into a Tailwind variant of the same name.
 export const LAYOUT_QUERIES = {

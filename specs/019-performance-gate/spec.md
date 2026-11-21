@@ -67,3 +67,20 @@ P-5 to P-8 run on every face, since each face has its own world; P-1 to P-4 on t
 - Unit tests for the limit comparison and the `--update` ratchet (no browser).
 - The definition of done; `check:docs` counts the measurements in this spec as dated.
 - The independent audit of this draft before building it (spec 012, large change).
+
+## 9. External baseline, 2026-11-21
+
+A first point of reference, taken before anything here is built (pending item dt-35, part 6). PageSpeed Insights refused the run (the keyless API's shared daily quota was spent), so the same engine ran locally: Lighthouse 12.8.2 against `https://ricardomelog.com` (deploy of `39eca65`), mobile with its default simulated throttling (412×823), desktop with its preset. One run each; the lab numbers of PageSpeed Insights come from the same simulation.
+
+| Page | Perf. | A11y | Best pr. | SEO | LCP | TBT | CLS | Weight |
+|---|---|---|---|---|---|---|---|---|
+| `/` mobile | 60 | 100 | 96 | 100 | 3.2 s | 2,450 ms | 0 | 471 KiB |
+| `/es` mobile | 61 | 100 | 96 | 100 | 3.2 s | 1,750 ms | 0 | 470 KiB |
+| `/` desktop | 90 | 100 | 100 | 100 | 0.6 s | 250 ms | 0 | 471 KiB |
+| `/es` desktop | 92 | 100 | 100 | 100 | 0.6 s | 230 ms | 0 | 470 KiB |
+
+What it says:
+
+- The mobile score is held down by the main thread, not by the network: 4.0 s of script evaluation in the single bundle, with long tasks of 1.5 s and 0.7 s after the first paint (the scene being built). The LCP element is the name (`h1`). The weight is small and nothing shifts.
+- Best practices on mobile loses two audits: no source maps for the bundle (a deliberate choice for a public site) and «Document doesn't use legible font sizes»: on a 412 px phone only 26% of the text is 12 px or larger. The body of the AGENTIC proofs and steps renders at 10.9 px, the proofs' small print at 8.4 px, the dock labels at 9.8 px. `check:layout` proves the text fits; it does not judge its size.
+- Not done yet: WebPageTest on a real mid-range Android (needs an account), PageSpeed Insights itself (field data needs traffic CrUX does not have), and the owner's laptop on battery.

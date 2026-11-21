@@ -9,7 +9,8 @@
   .stage {
     --ink: var(--color-ink-50);
     --ink-2: color-mix(in srgb, var(--color-ink-200) 74%, transparent);
-    --ink-3: color-mix(in srgb, var(--color-ink-300) 52%, transparent);
+    /* 60%: measured 5.2:1 over the field; 52% measured 4.2:1 (dt-35, 2026-11-21). */
+    --ink-3: color-mix(in srgb, var(--color-ink-300) 60%, transparent);
     --hair: color-mix(in srgb, var(--color-ink-100) 9%, transparent);
     --hair-accent: color-mix(in srgb, var(--accent) 30%, transparent);
     --glass: color-mix(in srgb, var(--color-night-950) 66%, transparent);

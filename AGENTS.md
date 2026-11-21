@@ -152,7 +152,7 @@ Infrastructure and cost rules (spec 014; checked by `scripts/checks/infraPlan.te
 - `infra/cdk.json` keeps `webAclArn`, the plan's web ACL: a deploy without it would remove the association, which the plan forbids. With a plan the price class is all edges.
 - The web ACL is the plan's, managed in the console: the IP rate rule (300 requests in 5 minutes, block) and the managed rules in Count mode. Changes to it are written down in `docs/deploy-aws.md`.
 - `ObsidianCubeCostGuard` disables the distribution when a 20 USD monthly budget is passed. Deploy it with `-c alertEmail=…`, never committing the address; turning the site on again is in `docs/deploy-aws.md`.
-- Reserved Lambda concurrency only as a ceiling on a public endpoint: the match log receiver is capped at 3 so a flood cannot starve the cost guard (account pool 1,000 since 2026-11-14; a pool of 10 would not allow it).
+- Every Lambda has a reserved concurrency, except the cost guard, which must always find room (`infra/scripts/forbidden-resources.test.mjs`). On a public endpoint it is also the flood ceiling: the match log receiver is capped at 3 so a flood cannot starve the cost guard (account pool 1,000 since 2026-11-14; a pool of 10 would not allow it).
 - Every deploy and every new AWS resource is weighed against the ceiling of about 20 USD a month for the whole account; anything billed outside the plan needs the owner's approval first. Budgets without actions are free.
 
 ## Architecture Rules
@@ -246,7 +246,7 @@ Phase 1 (status on 2026-11-12):
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
 - [ ] At least one deep-dive page exists (methodology) reached from a composition CTA. Whether it is built is decision D-8, still open.
-- [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (ADR 009). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
+- [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (ADR 009). `ci.yml` has no private content and builds the example identity; the deploy workflow first fetches the owner's published documents from the live site (`/content/`), so a deploy carries the real identity.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [x] Real identity live at a public URL (https://ricardomelog.com, 2026-11-12).
 - [ ] At least one real artifact per face.
