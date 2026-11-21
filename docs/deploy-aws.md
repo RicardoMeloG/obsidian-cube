@@ -83,7 +83,8 @@ stage (spec 010, D-6).
 
 The role, the environment and its values: the stack output `DeployRoleArn` is
 the secret `AWS_DEPLOY_ROLE_ARN`; `SITE_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`
-and `AWS_REGION` are variables of the repository.
+and `AWS_REGION` are variables; all four belong to the `production`
+environment, so only the upload job sees them.
 
 ## Going to production from this machine
 
