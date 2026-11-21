@@ -1,0 +1,2114 @@
+[
+ {
+  "hour": "2026-01-01T09",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-01T09:00Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-01T09:10Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-01T09:20Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-01T09:30Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T09:40Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-01T09:50Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-01T09:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T09:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-01T09:50Z",
+    "m": "GET",
+    "p": "/backup.sql",
+    "c": "SG",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesCommonRuleSet",
+    "g": "AWS#AWSManagedRulesCommonRuleSet#RestrictedExtensions_URIPATH",
+    "w": 1,
+    "k": "empty",
+    "n": "none"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-01T13",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-01T13:00Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-01T13:10Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T13:20Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-01T13:30Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-01T13:40Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-01T13:50Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T13:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T13:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-01T13:40Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "owner-test",
+    "n": "owner"
+   },
+   {
+    "t": "2026-01-01T13:50Z",
+    "m": "GET",
+    "p": "/.env",
+    "c": "DE",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "g": "AWS#AWSManagedRulesKnownBadInputsRuleSet#ExploitablePaths_URIPATH",
+    "w": 1,
+    "k": "library",
+    "n": "python-requests"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-01T18",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-01T18:00Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-01T18:10Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-01T18:20Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-01T18:30Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T18:40Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-01T18:50Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-01T18:00Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-01T18:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T18:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-01T18:50Z",
+    "m": "GET",
+    "p": "/wp-admin/install.php",
+    "c": "SE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "library",
+    "n": "curl"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-01T22",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-01T22:00Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T22:10Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-01T22:20Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-01T22:30Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-01T22:40Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T22:50Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-01T22:00Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-01T22:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-01T22:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-01T22:50Z",
+    "m": "GET",
+    "p": "/",
+    "c": "UA",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesAmazonIpReputationList",
+    "g": "AWS#AWSManagedRulesAmazonIpReputationList#AWSManagedReconnaissanceList",
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-02T09",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-02T09:00Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T09:10Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T09:20Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-02T09:30Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-02T09:40Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T09:50Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T09:00Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-02T09:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T09:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-02T09:50Z",
+    "m": "GET",
+    "p": "/.env",
+    "c": "DE",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "g": "AWS#AWSManagedRulesKnownBadInputsRuleSet#ExploitablePaths_URIPATH",
+    "w": 1,
+    "k": "library",
+    "n": "python-requests"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-02T13",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-02T13:00Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-02T13:10Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T13:20Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T13:30Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-02T13:40Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-02T13:50Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T13:00Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T13:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T13:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-02T13:40Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "owner-test",
+    "n": "owner"
+   },
+   {
+    "t": "2026-01-02T13:50Z",
+    "m": "GET",
+    "p": "/xmlrpc.php",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "other"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-02T18",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "sampled"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-02T18:00Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-02T18:10Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-02T18:20Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T18:30Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T18:40Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-02T18:50Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-02T18:00Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T18:10Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T18:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T18:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-02T18:50Z",
+    "m": "GET",
+    "p": "/",
+    "c": "UA",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesAmazonIpReputationList",
+    "g": "AWS#AWSManagedRulesAmazonIpReputationList#AWSManagedReconnaissanceList",
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-02T22",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-02T22:00Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-02T22:10Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-02T22:20Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T22:30Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T22:40Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-02T22:50Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-02T22:00Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-02T22:10Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T22:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-02T22:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-02T22:50Z",
+    "m": "GET",
+    "p": "/.git/config",
+    "c": "KR",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "g": "AWS#AWSManagedRulesKnownBadInputsRuleSet#ExploitablePaths_URIPATH",
+    "w": 1,
+    "k": "library",
+    "n": "other"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-03T09",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-03T09:00Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-03T09:10Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-03T09:20Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-03T09:30Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T09:40Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-03T09:50Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-03T09:00Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-03T09:10Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T09:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T09:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-03T09:50Z",
+    "m": "GET",
+    "p": "/xmlrpc.php",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "other"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-03T13",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-03T13:00Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-03T13:10Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-03T13:20Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-03T13:30Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T13:40Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-03T13:50Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-03T13:00Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-03T13:10Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T13:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T13:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-03T13:40Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "owner-test",
+    "n": "owner"
+   },
+   {
+    "t": "2026-01-03T13:50Z",
+    "m": "GET",
+    "p": "/backup.sql",
+    "c": "SG",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesCommonRuleSet",
+    "g": "AWS#AWSManagedRulesCommonRuleSet#RestrictedExtensions_URIPATH",
+    "w": 1,
+    "k": "empty",
+    "n": "none"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-03T18",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-03T18:00Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-03T18:10Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-03T18:20Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-03T18:30Z",
+    "m": "GET",
+    "p": "/contact",
+    "c": "DE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T18:40Z",
+    "m": "GET",
+    "p": "/",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-03T18:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T18:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-03T18:50Z",
+    "m": "GET",
+    "p": "/.git/config",
+    "c": "KR",
+    "a": "BLOCK",
+    "r": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "g": "AWS#AWSManagedRulesKnownBadInputsRuleSet#ExploitablePaths_URIPATH",
+    "w": 1,
+    "k": "library",
+    "n": "other"
+   }
+  ]
+ },
+ {
+  "hour": "2026-01-03T22",
+  "slices": [
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "CreatedByCloudFront-example",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   },
+   {
+    "rule": "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+    "status": "complete"
+   }
+  ],
+  "records": [
+   {
+    "t": "2026-01-03T22:00Z",
+    "m": "GET",
+    "p": "/es",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-03T22:10Z",
+    "m": "GET",
+    "p": "/es/seguridad",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Edge"
+   },
+   {
+    "t": "2026-01-03T22:20Z",
+    "m": "GET",
+    "p": "/agentic",
+    "c": "ES",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T22:30Z",
+    "m": "GET",
+    "p": "/es/productos",
+    "c": "AR",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Safari"
+   },
+   {
+    "t": "2026-01-03T22:40Z",
+    "m": "GET",
+    "p": "/research",
+    "c": "MX",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Firefox"
+   },
+   {
+    "t": "2026-01-03T22:20Z",
+    "m": "GET",
+    "p": "/assets/index-abc.js",
+    "c": "CL",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "browser",
+    "n": "Chrome"
+   },
+   {
+    "t": "2026-01-03T22:30Z",
+    "m": "GET",
+    "p": "/",
+    "c": "US",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "crawler",
+    "n": "Googlebot"
+   },
+   {
+    "t": "2026-01-03T22:50Z",
+    "m": "GET",
+    "p": "/wp-admin/install.php",
+    "c": "SE",
+    "a": "ALLOW",
+    "r": "CreatedByCloudFront-example",
+    "g": null,
+    "w": 1,
+    "k": "library",
+    "n": "curl"
+   }
+  ]
+ }
+]

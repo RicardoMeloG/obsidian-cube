@@ -20,6 +20,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium } from 'playwright'
 
+// Every request of a run ends its user agent with this mark, so the web ACL
+// sample collector tells the owner's checks from visitors (spec 020, D-6).
+// The mark is public: it only sorts, it never grants anything.
+const CHECK_MARK = 'obsidian-cube-check'
+const fetch = (url, init = {}) => globalThis.fetch(url, { ...init, headers: { 'user-agent': `node ${CHECK_MARK}`, ...init.headers } })
+
 const BASE = (process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'https://ricardomelog.com').replace(/\/$/, '')
 const ONLY = process.argv.find((arg) => arg.startsWith('--only='))?.slice(7).split(',')
 const LIVE = BASE.startsWith('https://')
@@ -86,6 +92,8 @@ const launch = (args) => chromium.launch({ executablePath: process.env.PW_CHROMI
 async function watchedPage(browser, problems, options = {}) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US', ...options })
   const page = await context.newPage()
+  const browserAgent = await page.evaluate(() => navigator.userAgent)
+  await context.setExtraHTTPHeaders({ 'user-agent': `${browserAgent} ${CHECK_MARK}` })
   // A request the browser drops because the page moved on (a new address, a
   // face change) or the test closed it is not a failure of the site: the
   // console shows nothing, only the network panel marks it cancelled. One cut

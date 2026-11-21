@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { summarize, createTally, type VisitSummary } from './visitLog'
-import { createS3Reader, fixtureLines, forEachS3Line, visitsConfig, VisitsConfigError } from './visitSource'
+import { createS3Reader, fixtureHours, fixtureLines, forEachS3Line, forEachWafHour, visitsConfig, VisitsConfigError } from './visitSource'
+import { createWafTally, type WafSummary } from './wafSamples'
 
-type Summary = VisitSummary & { source: 'fixture' | 's3'; skipped?: number }
+type Summary = (VisitSummary | WafSummary) & { source: 'fixture' | 's3' | 'waf' | 'waf-fixture'; skipped?: number }
 
 // Counts only, in memory, five-minute cache (spec 013, D-4 and D-5).
 // No persistence: the admin is a local tool, not a reporting service.
@@ -44,6 +45,20 @@ export class VisitsService {
     if (config.source === 'fixture') {
       const lines = await fixtureLines(today)
       value = { ...summarize(lines, days, today), source: 'fixture' as const }
+    } else if (config.source === 'waf-fixture') {
+      const tally = createWafTally(days, today)
+      for (const hour of fixtureHours(today)) tally.add(hour)
+      value = { ...tally.result(), source: 'waf-fixture' as const }
+    } else if (config.source === 'waf') {
+      const tally = createWafTally(days, today)
+      let skipped: number
+      try {
+        skipped = (await forEachWafHour(this.reader(config), config.prefix, today, days, (hour) => tally.add(hour))).skipped
+      } catch (err) {
+        throw this.unavailable(err, config.profile, 'las muestras del WAF')
+      }
+      if (skipped > 0) this.logger.warn(`S3: ${skipped} unreadable sample objects skipped`)
+      value = { ...tally.result(), source: 'waf' as const, skipped }
     } else {
       const since = new Date(Date.parse(`${today}T00:00:00.000Z`) - (days - 1) * 86_400_000)
       const tally = createTally(days, today)
@@ -51,19 +66,21 @@ export class VisitsService {
       try {
         skipped = (await forEachS3Line(this.reader(config), config.prefix, since, (line) => tally.add(line))).skipped
       } catch (err) {
-        const name = (err as Error)?.name ?? 'Error'
-        this.logger.warn(`S3 read failed: ${name}: ${(err as Error)?.message}`)
-        const hint = /Credential|Token|SSO|Expired/i.test(name)
-          ? `Si la sesión expiró: aws sso login --profile ${config.profile}`
-          : `Revisa VISITS_BUCKET y los permisos del perfil ${config.profile}.`
-        throw new ServiceUnavailableException(
-          `No se pudieron leer los registros de visitas en S3 (${name}). ${hint}`,
-        )
+        throw this.unavailable(err, config.profile, 'los registros de visitas')
       }
       if (skipped > 0) this.logger.warn(`S3: ${skipped} unreadable log objects skipped`)
       value = { ...tally.result(), source: 's3' as const, skipped }
     }
     return value
+  }
+
+  private unavailable(err: unknown, profile: string, what: string): ServiceUnavailableException {
+    const name = (err as Error)?.name ?? 'Error'
+    this.logger.warn(`S3 read failed: ${name}: ${(err as Error)?.message}`)
+    const hint = /Credential|Token|SSO|Expired/i.test(name)
+      ? `Si la sesión expiró: aws sso login --profile ${profile}`
+      : `Revisa VISITS_BUCKET y los permisos del perfil ${profile}.`
+    return new ServiceUnavailableException(`No se pudieron leer ${what} en S3 (${name}). ${hint}`)
   }
 
   protected reader(config: { bucket: string; prefix: string; profile: string; region: string }) {

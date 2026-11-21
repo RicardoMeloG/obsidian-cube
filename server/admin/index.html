@@ -147,6 +147,7 @@
     .vz-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px}
     @media(max-width:1100px){.vz-cols{grid-template-columns:1fr}}
     .vz-col{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+    .vz-probes>.vz-col-title,.vz-probes>.hint{padding:0 16px}
     .vz-col-title{font-size:13px;font-weight:600;margin:4px 0 10px}
     .vz-bar{fill:var(--accent)}
     .vz-baseline{stroke:var(--line)}
@@ -245,6 +246,7 @@
   <script src="/form-kit.js"></script>
   <script src="/form-media.js"></script>
   <script src="/form.js"></script>
+  <script src="/visits-probes.js"></script>
   <script src="/visits.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);

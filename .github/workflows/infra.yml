@@ -27,7 +27,7 @@ jobs:
           cache-dependency-path: infra/package-lock.json
       - run: npm run prepare:cdk
       - run: npm ci
-      - run: node --test scripts/security.test.mjs scripts/deploy-role.test.mjs
+      - run: node --test scripts/security.test.mjs scripts/deploy-role.test.mjs scripts/waf-collector.test.mjs
       - run: npm audit --audit-level=low
       # Offline synth: validates the infra compiles to CloudFormation.
       - run: npm run synth

@@ -36,12 +36,13 @@ await vite.close()
 const canonical = (value) =>
   JSON.stringify(value, (_, node) => (node && typeof node === 'object' && !Array.isArray(node) ? Object.fromEntries(Object.entries(node).sort(([a], [b]) => a.localeCompare(b))) : node))
 
-// The visits view's summary (spec 013), as /api/visits answers it.
+// The visits view's summary (spec 013), as /api/visits answers it from the
+// web ACL sample collector (spec 020): with the probes and the coverage.
 const VISITS = {
   days: 30,
   from: '2026-10-15',
   to: '2026-11-13',
-  source: 'fixture',
+  source: 'waf-fixture',
   visits: 42,
   crawlers: 5,
   otherPaths: 2,
@@ -59,6 +60,17 @@ const VISITS = {
     { key: '/es', visits: 20 },
     { key: '/', visits: 22 },
   ],
+  ownerTests: 7,
+  probes: {
+    total: 9,
+    blocked: 6,
+    paths: [{ key: '/.env', visits: 5 }, { key: '/wp-admin/install.php', visits: 3 }, { key: '/', visits: 1 }],
+    rules: [{ key: 'ExploitablePaths_URIPATH', visits: 5 }, { key: 'permitido (sin página)', visits: 3 }, { key: 'ip-rate-limit-300-5min', visits: 1 }],
+    countries: [{ key: 'DE', visits: 6 }, { key: 'SE', visits: 3 }],
+    clients: [{ key: 'library: curl', visits: 8 }, { key: 'browser: other', visits: 1 }],
+    perDay: [],
+  },
+  coverage: { hours: 48, missingHours: 2, slices: { complete: 280, sampled: 0, truncated: 1, missing: 6 }, firstHour: '2026-11-12T00', lastHour: '2026-11-13T23' },
 }
 
 const failures = []
@@ -96,6 +108,7 @@ await page.route(`${ORIGIN}/**`, async (route) => {
     }
   }
   if (pathname === '/visits.js') return route.fulfill({ contentType: 'text/javascript', body: read('server/admin/visits.js') })
+  if (pathname === '/visits-probes.js') return route.fulfill({ contentType: 'text/javascript', body: read('server/admin/visits-probes.js') })
   if (pathname === '/world.json') return route.fulfill({ contentType: 'application/json', body: read('server/admin/world.json') })
   if (pathname === '/api/visits') return json(VISITS)
   return json({ message: `unexpected ${request.method()} ${pathname}` }, 404)
@@ -213,8 +226,19 @@ if (visitsRendered) {
   if (!editorCls.includes('hidden')) fail('visits', '#editorPane is not hidden')
   const legendText = await page.locator('#visitsPane .vz-legend').textContent()
   if (!legendText.includes('4 visitas sin país')) fail('visits', `legend text does not contain '4 visitas sin país'`)
+  // Spec 020: the probes panel and the coverage, as the collector reports them.
+  const probeRows = await page.locator('#visitsPane .vz-probes .vz-row-name').allTextContents()
+  if (probeRows[0] !== '/.env' || !probeRows.includes('ExploitablePaths_URIPATH') || !probeRows.includes('Alemania')) {
+    fail('visits-probes', `probe rows are ${JSON.stringify(probeRows.slice(0, 8))}`)
+  }
+  const hintText = await page.locator('#visitsPane .vz-hint').textContent()
+  if (!hintText.includes('48 horas recolectadas') || !hintText.includes('2 horas sin datos') || !hintText.includes('1 tramo truncado')) {
+    fail('visits-coverage', `hint is '${hintText}'`)
+  }
   if (process.argv.includes('--screenshots')) {
     await page.screenshot({ path: 'walkthrough/admin-visits.png' })
+    await page.locator('#visitsPane .vz-probes').scrollIntoViewIfNeeded()
+    await page.screenshot({ path: 'walkthrough/admin-visits-probes.png' })
   }
   await loading(() => page.click('.nav-item[data-kind="face"][data-id="agentic"]'))
   const editorAfter = await page.locator('#editorPane').getAttribute('class')

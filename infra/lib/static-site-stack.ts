@@ -9,6 +9,7 @@ import { join } from 'node:path'
 import { GitHubDeployRole } from './github-deploy-role'
 import { MatchLogReceiver } from './match-log-receiver'
 import { VisitLogs } from './visit-logs'
+import { WafSampleCollector } from './waf-sample-collector'
 
 // Security headers, shared with `vite preview` so the layout check runs the
 // built site under the same policy (spec 010, 5.13). CloudFront sets them with
@@ -159,6 +160,15 @@ export class StaticSiteStack extends cdk.Stack {
     if (githubDeploySubject) {
       const deploy = new GitHubDeployRole(this, 'GitHubDeploy', { bucket, distribution, subjectPrefix: githubDeploySubject })
       new cdk.CfnOutput(this, 'DeployRoleArn', { value: deploy.role.roleArn })
+    }
+
+    // Spec 020: the web ACL's samples, copied every hour for the local admin.
+    // Off until the owner approves the stack diff (context wafSamples).
+    const wafSamplesEnabled = this.node.tryGetContext('wafSamples')
+    if (wafSamplesEnabled === true || wafSamplesEnabled === 'true') {
+      if (!webAclArn) throw new Error('wafSamples needs webAclArn in the context')
+      const collector = new WafSampleCollector(this, 'WafSamples', { webAclArn })
+      new cdk.CfnOutput(this, 'WafSamplesBucket', { value: collector.bucket.bucketName })
     }
 
     // Exports consumed by the deploy workflow (S3 sync + CloudFront invalidation).

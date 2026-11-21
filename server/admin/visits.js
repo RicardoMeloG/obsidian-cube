@@ -35,7 +35,9 @@
 
   function makeRow(name, visits, max, isCode) {
     const row = el('div', 'vz-row');
-    row.appendChild(isCode ? el('code', 'vz-row-name', name) : el('span', 'vz-row-name', name));
+    const label = isCode ? el('code', 'vz-row-name', name) : el('span', 'vz-row-name', name);
+    label.title = name;
+    row.appendChild(label);
     const bw = el('div', 'vz-row-bar-wrap');
     const bar = el('div', 'vz-row-bar');
     bar.style.width = (visits / max * 100) + '%';
@@ -142,13 +144,19 @@
     return col;
   }
 
+  const SOURCES = { s3: 'CloudFront (S3)', waf: 'muestras del WAF', 'waf-fixture': 'muestras de ejemplo', fixture: 'datos de ejemplo' };
+
   function render(container, data, w) {
     const hint = container.querySelector('.vz-hint');
-    hint.textContent = 'del ' + data.from + ' al ' + data.to + ' (días UTC) · ' + (data.source === 's3' ? 'CloudFront (S3)' : 'datos de ejemplo') +
-      (data.skipped ? ' · ' + data.skipped + (data.skipped === 1 ? ' archivo de registro ilegible omitido' : ' archivos de registro ilegibles omitidos') : '');
+    hint.textContent = 'del ' + data.from + ' al ' + data.to + ' (días UTC) · ' + (SOURCES[data.source] || data.source) +
+      (data.skipped ? ' · ' + data.skipped + (data.skipped === 1 ? ' archivo ilegible omitido' : ' archivos ilegibles omitidos') : '') +
+      (data.coverage ? window.VisitsProbes.coverageText(data.coverage) : '');
     const cc = data.countries.filter(c => c.key !== 'ZZ').length;
     const tiles = el('div', 'vz-tiles');
-    [['Visitas', data.visits], ['Países', cc], ['Rastreadores', data.crawlers], ['Otras rutas', data.otherPaths]].forEach(function (pair) {
+    const pairs = data.probes
+      ? [['Visitas', data.visits], ['Países', cc], ['Rastreadores', data.crawlers], ['Intentos', data.probes.total], ['Bloqueados', data.probes.blocked], ['Pruebas propias', data.ownerTests]]
+      : [['Visitas', data.visits], ['Países', cc], ['Rastreadores', data.crawlers], ['Otras rutas', data.otherPaths]];
+    pairs.forEach(function (pair) {
       const t = el('div', 'vz-tile');
       t.appendChild(el('span', 'vz-tile-label', pair[0]));
       t.appendChild(el('span', 'vz-tile-num', pair[1].toLocaleString('es-CL')));
@@ -160,6 +168,7 @@
     cols.appendChild(renderChart(data));
     cols.appendChild(renderLists(data, w));
     container.appendChild(cols);
+    if (data.probes) container.appendChild(window.VisitsProbes.render(data, w, { el: el, makeRow: makeRow }));
   }
 
   async function load(container, days) {

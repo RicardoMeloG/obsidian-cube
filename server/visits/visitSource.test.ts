@@ -50,7 +50,7 @@ describe('visitsConfig', () => {
 
   it('throws VisitsConfigError for unknown source value', () => {
     expect(() => visitsConfig({ VISITS_SOURCE: 'other' })).toThrow(
-      'VISITS_SOURCE debe ser fixture o s3, no "other".',
+      'VISITS_SOURCE debe ser fixture, s3, waf o waf-fixture, no "other".',
     )
   })
 })

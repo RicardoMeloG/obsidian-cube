@@ -1,6 +1,6 @@
 # 020: Visits and Probes From the Web ACL's Samples
 
-**Status:** draft (2026-11-21), not built. The owner asked for a visit counter on 2026-11-21 and, after seeing what the console reports give, for where the bots try to get in. Nothing in AWS changes until the owner approves this spec and the stack diff.
+**Status:** built on `spec/020-waf-sample-collector` (2026-11-21), not deployed; the owner took D-3 and D-5 the same day («acepto tus recomendaciones»). The owner asked for a visit counter on 2026-11-21 and, after seeing what the console reports give, for where the bots try to get in. Nothing in AWS changes until the owner approves this spec and the stack diff.
 **Builds on:** spec 013 (the «Visitas» view in the local admin, its counting and its fixture), spec 014 (the flat-rate Free plan and its web ACL), spec 016 (layered security), `AGENTS.md` (no cookies, no third-party script, no IP stored).
 
 ## 1. Problem
@@ -44,7 +44,7 @@ So an EventBridge schedule runs the function at ten minutes past every hour, and
 - 500 < population, window returned whole: sampled (weights apply, D-4);
 - window returned shorter: **truncated**: more than 5,000 requests in ten minutes (over 8 a second, an attack or a flood; the rate rule already blocks a single source above 300 in five minutes). The slice is marked, and the view says so instead of showing a low count.
 
-The hour comes from the schedule's event time, never from the clock. The function writes the hour's object (overwriting, so a retried or repeated run cannot duplicate it), and only then advances `state.json`, the last completed hour. If a run fails, the next reads the missed hour too, but only the slices still wholly inside the three-hour limit (the API silently moves an older start to three hours ago); a slice that is no longer whole is recorded as **missing** in a marker object, so the view tells a missing hour from a quiet one. Reserved concurrency 1 keeps two runs from overlapping. A request seen in the last seconds of a slice can be stamped into the next; the tolerance is that of the WAF's own timestamps.
+The hour comes from the schedule's event time, never from the clock. The function writes the hour's object (overwriting, so a retried or repeated run cannot duplicate it), and only then advances `state.json`, the last completed hour. If a run fails, the next reads the missed hour too, but only the slices still wholly inside the three-hour limit (the API silently moves an older start to three hours ago); a slice that is no longer whole is recorded as **missing** in its hour's object, and an hour with no object at all, between the first and the last hour collected, is a missing hour; so the view tells a missing hour from a quiet one. Reserved concurrency 1 keeps two runs from overlapping. A request seen in the last seconds of a slice can be stamped into the next; the tolerance is that of the WAF's own timestamps.
 
 ### D-3 What a record keeps
 
@@ -57,7 +57,7 @@ The path, by kind (a path can carry personal data, an e-mail or a token in `/x/u
 
 Never kept: the client IP, any header (the user agent is reduced in memory), the HTTP version, the request id. A test refuses an IP, a header or a query (unless D-3's option is on) in any record.
 
-**Owner decision: keep the query of probes (shows the attack) or not (recommended default: not).**
+**Decided by the owner (2026-11-21): not kept.** No record keeps a query; turning it on later is a change to `pathOf` in `infra/lambda/waf-samples/logic.mjs` and its test.
 
 ### D-4 Counts are estimates, and the view says so
 
@@ -67,7 +67,7 @@ A visit is what spec 013's D-5 calls a page view: a `GET` allowed, on a page of 
 
 ### D-5 A private bucket, records kept twelve months
 
-A new private bucket (`BLOCK_ALL`, SSE-S3, TLS only), objects `samples/YYYY/MM/DD/HH.json` (one JSON array per hour) plus `state.json`, with a lifecycle rule that expires samples after 12 months. Twelve months, against spec 013's 90 days: spec 013 bounded at 90 days a log line that keeps the full user agent (its D-2); a record here keeps only the client's class and name, no IP, no user agent and the time in ten-minute slices, and the attack trend is more useful over a year. At about 170 records an hour a calm year is roughly 1.5 million records, about 150 MB; an attack adds at most 500 records per rule per slice (D-2), so a sustained flood on every rule is about 15,000 records an hour, still cents a month. The bucket is kept if the stack is deleted (`RETAIN`, as the site and match-log buckets). **Owner decision: 12 months (recommended) or 90 days.**
+A new private bucket (`BLOCK_ALL`, SSE-S3, TLS only), objects `samples/YYYY/MM/DD/HH.json` (one JSON array per hour) plus `state.json`, with a lifecycle rule that expires samples after 12 months. Twelve months, against spec 013's 90 days: spec 013 bounded at 90 days a log line that keeps the full user agent (its D-2); a record here keeps only the client's class and name, no IP, no user agent and the time in ten-minute slices, and the attack trend is more useful over a year. At about 170 records an hour a calm year is roughly 1.5 million records, about 150 MB; an attack adds at most 500 records per rule per slice (D-2), so a sustained flood on every rule is about 15,000 records an hour, still cents a month. The bucket is kept if the stack is deleted (`RETAIN`, as the site and match-log buckets). **Decided by the owner (2026-11-21): 12 months** (`SAMPLE_RETENTION_DAYS` in `infra/lib/waf-sample-collector.ts`).
 
 ### D-6 The owner's own tests are marked, not guessed
 
@@ -75,11 +75,11 @@ A new private bucket (`BLOCK_ALL`, SSE-S3, TLS only), objects `samples/YYYY/MM/D
 
 ### D-7 The function is small and can only read the samples and write the bucket
 
-`infra/lambda/waf-samples/` (the runtime the match-log receiver uses, Node.js 22, no dependencies beyond the SDK in the runtime), 128 MB, 60 s timeout, reserved concurrency 1, logs kept one month. It lives in the site's stack, deployed in **us-east-1** (a CloudFront-scope web ACL is only reachable from that region, and the stack is already there for the certificate), and its WAF client is pinned to us-east-1. The web ACL's ARN comes from the `webAclArn` context the stack already uses. Its role allows `wafv2:GetSampledRequests` on that web ACL's ARN (the action supports the `webacl` resource type) and `s3:GetObject`/`s3:PutObject` on its bucket only. A `WAFInternalErrorException` or throttling is retried with backoff inside the run; what still fails leaves the hour to the catch-up (D-2). No function URL, no route on the distribution. The logic lives in plain functions (`logic.mjs`) tested with Vitest, as the match-log receiver does.
+`infra/lambda/waf-samples/` (the runtime the match-log receiver uses, Node.js 22, no dependencies beyond the SDK in the runtime), 128 MB, 60 s timeout, reserved concurrency 1, logs kept one month. It lives in the site's stack, deployed in **us-east-1** (a CloudFront-scope web ACL is only reachable from that region, and the stack is already there for the certificate), and its WAF client is pinned to us-east-1. The web ACL's ARN comes from the `webAclArn` context the stack already uses. Its role allows `wafv2:GetSampledRequests` and `wafv2:GetWebACL` on that web ACL's ARN (the rule metric names are read from the web ACL at each run, so a changed rule set is followed), `s3:GetObject`/`s3:PutObject` on its bucket's objects and `s3:ListBucket` on its bucket (without it a state that does not exist yet reads as «access denied», not as missing), and nothing else. A `WAFInternalErrorException` or throttling is retried with backoff inside the run; what still fails leaves the hour to the catch-up (D-2). No function URL, no route on the distribution. The logic lives in plain functions (`logic.mjs`) tested with Vitest, as the match-log receiver does.
 
 ### D-8 The admin reads the bucket like spec 013 reads logs
 
-`VISITS_SOURCE=waf` and `VISITS_BUCKET` in `.env` (the bucket's stack output); the SSO profile as in spec 013's D-4. `GET /api/visits?days=` keeps its shape and gains the probes; the fixture gains sample records, so the view still runs with no AWS. The map, the days and the pages keep spec 013's design; the probes are a second panel: top paths, rules, countries and client classes, by day. The view shows the last completed hour and the sampled, truncated and missing slices of the range, so a stopped collector is visible the next time the owner looks; an alarm is not part of this spec.
+`VISITS_SOURCE=waf` and `VISITS_BUCKET` in `.env` (the stack output `WafSamplesBucket`); the SSO profile as in spec 013's D-4; `VISITS_SOURCE=waf-fixture` shows the committed sample hours with no AWS. `GET /api/visits?days=` keeps its shape and gains the probes; the fixture gains sample records, so the view still runs with no AWS. The map, the days and the pages keep spec 013's design; the probes are a second panel: top paths, rules, countries and client classes, by day. The view shows the last completed hour and the sampled, truncated and missing slices of the range, so a stopped collector is visible the next time the owner looks; an alarm is not part of this spec.
 
 ### D-9 Behind a context switch, off
 
@@ -107,7 +107,7 @@ A new private bucket (`BLOCK_ALL`, SSE-S3, TLS only), objects `samples/YYYY/MM/D
 1. A sample with an IP and headers becomes a record with neither; an allowed request on a known page keeps only the page; a probe keeps its path cut at 200 characters and a query only if D-3's option is on (unit tests).
 2. Two adjacent runs read adjacent hours and never the same sample twice; a repeated run overwrites its hour; `state.json` advances only after the hour is written; a failed run is caught up by the next for the slices still inside three hours, and the rest is recorded as missing (unit tests over a fake schedule time).
 3. A slice whose returned window is shorter than asked is recorded as truncated, one with more than 500 requests as sampled, and the view shows both; a `WAFInternalErrorException` is retried (unit tests).
-4. `cdk synth -c wafSamples=true` produces one function in the site's stack with reserved concurrency 1, an hourly schedule, a role limited to `wafv2:GetSampledRequests` on the web ACL and `s3:GetObject`/`s3:PutObject` on its bucket, its WAF client set to us-east-1, and a private bucket kept on stack deletion that expires samples at the chosen retention; without the switch the template is unchanged (infra test).
+4. `cdk synth -c wafSamples=true` produces one function in the site's stack with reserved concurrency 1, no retry, an hourly schedule, a role limited to `wafv2:GetSampledRequests` and `wafv2:GetWebACL` on the web ACL and `s3:GetObject`/`s3:PutObject`/`s3:ListBucket` on its bucket, its WAF client set to us-east-1, and a private bucket kept on stack deletion that expires samples at the chosen retention; without the switch the template is unchanged (infra test).
 5. With `VISITS_SOURCE` unset the view shows the fixture's visits and probes and the last completed hour; `npm run check:admin` finds them.
 6. After the owner's deploy: the first hourly objects appear, their records carry no IP, and a `check:live` run shows as `owner-test`.
 7. The definition-of-done gates pass, and the change audit's findings are verified (`audit-1.md`).

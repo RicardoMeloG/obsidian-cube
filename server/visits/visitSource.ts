@@ -7,33 +7,38 @@ import { join } from 'node:path'
 import { gunzipSync } from 'node:zlib'
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3'
 import { fromIni } from '@aws-sdk/credential-providers'
+import type { HourObject } from './wafSamples'
 
 export class VisitsConfigError extends Error {}
 
 export type VisitsConfig =
   | { source: 'fixture' }
   | { source: 's3'; bucket: string; prefix: string; profile: string; region: 'us-east-1' }
+  // Spec 020: the web ACL sample collector's records, or their fixture.
+  | { source: 'waf'; bucket: string; prefix: string; profile: string; region: 'us-east-1' }
+  | { source: 'waf-fixture' }
 
 export function visitsConfig(env: NodeJS.ProcessEnv = process.env): VisitsConfig {
   const value = env.VISITS_SOURCE
   if (value === undefined || value === '' || value === 'fixture') {
     return { source: 'fixture' }
   }
-  if (value === 's3') {
+  if (value === 'waf-fixture') return { source: 'waf-fixture' }
+  if (value === 's3' || value === 'waf') {
     const bucket = env.VISITS_BUCKET
     const profile = env.VISITS_PROFILE
     if (!bucket || !profile) {
-      throw new VisitsConfigError('VISITS_SOURCE=s3 necesita VISITS_BUCKET y VISITS_PROFILE en .env.')
+      throw new VisitsConfigError(`VISITS_SOURCE=${value} necesita VISITS_BUCKET y VISITS_PROFILE en .env.`)
     }
     return {
-      source: 's3',
+      source: value,
       bucket,
       prefix: env.VISITS_PREFIX || '',
       profile,
       region: 'us-east-1',
     }
   }
-  throw new VisitsConfigError(`VISITS_SOURCE debe ser fixture o s3, no "${value}".`)
+  throw new VisitsConfigError(`VISITS_SOURCE debe ser fixture, s3, waf o waf-fixture, no "${value}".`)
 }
 
 export const FIXTURE_PATH: string = join(__dirname, 'fixtures', 'sample-logs.jsonl')
@@ -188,4 +193,55 @@ export function createS3Reader(config: { bucket: string; profile: string; region
       return await res.Body.transformToByteArray()
     },
   }
+}
+
+// Spec 020: the collector's hours. The fixture's dates move so its last day is
+// today, like the log fixture's (redate above).
+export const WAF_FIXTURE_PATH: string = join(__dirname, 'fixtures', 'waf-samples.json')
+
+export function redateHours(hours: HourObject[], today: string): HourObject[] {
+  if (hours.length === 0) return []
+  const dates = hours.map((h) => h.hour.slice(0, 10)).sort()
+  const last = dates[dates.length - 1]
+  const delta = Math.round((parseUtcMs(today) - parseUtcMs(last)) / 86400000)
+  const shift = (stamp: string) => formatUtc(parseUtcMs(stamp.slice(0, 10)) + delta * 86400000) + stamp.slice(10)
+  return hours.map((h) => ({ ...h, hour: shift(h.hour), records: h.records.map((r) => ({ ...r, t: shift(r.t) })) }))
+}
+
+export function fixtureHours(today: string, file: string = WAF_FIXTURE_PATH): HourObject[] {
+  return redateHours(JSON.parse(readFileSync(file, 'utf-8')) as HourObject[], today)
+}
+
+// Every hour object of the range, one day prefix at a time
+// (`samples/YYYY/MM/DD/`). An unreadable object is skipped and counted, as
+// forEachS3Line does; errors of the session or the bucket still throw.
+export async function forEachWafHour(
+  reader: S3Reader,
+  prefix: string,
+  today: string,
+  days: number,
+  onHour: (hour: HourObject) => void,
+): Promise<S3ReadCount> {
+  const count: S3ReadCount = { read: 0, skipped: 0 }
+  let firstError: unknown
+  for (let i = days - 1; i >= 0; i--) {
+    const day = formatUtc(parseUtcMs(today) - i * 86400000)
+    const keys: string[] = []
+    for await (const obj of reader.list(`${prefix}samples/${day.slice(0, 4)}/${day.slice(5, 7)}/${day.slice(8, 10)}/`)) keys.push(obj.key)
+    for (let at = 0; at < keys.length; at += READ_AT_ONCE) {
+      const results = await Promise.allSettled(keys.slice(at, at + READ_AT_ONCE).map(async (key) => JSON.parse(Buffer.from(await reader.read(key)).toString('utf-8')) as HourObject))
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          onHour(result.value)
+          count.read++
+          continue
+        }
+        if (FATAL_ERROR.test((result.reason as Error)?.name ?? '')) throw result.reason
+        firstError ??= result.reason
+        count.skipped++
+      }
+    }
+  }
+  if (count.read === 0 && count.skipped > 0) throw firstError
+  return count
 }

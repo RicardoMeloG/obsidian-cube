@@ -56,7 +56,7 @@ export function agentOf(userAgent: string): Agent {
   return 'human'
 }
 
-function isAsset(path: string): boolean {
+export function isAsset(path: string): boolean {
   if (ASSET_PREFIXES.some((prefix) => path.startsWith(prefix))) return true
   if (path === '/llms.txt') return false
   const lastSlash = path.lastIndexOf('/')
@@ -121,13 +121,13 @@ export type VisitSummary = {
   pages: Count[]
 }
 
-function addDaysUTC(dateStr: string, offset: number): string {
+export function addDaysUTC(dateStr: string, offset: number): string {
   const parts = dateStr.split('-').map(Number)
   const dt = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2] + offset))
   return dt.toISOString().slice(0, 10)
 }
 
-function sortCounts(arr: Count[]): Count[] {
+export function sortCounts(arr: Count[]): Count[] {
   return [...arr].sort((a, b) => b.visits - a.visits || a.key.localeCompare(b.key))
 }
 
