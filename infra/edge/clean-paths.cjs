@@ -15,12 +15,17 @@
 
 const CLEAN_PATHS_CODE = `function handler(event) {
   var request = event.request;
-  var host = request.headers.host ? request.headers.host.value : '';
+  var host = request.headers.host ? request.headers.host.value.toLowerCase().split(':')[0] : '';
   if (host.indexOf('www.') === 0) {
     return {
       statusCode: 301,
       statusDescription: 'Moved Permanently',
-      headers: { location: { value: 'https://' + host.slice(4) + request.uri } },
+      // The viewer-response function does not run on this answer: HSTS here,
+      // the value of infra/security-headers.json.
+      headers: {
+        location: { value: 'https://' + host.slice(4) + request.uri },
+        'strict-transport-security': { value: 'max-age=63072000; includeSubDomains' },
+      },
     };
   }
   // Empty segments out: '//' and a trailing slash collapse.

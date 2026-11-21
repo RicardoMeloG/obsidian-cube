@@ -13,7 +13,7 @@ import { compareWebAcl, normaliseWebAcl, webAclRef } from './lib/web-acl.mjs'
 const EXPECTED = new URL('../infra/web-acl.expected.json', import.meta.url)
 const option = (name) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3)
 const envFile = existsSync(new URL('../.env', import.meta.url)) ? readFileSync(new URL('../.env', import.meta.url), 'utf8') : ''
-const profile = option('profile') ?? process.env.AWS_PROFILE ?? /^VISITS_PROFILE=(.+)$/m.exec(envFile)?.[1]?.trim()
+const profile = option('profile') ?? process.env.AWS_PROFILE ?? /^VISITS_PROFILE=(.+)$/m.exec(envFile)?.[1]?.trim().replace(/^(['"])(.*)\1$/, '$2')
 if (!profile) throw new Error('No AWS profile: pass --profile=<name>, or set AWS_PROFILE or VISITS_PROFILE in .env')
 
 const context = JSON.parse(readFileSync(new URL('../infra/cdk.json', import.meta.url), 'utf8')).context

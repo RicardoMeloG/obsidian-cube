@@ -28,10 +28,20 @@ describe('edge clean paths', () => {
     expect(out.statusCode).toBe(301)
     expect(out.headers.location?.value).toBe('https://ricardomelog.com/es/seguridad')
     expect(run('/', 'www.ricardomelog.com').headers.location?.value).toBe('https://ricardomelog.com/')
+    expect(run('/es', 'WWW.ricardomelog.com:443').headers.location?.value).toBe('https://ricardomelog.com/es')
+    expect(out.headers['strict-transport-security']?.value).toMatch(/max-age=\d+/)
   })
 
   it('leaves the bare domain and the CloudFront domain alone', () => {
     expect(run('/es', 'd111111abcdef8.cloudfront.net').statusCode).toBeUndefined()
     expect(run('/es', 'ricardomelog.com').statusCode).toBeUndefined()
+  })
+})
+
+describe('edge clean paths and the shared policy', () => {
+  it('sends the HSTS of infra/security-headers.json on the www redirect', async () => {
+    const { readFileSync } = await import('node:fs')
+    const policy = JSON.parse(readFileSync(new URL('../../infra/security-headers.json', import.meta.url), 'utf8')) as { strictTransportSecuritySeconds: number }
+    expect(run('/', 'www.ricardomelog.com').headers['strict-transport-security']?.value).toBe(`max-age=${policy.strictTransportSecuritySeconds}; includeSubDomains`)
   })
 })
