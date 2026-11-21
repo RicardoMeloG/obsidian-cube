@@ -2,7 +2,7 @@
 // @aws-sdk/client-s3 ships with the Node.js 22 runtime; nothing is bundled.
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { handleRequest } from './logic.mjs'
-import { createBrakes, viewerIp } from './brakes.mjs'
+import { createBrakes, forwardedCount, viewerIp } from './brakes.mjs'
 
 const s3 = new S3Client({})
 const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS ?? '[]')
@@ -22,9 +22,12 @@ export async function handler(event) {
   )
 
   if (result.status === 204) {
-    const refusal = brakes.take(viewerIp(event.headers, event.requestContext?.http?.sourceIp), Date.now())
+    const ip = viewerIp(event.headers, event.requestContext?.http?.sourceIp)
+    // Whether the brake found the viewer, never the address (spec 013, E-03).
+    const seen = `ip=${ip ? 'found' : 'none'} xff=${forwardedCount(event.headers)}`
+    const refusal = brakes.take(ip, Date.now())
     if (refusal) {
-      console.log(`refused ${refusal.status} ${refusal.reason}`)
+      console.log(`refused ${refusal.status} ${refusal.reason} ${seen}`)
       return { statusCode: refusal.status, headers: { 'retry-after': String(refusal.retryAfter) }, body: refusal.reason }
     }
     await s3.send(new PutObjectCommand({
@@ -33,7 +36,7 @@ export async function handler(event) {
       Body: result.json,
       ContentType: 'application/json',
     }))
-    console.log(`stored ${result.key} ${Buffer.byteLength(result.json, 'utf8')} bytes`)
+    console.log(`stored ${result.key} ${Buffer.byteLength(result.json, 'utf8')} bytes ${seen}`)
     return { statusCode: 204 }
   }
 

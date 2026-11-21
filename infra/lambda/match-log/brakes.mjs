@@ -31,6 +31,12 @@ export function viewerIp(headers, edgeIp) {
   return null
 }
 
+/** How many entries X-Forwarded-For carries: logged instead of the address. */
+export function forwardedCount(headers) {
+  const forwarded = Object.entries(headers ?? {}).find(([name]) => name.toLowerCase() === 'x-forwarded-for')?.[1]
+  return typeof forwarded === 'string' ? forwarded.split(',').filter((entry) => entry.trim()).length : 0
+}
+
 export function createBrakes({ perIpLimit = PER_IP_LIMIT, perIpWindowMs = PER_IP_WINDOW_MS, perSecond = PER_SECOND, maxTrackedIps = MAX_TRACKED_IPS } = {}) {
   const writesByIp = new Map() // ip → timestamps of its stored logs, oldest first
   let second = -1
