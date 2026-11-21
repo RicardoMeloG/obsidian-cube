@@ -22,7 +22,29 @@ describe('deploy workflow', () => {
 
   it('never removes, copies or moves anything onto content/ (audit-2 B-08)', () => {
     expect(s3Commands.filter((line) => /aws s3 rm\b/.test(line))).toEqual([])
-    expect(s3Commands.filter((line) => /aws s3 (cp|mv)\b/.test(line) && line.includes('content'))).toEqual([])
+    expect(s3Commands.filter((line) => /aws s3 mv\b/.test(line))).toEqual([])
+    // A copy may read content/ (to build the owner's pages), never write it:
+    // its destination, the last path argument, is never in the bucket.
+    for (const command of s3Commands.filter((line) => /aws s3 cp\b/.test(line))) {
+      const paths = command.match(/"[^"]+"|\S+/g)!.filter((word) => !word.startsWith('--')).slice(3)
+      expect(paths.at(-1), command).not.toMatch(/s3:\/\//)
+    }
+  })
+
+  it('builds from the published content read from the bucket, never the example (dp-04)', () => {
+    const steps = workflow.replace(/\r/g, '')
+    const fetch = steps.indexOf('Fetch the published content')
+    expect(fetch).toBeGreaterThan(steps.indexOf('Configure AWS credentials'))
+    expect(fetch).toBeLessThan(steps.indexOf('run: npm run build'))
+    // The documents the build reads (vite.config.ts): both languages of the
+    // site and the profile, and the visual document.
+    expect(steps).toMatch(/for doc in site\.en site\.es profile\.en profile\.es visual; do/)
+    expect(steps).toContain('"s3://${{ vars.SITE_BUCKET }}/content/$doc.json" "public/content/$doc.json"')
+  })
+
+  it('runs only from main, in the production environment that asks the owner', () => {
+    expect(workflow).toMatch(/^\s+environment: production$/m)
+    expect(workflow).toMatch(/^\s+if: github\.ref == 'refs\/heads\/main'$/m)
   })
 
   it('syncs to S3', () => {

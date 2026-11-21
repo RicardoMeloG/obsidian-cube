@@ -6,6 +6,7 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 import * as acm from 'aws-cdk-lib/aws-certificatemanager'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { GitHubDeployRole } from './github-deploy-role'
 import { MatchLogReceiver } from './match-log-receiver'
 import { VisitLogs } from './visit-logs'
 
@@ -149,6 +150,14 @@ export class StaticSiteStack extends cdk.Stack {
     const visitLogsEnabled = this.node.tryGetContext('visitLogs')
     if (visitLogsEnabled === true || visitLogsEnabled === 'true') {
       new VisitLogs(this, 'VisitLogs', { distribution })
+    }
+
+    // The deploy from GitHub (spec 010, D-6; dp-04): only when the repository
+    // is in the context, so a fresh clone synthesises without it.
+    const githubDeployRepo = this.node.tryGetContext('githubDeployRepo') as string | undefined
+    if (githubDeployRepo) {
+      const deploy = new GitHubDeployRole(this, 'GitHubDeploy', { bucket, distribution, repository: githubDeployRepo })
+      new cdk.CfnOutput(this, 'DeployRoleArn', { value: deploy.role.roleArn })
     }
 
     // Exports consumed by the deploy workflow (S3 sync + CloudFront invalidation).

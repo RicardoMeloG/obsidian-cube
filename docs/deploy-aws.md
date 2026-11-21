@@ -35,9 +35,11 @@ owner's machine (SSO) ──► S3 (private bucket) ──(OAC)──► CloudFr
   CNAMEs with the grey cloud (DNS only) to the distribution's domain.
 - **CI/CD**: `.github/workflows/ci.yml` (every gate listed in
   `docs/architecture.md`) and `infra.yml` (`cdk synth`, when `infra/` changes).
-  `deploy.yml` (build → `aws s3 sync` → invalidation, over a short-lived OIDC
-  role) exists but is not wired yet: the OIDC role is not created, so today
-  releases go out from the owner's machine (below).
+  `deploy.yml` (published content read from the bucket → build → `aws s3
+  sync` → invalidation) runs on demand from `main`, over a short-lived OIDC
+  token for the role of `infra/lib/github-deploy-role.ts` (since 2026-11-21,
+  dp-04). Only the `production` environment of this repository can take the
+  role, and that environment waits for the owner's approval in GitHub.
 
 Defined in `infra/` with the **AWS CDK (TypeScript)**.
 
@@ -65,10 +67,26 @@ runs on demand only (2026-10-16): after every CI on `main` it failed for lack
 of the account; whether it runs on its own again is decided at the release
 stage (spec 010, D-6).
 
+## Going to production from GitHub
+
+1. **Publish in the admin** first if content changed (step 1 and 5 below): the
+   workflow reads the published documents from the bucket, never writes them.
+2. **Start it:** `gh workflow run deploy.yml --ref main` (or Actions → Deploy
+   static site → Run workflow).
+3. **Approve it:** the run waits on the `production` environment until the
+   owner approves it in GitHub (Review deployments). Nobody else may approve;
+   an agent never does.
+4. **Check the live site:** `npm run check:live`, then the content backup
+   (step 8 below).
+
+The role, the environment and its values: the stack output `DeployRoleArn` is
+the secret `AWS_DEPLOY_ROLE_ARN`; `SITE_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`
+and `AWS_REGION` are variables of the repository.
+
 ## Going to production from this machine
 
-Until the deploy runs from GitHub with the OIDC role (spec 010, D-6), a release
-goes out from the owner's machine with an SSO profile, never the root account.
+The fallback when GitHub cannot deploy: a release goes out from the owner's
+machine with an SSO profile, never the root account.
 `<bucket>` and `<distribution>` are the stack outputs `BucketName` and
 `DistributionId`.
 

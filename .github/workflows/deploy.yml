@@ -1,10 +1,11 @@
 name: Deploy static site
 
-# Publishes the built frontend to S3 + CloudFront, on demand only. It used to
-# run after every green CI on main and failed each time, because the AWS
-# account, the OIDC role and the target variables do not exist yet (five
-# failures, 2026-10-10 to 10-16); how deploys run is decided at the release
-# stage (spec 010, D-6).
+# Publishes the built frontend to S3 + CloudFront, on demand only, from main.
+# It signs in to AWS with a short-lived OIDC token for the role of
+# infra/lib/github-deploy-role.ts, which only the `production` environment of
+# this repository can take; that environment waits for the owner's approval
+# before the job starts (spec 010, D-6; dp-04). Until 2026-11-21 releases went
+# out from the owner's machine (docs/deploy-aws.md).
 on:
   workflow_dispatch:
 
@@ -12,9 +13,15 @@ permissions:
   id-token: write # OIDC: assume the deploy role, no long-lived AWS keys
   contents: read
 
+# One deploy at a time; a second one waits instead of racing the first.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Build & deploy
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -24,7 +31,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run build
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -32,10 +38,25 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      # The repository has only the example content; the owner's published
+      # documents live in the bucket's content/ (ADR 004). The build renders
+      # each page, llms.txt and the profile pages from them, so they are read
+      # first: without them the site would ship the example under the owner's
+      # address. A missing document fails the step. Read only, never written.
+      - name: Fetch the published content
+        run: |
+          for doc in site.en site.es profile.en profile.es visual; do
+            aws s3 cp "s3://${{ vars.SITE_BUCKET }}/content/$doc.json" "public/content/$doc.json" --only-show-errors
+          done
+
+      - run: npm run build
+      - run: npm run report:objective
+
       # content/ belongs to the admin (ADR 004): a code deploy never uploads,
-      # overwrites or deletes it. Hashed chunks in assets/ are uploaded first and
-      # never deleted, so a page opened before this deploy can still lazy-load
-      # its chunks (spec 010, AD-09 and AD-11; checked by deployWorkflow.test.ts).
+      # overwrites or deletes it (the role denies it too). Hashed chunks in
+      # assets/ are uploaded first and never deleted, so a page opened before
+      # this deploy can still lazy-load its chunks (spec 010, AD-09 and AD-11;
+      # checked by deployWorkflow.test.ts).
       - name: Upload hashed assets
         run: aws s3 sync dist/assets/ "s3://${{ vars.SITE_BUCKET }}/assets/"
 
@@ -44,8 +65,7 @@ jobs:
           aws s3 sync dist/ "s3://${{ vars.SITE_BUCKET }}" --delete
           --exclude "content/*" --exclude "assets/*"
 
-      - name: Invalidate CloudFront cache
-        run: >-
-          aws cloudfront create-invalidation
-          --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}"
-          --paths "/*"
+      - name: Invalidate CloudFront cache and wait
+        run: |
+          id=$(aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/*" --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --id "$id"
