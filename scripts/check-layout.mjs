@@ -8,7 +8,7 @@
 // shrinks.
 //
 //   node scripts/check-layout.mjs              default matrix (4 viewports, every layout mode)
-//   node scripts/check-layout.mjs --full       full matrix (9 viewports)
+//   node scripts/check-layout.mjs --full       full matrix (10 viewports; 320x568 since dp-08)
 //   --out-dir=<private build> --require-complete-content checks a fixed owner
 //   snapshot and refuses acceptance while examples or publish warnings remain.
 //   node scripts/check-layout.mjs --worlds     also the contrast over every world
@@ -79,7 +79,7 @@ if (reviewManifest) {
 // checked at night): 1920×1080 is desktop, 1600×725 and 1366×768 are
 // desktop-short, 390×844 is stacked. A run that misses a mode fails.
 const PR_VIEWPORTS = ['1920x1080', '1600x725', '1366x768', '390x844']
-const FULL_VIEWPORTS = ['2048x1152', '1920x1080', '1600x725', '1536x864', '1440x900', '1366x768', '1280x720', '768x1024', '390x844']
+const FULL_VIEWPORTS = ['2048x1152', '1920x1080', '1600x725', '1536x864', '1440x900', '1366x768', '1280x720', '768x1024', '390x844', '320x568']
 const LAYOUT_MODES = ['stacked', 'desktop', 'desktop-short']
 const LOCALES = ['en', 'es']
 const FACES = ['agentic', 'products', 'systems', 'security', 'research', 'contact']

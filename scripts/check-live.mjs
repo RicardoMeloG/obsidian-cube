@@ -420,6 +420,70 @@ try {
     }
     await close()
   })
+  // CU-13: crawlers find the site's map, and browsers cache what can be cached
+  // (ADR 009, spec 018 D-6; pending item dt-35).
+  await useCase('CU-13', 'Crawlers and caches: robots, sitemap, and Cache-Control by path', async (problems) => {
+    const origin = LIVE ? new URL(BASE).origin : 'https://ricardomelog.com'
+    const robots = await fetch(`${BASE}/robots.txt`)
+    const robotsText = await robots.text()
+    expect(problems, robots.status === 200 && /^text\/plain/.test(robots.headers.get('content-type') ?? ''), `robots.txt answered ${robots.status} ${robots.headers.get('content-type')}`)
+    expect(problems, robotsText.includes(`Sitemap: ${origin}/sitemap.xml`), 'robots.txt does not name the sitemap')
+    for (const agent of ['GPTBot', 'ClaudeBot', 'PerplexityBot', '*']) {
+      expect(problems, new RegExp(`User-agent: ${agent.replace('*', '\\*')}\\nAllow: /`).test(robotsText), `robots.txt does not allow ${agent}`)
+    }
+    const sitemap = await fetch(`${BASE}/sitemap.xml`)
+    const locs = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
+    expect(problems, sitemap.status === 200 && /xml/.test(sitemap.headers.get('content-type') ?? ''), `sitemap.xml answered ${sitemap.status} ${sitemap.headers.get('content-type')}`)
+    for (const path of ['/', '/agentic', '/contact', '/es', '/es/seguridad', '/es/contacto']) {
+      expect(problems, locs.includes(`${origin}${path}`), `sitemap.xml does not list ${path}`)
+    }
+    expect(problems, locs.length === 14, `sitemap.xml lists ${locs.length} pages, not 14 (7 faces in 2 languages)`)
+    // The edge function sets these (spec 018): vite preview does not.
+    if (LIVE) {
+      const asset = (await (await fetch(`${BASE}/`)).text()).match(/\/assets\/[^"']+\.js/)?.[0]
+      const cacheOf = async (path) => (await fetch(`${BASE}${path}`)).headers.get('cache-control') ?? ''
+      expect(problems, Boolean(asset) && /max-age=31536000/.test(await cacheOf(asset)) && /immutable/.test(await cacheOf(asset)), `a hashed asset (${asset}) is not cached for a year and immutable`)
+      for (const path of ['/', '/es/seguridad', '/content/site.es.json', '/sitemap.xml']) {
+        expect(problems, /no-cache/.test(await cacheOf(path)), `${path} is not revalidated (Cache-Control: ${await cacheOf(path)})`)
+      }
+    }
+  })
+
+  // CU-14: a visitor on a desktop contemplates a world and comes back (spec 017).
+  await useCase('CU-14', 'Art mode: a double-click on the world shows it alone, signed; Esc comes back', async (problems) => {
+    const { context, page, close } = await watchedPage(softwareBrowser, problems, { viewport: { width: 1600, height: 900 }, softwareWebgl: true })
+    context.setDefaultTimeout(120000)
+    await page.goto(`${BASE}/agentic?intro=0`)
+    await idle(page, 'agentic')
+    // The centre of a desktop is kept clear for the cube (check:layout), so a
+    // double-click there lands on the world, not on the interface.
+    // The mode opens only once the scene is ready (spec 017), which on
+    // software WebGL comes a few seconds after the stage: try again until then.
+    let shown = false
+    for (let attempt = 0; attempt < 8 && !shown; attempt++) {
+      await page.mouse.dblclick(800, 450)
+      shown = await page.waitForSelector('.art-mode[data-phase="on"]', { timeout: 8000 }).then(() => true).catch(() => false)
+    }
+    expect(problems, shown, 'art mode did not open on a double-click')
+    if (shown) {
+      const signature = (await page.locator('.art-mode__signature').textContent())?.trim() ?? ''
+      expect(problems, signature.length > 0, 'the art mode is not signed with the owner name')
+      // The layer covers the page: what is under the centre and the corners is the art.
+      const covered = await page.evaluate(() =>
+        [[0.5, 0.5], [0.05, 0.1], [0.95, 0.9]].every(([x, y]) => document.elementFromPoint(innerWidth * x, innerHeight * y)?.closest('.art-mode') !== null),
+      )
+      expect(problems, covered, 'the art mode does not cover the page')
+      await page.keyboard.press('Escape')
+      const left = await page
+        .waitForFunction(() => !document.querySelector('.art-mode') || document.querySelector('.art-mode')?.getAttribute('data-phase') === 'off', null, { timeout: 15000 })
+        .then(() => true)
+        .catch(() => false)
+      expect(problems, left, 'Esc did not leave art mode')
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('.stage-content')).visibility !== 'hidden', null, { timeout: 10000 }).catch(() => {})
+      expect(problems, await visible(page, '.stage-content'), 'the stage did not come back after art mode')
+    }
+    await close()
+  })
 } finally {
   await softwareBrowser.close()
   await noWebglBrowser.close()

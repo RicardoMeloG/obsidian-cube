@@ -27,6 +27,7 @@ describe('the WAF records tally (spec 020)', () => {
     rec({ p: '/es', m: 'HEAD' }),
     rec({ p: '/es/seguridad', a: 'COUNT', r: 'AWS-AWSManagedRulesCommonRuleSet' }),
     rec({ p: '/xmlrpc.php', m: 'POST' }),
+    rec({ p: '/api/iron-bastion/partidas', m: 'POST', k: 'browser', n: 'Edge' }),
   ], ['complete', 'sampled', 'truncated']))
   tally.add(hour('2026-11-21T05', [], ['missing']))
   tally.add(hour('2026-11-01T00', [rec({})]))

@@ -762,6 +762,12 @@
     @variant phone-small {
       font-size: 0.66em;
     }
+
+    /* 320 px: «Investigación» fits in full, as the dock rule asks (dp-08). */
+    @variant tiny {
+      font-size: 0.62em;
+      letter-spacing: 0.02em;
+    }
   }
 
   .stage-dock__text small {

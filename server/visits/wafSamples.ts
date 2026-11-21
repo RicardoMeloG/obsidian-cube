@@ -40,6 +40,9 @@ export type Coverage = {
 export type WafSummary = VisitSummary & { probes: ProbeSummary; coverage: Coverage; ownerTests: number }
 
 const TOP = 20
+// Endpoints the site serves besides its pages: an allowed call to them is the
+// site working, not a probe (the Iron Bastion match-log receiver, spec 015).
+const KNOWN_ENDPOINTS = ['/api/iron-bastion/']
 
 // The readable name of the rule that stopped a request: the managed rule when
 // there is one (`ExploitablePaths_URIPATH`), else the rule's metric name.
@@ -112,8 +115,9 @@ export function createWafTally(days: number, today: string): WafTally {
           }
           continue
         }
-        // An allowed asset is part of a page someone loaded, not a probe.
-        if (record.a === 'ALLOW' && isAsset(record.p)) continue
+        // An allowed asset is part of a page someone loaded, and an allowed call
+        // to a known endpoint is the site at work: neither is a probe.
+        if (record.a === 'ALLOW' && (isAsset(record.p) || KNOWN_ENDPOINTS.some((prefix) => record.p.startsWith(prefix)))) continue
         // Everything else is a probe: a path the site does not have, or a block.
         if (record.a === 'ALLOW') otherPaths += weight
         else blocked += weight

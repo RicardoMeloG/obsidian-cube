@@ -46,7 +46,7 @@ I design the architecture, the rules and the gates; AI agents implement inside t
 - **Independent audits.** Stages close only after an audit by a reviewer with no context from the work (`specs/010-architecture/audit-1.md`, `audit-2.md`); every finding is fixed or recorded as a decision.
 - **Process in proportion to the change** (spec 012). The pre-push hook reads what a push changes: documentation passes with the usual gates, code needs an audit of its exact diff by two local models, and a change to the contract or a gate needs its spec or ADR. It also refuses ignored files, keys and secret values.
 - **Stages in order** (ADR 007, ADR 008): normalize the code, compositions, content, security, release.
-- **The published site is tested too.** `npm run check:live` walks twelve visitor use cases against the live site and fails on any console error or warning (`docs/live-use-cases.md`).
+- **The published site is tested too.** `npm run check:live` walks fourteen visitor use cases against the live site and fails on any console error or warning (`docs/live-use-cases.md`).
 
 ## Getting Started
 
@@ -114,7 +114,7 @@ Obsidian Interface System: dark, premium, technical, sober. Violet volumetric am
 
 ## Status (2026-11-21)
 
-Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy, an A+ on Mozilla Observatory (2026-11-14) and an A+ on SSL Labs on all twelve edge addresses (2026-11-15). Since the first release (2026-11-12): the art mode and its gallery of worlds (spec 017), a lighter scene on dense and integrated-GPU screens, layered cost ceilings with a tested kill switch (spec 014), the WAF's managed rules blocking, the Iron Bastion match log receiver with a capped concurrency (spec 015), real 404s, the scene at 30 frames a second at rest with cache headers by path (spec 018), the AGENTIC plexus moved to the GPU, and the visits view in the local admin (spec 013, its log delivery still off). Code deploys run from GitHub since 2026-11-21, after the owner approves them. `npm run check:live` passes its twelve use cases on the live site. Still open (`docs/roadmap.md`): the intro that hides the name for a few seconds, the contact form and the CV request of the security stage, a performance gate (spec 019), and the Cognito admin of ADR 004.
+Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy, an A+ on Mozilla Observatory (2026-11-14) and an A+ on SSL Labs on all twelve edge addresses (2026-11-15). Since the first release (2026-11-12): the art mode and its gallery of worlds (spec 017), a lighter scene on dense and integrated-GPU screens, layered cost ceilings with a tested kill switch (spec 014), the WAF's managed rules blocking, the Iron Bastion match log receiver with a capped concurrency (spec 015), real 404s, the scene at 30 frames a second at rest with cache headers by path (spec 018), the AGENTIC plexus moved to the GPU, and the visits view in the local admin, fed hourly by the web ACL's samples with the probes the bots try (specs 013 and 020). Code deploys run from GitHub since 2026-11-21, after the owner approves them. `npm run check:live` passes its fourteen use cases on the live site. Still open (`docs/roadmap.md`): the intro that hides the name for a few seconds, the contact form and the CV request of the security stage, a performance gate (spec 019), and the Cognito admin of ADR 004.
 
 ## Orientation for Contributors
 

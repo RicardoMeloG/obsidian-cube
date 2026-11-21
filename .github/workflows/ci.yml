@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       full:
-        description: Full viewport matrix (9 sizes)
+        description: Full viewport matrix (10 sizes)
         type: boolean
         default: false
       worlds:

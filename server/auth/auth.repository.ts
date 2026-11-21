@@ -19,7 +19,7 @@ export type AdminUser = {
   totpEnabled: boolean
 }
 
-// Plain class (no Nest decorator) — testable with an injected pg-mem pool.
+// Plain class (no Nest decorator) — testable with an injected pool.
 export class AuthRepository {
   private available = false
   private readonly logger = new Logger(AuthRepository.name)

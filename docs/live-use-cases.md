@@ -1,6 +1,6 @@
 # Use Cases on the Published Site
 
-**Status:** living document, 2026-11-12. Run by `npm run check:live` (`scripts/check-live.mjs`).
+**Status:** living document, 2026-11-12; CU-13 and CU-14 added on 2026-11-21. Run by `npm run check:live` (`scripts/check-live.mjs`).
 
 The layout check proves the build before it ships; these use cases prove the published site, in a real browser, the way each kind of visitor meets it. The console is watched in every case: a reviewer may open the developer tools, so any error, warning, failed request or CSP violation fails the run. The script is read-only.
 
@@ -27,6 +27,8 @@ npm run check:live -- --force                      # skip the five-minute pause
 | CU-10 | Reviewer checking security from outside | Reads headers, tries plain HTTP and private paths | Enforced CSP, HSTS, `DENY`, `nosniff`, Referrer and Permissions policies, no `Server: AmazonS3`; HTTP moves to HTTPS; `www` answers; no private file is served |
 | CU-11 | The owner's rules | Looks at Contact in both languages | No CV link (the CV is never on the site), no request to another host, no cookies |
 | CU-12 | Any desktop visitor | Opens all 14 addresses | Every one answers 200 with a clean console |
+| CU-13 | Crawlers and browsers | Read `robots.txt` and `sitemap.xml`; load a page and its assets | `robots.txt` as text, naming the sitemap and allowing the AI crawlers; the sitemap lists the 14 pages; on the live site, hashed assets cached a year and immutable, pages, content and the sitemap revalidated (spec 018) |
+| CU-14 | Desktop visitor, 1600×900 | Double-clicks the world, then presses Esc | The art mode covers the page, signed with the owner's name; Esc brings the stage back (spec 017) |
 
 ## Notes
 
@@ -36,4 +38,5 @@ npm run check:live -- --force                      # skip the five-minute pause
 - **The WAF's rate limit.** The web ACL blocks a client above 300 requests in 5 minutes, and one full run makes about 150 to 200, so two runs in a row block the owner's own IP and the whole site answers 403 for a few minutes (dt-01). A run on the live site therefore refuses to start within five minutes of the previous one (`--force` overrides it; the stamp lives in the system's temporary folder), checks the home page before starting, and when a use case fails it checks again: if the WAF is refusing the IP, the run stops there with exit code 2 and says so, instead of reporting the rest as failures of the site.
 - **Cancelled requests.** A request the browser drops because the page moved to another address or face, or because the test closed it, is not counted: the console shows nothing and only the network panel marks it cancelled. One cut short on a page that stayed put still fails the case.
 - **Local preview.** `vite preview` answers the home page for any path, so CU-10's unknown and private paths fail on a local run; that case is meaningful on the published site only.
+- **The owner's mark.** Every request of a run ends its user agent with `obsidian-cube-check`, so the web ACL sample collector shows the run as the owner's tests, not as visits (spec 020, D-6).
 - **Published content.** `/content/site.*.json` and `/content/profile.*.json` are the published content the page reads; they are public by design (ADR 004).
