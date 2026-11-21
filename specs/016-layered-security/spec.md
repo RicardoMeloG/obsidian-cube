@@ -1,6 +1,6 @@
 # 016: Layered Security, Shown With Evidence
 
-**Status:** analysis (2026-11-19), not built. The owner asked for it on 2026-11-14 (pending item dp-18): not to answer an attack, but to show command of the subject with redundant controls, where each layer still holds when the one before it fails. The owner asked for a deeper analysis before building; this is that analysis. Decisions D-1 to D-6 are the owner's.
+**Status:** analysis (2026-11-19), not built. The owner asked for it on 2026-11-14 (pending item dp-18): not to answer an attack, but to show command of the subject with redundant controls, where each layer still holds when the one before it fails. The owner asked for a deeper analysis before building; this is that analysis. Decisions D-1 to D-6 taken by the owner on 2026-11-21 (section 6); being built: P-1 (with a per-IP brake added by the owner) and P-2 in `main`, P-3 to P-5 next.
 **Builds on:** spec 014 (Free plan, web ACL, kill switch), spec 015 (the match log receiver), the security review of 2026-11-12 (OWASP Top 10:2025, ZAP), ADR 004 (the Cognito admin, later).
 
 ## 1. What there is to protect
@@ -66,6 +66,17 @@ Following the owner's rule for audits (recommendations, staged: now, later, no):
 - The local admin's login has no rate limiting: it never leaves 127.0.0.1 (AGENTS.md, admin rules); the cloud admin will use Cognito's (ADR 004).
 
 ## 6. Decisions for the owner
+
+Taken on 2026-11-21, one question at a time:
+
+- **D-1** Yes, and more: two brakes in the function (`infra/lambda/match-log/brakes.mjs`). Per IP, at most 10 stored logs in 10 minutes (the owner asked that too many sends from one origin block that sender; the IP is read from the `X-Forwarded-For` entry CloudFront appends, kept only in the instance's memory for the window, never written). In total, 5 writes a second per instance, the only brake on a flood from many addresses. A refusal answers 429 with `Retry-After`.
+- **D-2** Compare only (`npm run check:waf`; the expected rules in `infra/web-acl.expected.json`, taken on 2026-11-21, 0 differences).
+- **D-3** Once now and after any change to the rule; the owner runs it from CloudShell.
+- **D-4** English only; contact `security@ricardomelog.com`, an alias the owner creates.
+- **D-5** The settings applied through the GitHub API with the owner's yes to each; the protection of `main` must not require pull requests.
+- **D-6** Yes: SECURITY.md is the SECURITY face's inspectable artifact, linked from the admin.
+
+The questions as they were put:
 
 - **D-1** P-1, and its rate (5 writes a second per instance is about 20 times what one player sends).
 - **D-2** P-2: the script compares only, or also prints the console steps to restore a drifted rule.

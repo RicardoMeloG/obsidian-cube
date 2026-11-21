@@ -2,10 +2,13 @@
 // @aws-sdk/client-s3 ships with the Node.js 22 runtime; nothing is bundled.
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { handleRequest } from './logic.mjs'
+import { createBrakes, viewerIp } from './brakes.mjs'
 
 const s3 = new S3Client({})
 const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS ?? '[]')
 const bucket = process.env.BUCKET
+// One per instance, kept while the instance lives (brakes.mjs).
+const brakes = createBrakes()
 
 export async function handler(event) {
   const result = handleRequest(
@@ -19,6 +22,11 @@ export async function handler(event) {
   )
 
   if (result.status === 204) {
+    const refusal = brakes.take(viewerIp(event.headers, event.requestContext?.http?.sourceIp), Date.now())
+    if (refusal) {
+      console.log(`refused ${refusal.status} ${refusal.reason}`)
+      return { statusCode: refusal.status, headers: { 'retry-after': String(refusal.retryAfter) }, body: refusal.reason }
+    }
     await s3.send(new PutObjectCommand({
       Bucket: bucket,
       Key: result.key,
