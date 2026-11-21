@@ -72,7 +72,7 @@ Taken on 2026-11-21, one question at a time:
 - **D-1** Yes, and more: two brakes in the function (`infra/lambda/match-log/brakes.mjs`). Per IP, at most 10 stored logs in 10 minutes (the owner asked that too many sends from one origin block that sender; the IP is read from the `X-Forwarded-For` entry CloudFront appends, kept only in the instance's memory for the window, never written). In total, 5 writes a second per instance, the only brake on a flood from many addresses. A refusal answers 429 with `Retry-After`. The map of addresses holds at most 5,000; a flood from more distinct addresses inside one window can push an earlier offender out of it, and then the total brake is what holds. After the deploy, one real request confirms the shape of `X-Forwarded-For` behind the function URL: the log line says whether a viewer IP was found and how many entries the header had, never the IP.
 - **D-2** Compare only (`npm run check:waf`; the expected rules in `infra/web-acl.expected.json`, taken on 2026-11-21, 0 differences).
 - **D-3** Once now and after any change to the rule; the owner runs it from CloudShell.
-- **D-4** English only; contact `security@ricardomelog.com`, an alias the owner creates.
+- **D-4** English only; contact a `security@` alias of the site's domain, which the owner creates (the address itself is written where it is published, SECURITY.md and security.txt).
 - **D-5** The settings applied through the GitHub API with the owner's yes to each; the protection of `main` must not require pull requests.
 - **D-6** Yes: SECURITY.md is the SECURITY face's inspectable artifact, linked from the admin.
 
