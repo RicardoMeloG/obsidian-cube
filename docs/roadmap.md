@@ -16,7 +16,7 @@ Loaded on demand. The stages to the first release, what is open after it, and th
 - Cost ceiling of about 20 USD a month (spec 014, 2026-11-14): the CloudFront flat-rate Free plan, IP rate limiting and managed rules in its web ACL, a kill switch tested by hand, and the budget alerts.
 - The Iron Bastion match-log receiver (spec 015, 2026-11-14) and the fullscreen art mode with its gallery (spec 017, 2026-11-14).
 - The scene at 30 frames a second at rest and cache headers by path (spec 018, 2026-11-17); the AGENTIC plexus on the GPU (2026-11-21).
-- The visits view in the local admin (spec 013, in `main` since 2026-11-21; its log delivery stays off until the owner turns it on).
+- The visits view in the local admin (spec 013, in `main` since 2026-11-20; its log delivery stays off until the owner turns it on).
 - Code deploys from GitHub over an OIDC role, after the owner approves the `production` environment (spec 010, D-6; 2026-11-21).
 
 ## Open after the release, in order

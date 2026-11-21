@@ -82,7 +82,7 @@ npm run check:tokens     # colours and type only from the tokens
 npm run check:layout     # layout, accessibility, contrast and CSP on a viewport matrix (Playwright)
 npm run check:layout -- --worlds   # also name and role over every world (software WebGL; on demand in CI)
 npm run check:live       # use cases against the published site (or --url=http://127.0.0.1:5181)
-npm run audit:change     # before pushing code: two local models audit the exact diff (Ollama); AUDIT_MODELS=sonnet accepts a Claude Sonnet audit instead
+npm run audit:change     # before pushing code: two local models audit the exact diff (Ollama). The gate accepts the record of whichever models AUDIT_MODELS names: with AUDIT_MODELS=sonnet, a record in audit-runs/ written from a Claude Sonnet audit of the same diff (hash, base, head, models[].findings), since this script talks only to Ollama
 ```
 
 Private values for the privacy check go in `.privacy-denylist` (gitignored, one per line) and, in CI, in the `PRIVACY_DENYLIST` secret; CI fails when the secret is missing, except on a fork's pull request or a Dependabot run, which only warn.
