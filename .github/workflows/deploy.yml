@@ -50,7 +50,9 @@ jobs:
           done
 
       - run: npm run build
-      - run: npm run report:objective
+      # Another site's outage (an artifact link timing out) warns, it does not
+      # hold back a code deploy; the owner's own pages and files still fail it.
+      - run: npm run report:objective -- --links=warn
 
       # Only the files the upload syncs: dist/content/ never goes to the
       # bucket, so it does not travel either.

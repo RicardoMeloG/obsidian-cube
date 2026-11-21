@@ -17,6 +17,11 @@ import { resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const reviewBuild = process.argv.find(arg => arg.startsWith('--out-dir='))?.slice('--out-dir='.length)
+// --links=warn: an artifact link that does not answer is reported, not a
+// failure. The deploy uses it, so another site's outage (zenodo.org timed out
+// on 2026-11-21) does not hold back a code deploy; locally it stays strict.
+const LINKS_WARN = process.argv.includes('--links=warn')
+const warnings = []
 const DIST = reviewBuild ? pathToFileURL(resolve(reviewBuild) + sep) : new URL('../dist/', import.meta.url)
 const CONTENT = reviewBuild ? new URL('./content/', DIST) : new URL('../public/content/', import.meta.url)
 console.log(`Content reported: ${CONTENT.href}; HTML: ${DIST.href}`)
@@ -70,7 +75,7 @@ for (const [locale, content] of Object.entries(documents)) {
       }
       const code = await status(link.href)
       console.log(`  ${locale} ${section.id.padEnd(8)} #${index + 1}  ${host.padEnd(22)} ${code}`)
-      if (code !== 200) problem(`${locale} ${section.id} #${index + 1} (${host}) answered ${code}`)
+      if (code !== 200) (LINKS_WARN ? warnings : problems).push(`${locale} ${section.id} #${index + 1} (${host}) answered ${code}`)
     }
   }
 }
@@ -118,5 +123,6 @@ for (const [locale, content] of Object.entries(documents)) {
 console.log(`Layer for machines: ${LLMS_FILE} and the profile pages checked.`)
 
 for (const line of problems) console.log(`- ${line}`)
+for (const warning of warnings) console.log(`::warning::${warning}`)
 console.log(problems.length === 0 ? 'Objective report: nothing missing.' : `Objective report: ${problems.length} things missing.`)
 process.exitCode = problems.length > 0 ? 1 : 0
