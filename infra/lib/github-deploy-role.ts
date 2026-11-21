@@ -16,8 +16,13 @@ import { Construct } from 'constructs'
 export type GitHubDeployRoleProps = {
   bucket: s3.IBucket
   distribution: cloudfront.IDistribution
-  // owner/name of the repository allowed to deploy.
-  repository: string
+  // The subject prefix GitHub puts in this repository's tokens, as
+  // `gh api repos/<owner>/<repo>/actions/oidc/customization/sub` reports it
+  // (sub_claim_prefix). This repository uses GitHub's immutable subjects,
+  // with the owner's and the repository's ids
+  // (repo:Owner@id/name@id), so a renamed or recreated repository with the
+  // same name cannot take the role.
+  subjectPrefix: string
 }
 
 export const DEPLOY_ENVIRONMENT = 'production'
@@ -28,7 +33,7 @@ export class GitHubDeployRole extends Construct {
 
   constructor(scope: Construct, id: string, props: GitHubDeployRoleProps) {
     super(scope, id)
-    const { bucket, distribution, repository } = props
+    const { bucket, distribution, subjectPrefix } = props
 
     const provider = new iam.OidcProviderNative(this, 'GitHubOidc', {
       url: `https://${GITHUB_OIDC}`,
@@ -36,14 +41,17 @@ export class GitHubDeployRole extends Construct {
     })
 
     this.role = new iam.Role(this, 'Role', {
-      description: `Deploys the static site from ${repository} (environment ${DEPLOY_ENVIRONMENT}, deploy.yml)`,
+      description: `Deploys the static site from ${subjectPrefix} (environment ${DEPLOY_ENVIRONMENT}, deploy.yml)`,
       maxSessionDuration: cdk.Duration.hours(1),
       assumedBy: new iam.WebIdentityPrincipal(provider.oidcProviderArn, {
         StringEquals: {
           [`${GITHUB_OIDC}:aud`]: 'sts.amazonaws.com',
           // Exact subject: this repository, this environment. A branch, a
           // pull request or another environment gets a different subject.
-          [`${GITHUB_OIDC}:sub`]: `repo:${repository}:environment:${DEPLOY_ENVIRONMENT}`,
+          // The subject names no branch: the environment's branch policy
+          // (main only) and its required reviewer, set in GitHub, are what
+          // keep another branch out.
+          [`${GITHUB_OIDC}:sub`]: `${subjectPrefix}:environment:${DEPLOY_ENVIRONMENT}`,
         },
       }),
     })

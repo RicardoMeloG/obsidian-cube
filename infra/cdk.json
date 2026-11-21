@@ -15,7 +15,7 @@
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "visitLogs": false,
-    "githubDeployRepo": "RicardoMeloG/obsidian-cube",
+    "githubDeploySubject": "repo:RicardoMeloG@49494594/obsidian-cube@1456005002",
     "siteDomains": [
       "ricardomelog.com",
       "www.ricardomelog.com"

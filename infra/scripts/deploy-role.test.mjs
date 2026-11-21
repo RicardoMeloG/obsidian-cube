@@ -24,7 +24,7 @@ test('without the repository in the context there is no deploy role', () => {
   assert.equal(template.Outputs.DeployRoleArn, undefined)
 })
 
-const template = synth({ githubDeployRepo: 'owner/site' })
+const template = synth({ githubDeploySubject: 'repo:owner@1/site@2' })
 const role = ofType(template, 'AWS::IAM::Role').find((resource) => /static site/.test(resource.Properties.Description ?? ''))
 const statements = ofType(template, 'AWS::IAM::Policy')
   .flatMap((policy) => policy.Properties.PolicyDocument.Statement)
@@ -37,7 +37,7 @@ test('only the production environment of the repository can take the role', () =
   assert.deepEqual(trust.Condition, {
     StringEquals: {
       'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-      'token.actions.githubusercontent.com:sub': 'repo:owner/site:environment:production',
+      'token.actions.githubusercontent.com:sub': 'repo:owner@1/site@2:environment:production',
     },
   })
   assert.equal(role.Properties.MaxSessionDuration, 3600)

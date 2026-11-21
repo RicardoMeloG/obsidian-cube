@@ -152,11 +152,12 @@ export class StaticSiteStack extends cdk.Stack {
       new VisitLogs(this, 'VisitLogs', { distribution })
     }
 
-    // The deploy from GitHub (spec 010, D-6; dp-04): only when the repository
-    // is in the context, so a fresh clone synthesises without it.
-    const githubDeployRepo = this.node.tryGetContext('githubDeployRepo') as string | undefined
-    if (githubDeployRepo) {
-      const deploy = new GitHubDeployRole(this, 'GitHubDeploy', { bucket, distribution, repository: githubDeployRepo })
+    // The deploy from GitHub (spec 010, D-6; dp-04): only when the subject prefix of the
+    // repository's tokens is in the context, so a fresh clone synthesises
+    // without it.
+    const githubDeploySubject = this.node.tryGetContext('githubDeploySubject') as string | undefined
+    if (githubDeploySubject) {
+      const deploy = new GitHubDeployRole(this, 'GitHubDeploy', { bucket, distribution, subjectPrefix: githubDeploySubject })
       new cdk.CfnOutput(this, 'DeployRoleArn', { value: deploy.role.roleArn })
     }
 

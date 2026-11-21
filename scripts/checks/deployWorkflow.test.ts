@@ -23,12 +23,30 @@ describe('deploy workflow', () => {
   it('never removes, copies or moves anything onto content/ (audit-2 B-08)', () => {
     expect(s3Commands.filter((line) => /aws s3 rm\b/.test(line))).toEqual([])
     expect(s3Commands.filter((line) => /aws s3 mv\b/.test(line))).toEqual([])
-    // A copy may read content/ (to build the owner's pages), never write it:
-    // its destination, the last path argument, is never in the bucket.
+    expect(workflow).not.toMatch(/aws s3api\b/)
+    // A copy may read the bucket (the owner's content, to build the pages),
+    // never write it: the bucket is only ever the source, the word right
+    // after `cp`, and no other word of the command names it.
     for (const command of s3Commands.filter((line) => /aws s3 cp\b/.test(line))) {
-      const paths = command.match(/"[^"]+"|\S+/g)!.filter((word) => !word.startsWith('--')).slice(3)
-      expect(paths.at(-1), command).not.toMatch(/s3:\/\//)
+      const words = command.slice(command.indexOf('aws s3 cp') + 'aws s3 cp'.length).match(/"[^"]+"|\S+/g)!
+      expect(words[0], command).toMatch(/s3:\/\//)
+      expect(words.slice(1).filter((word) => word.includes('s3://')), command).toEqual([])
     }
+  })
+
+  it('builds without AWS credentials and takes the role again to upload', () => {
+    const steps = workflow.replace(/\r/g, '')
+    const drop = steps.indexOf('Drop the credentials for the build')
+    const again = steps.indexOf('Configure AWS credentials again')
+    expect(drop).toBeGreaterThan(steps.indexOf('Fetch the published content'))
+    expect(drop).toBeLessThan(steps.indexOf('run: npm run build'))
+    expect(again).toBeGreaterThan(steps.indexOf('run: npm run report:objective'))
+    expect(again).toBeLessThan(steps.indexOf('Upload hashed assets'))
+    for (const name of ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN']) expect(steps).toContain(name)
+  })
+
+  it('pins every action by commit', () => {
+    for (const [, ref] of workflow.matchAll(/uses: [\w./-]+@(\S+)/g)) expect(ref).toMatch(/^[0-9a-f]{40}$/)
   })
 
   it('builds from the published content read from the bucket, never the example (dp-04)', () => {
