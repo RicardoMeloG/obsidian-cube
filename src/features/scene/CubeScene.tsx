@@ -613,7 +613,7 @@ export function CubeScene({
           }
         }}
       >
-        <PremiumCube animateGlints={effects.glints} sections={sections} shadows={effects.shadows} />
+        <PremiumCube activeSectionId={activeSectionId} animateGlints={effects.glints} sections={sections} shadows={effects.shadows} />
       </group>
 
       <group scale={platformScale} position={[0, platformBaseY, 0]}>

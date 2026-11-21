@@ -1,8 +1,8 @@
 import { RoundedBox } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
-import { useMemo } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace } from 'three'
-import type { Mesh, MeshBasicMaterial } from 'three'
+import type { CanvasTexture as FaceTexture, Mesh, MeshBasicMaterial, WebGLProgramParametersWithUniforms } from 'three'
 import type { FaceId } from '@/kernel/faces'
 import type { ResolvedFace } from '@/kernel/visualContent'
 
@@ -365,13 +365,66 @@ function ShineGlints({ animate }: ShineGlintsProps) {
   )
 }
 
+// The shown face stays sharp (owner, 2026-11-21). On the stage the cube is
+// drawn small, so its 1536 px face texture is minified about six times and
+// trilinear mipmapping blends two coarse levels: the thin label blurs. A
+// negative level-of-detail bias on the shown face alone samples one level
+// finer; the other faces keep the softer, alias-free sampling. It costs no
+// pixel and no texture memory, and one shader serves all six faces.
+const SHOWN_FACE_MIP_BIAS = -1
+
+type FacePanelProps = {
+  position: readonly [number, number, number]
+  rotation: readonly [number, number, number]
+  texture: FaceTexture | null
+  shown: boolean
+}
+
+function FacePanel({ position, rotation, texture, shown }: FacePanelProps) {
+  // The uniform object outlives renders: the compiled shader holds it.
+  const bias = useRef({ value: 0 })
+  const invalidate = useThree((state) => state.invalidate)
+  useEffect(() => {
+    bias.current.value = shown ? SHOWN_FACE_MIP_BIAS : 0
+    // At rest the scene draws on demand: ask for the frame that shows it.
+    invalidate()
+  }, [invalidate, shown])
+  const withBias = useCallback(
+    (shader: WebGLProgramParametersWithUniforms) => {
+      shader.uniforms.mapBias = bias.current
+      shader.fragmentShader = `uniform float mapBias;\n${shader.fragmentShader}`.replace(
+        '#include <map_fragment>',
+        '#ifdef USE_MAP\n\tdiffuseColor *= texture2D( map, vMapUv, mapBias );\n#endif',
+      )
+    },
+    [],
+  )
+
+  return (
+    <mesh position={position} rotation={rotation}>
+      <planeGeometry args={[2, 2]} />
+      <meshBasicMaterial
+        map={texture}
+        transparent
+        opacity={0.92}
+        depthWrite={false}
+        toneMapped={false}
+        onBeforeCompile={withBias}
+        customProgramCacheKey={faceProgramKey}
+      />
+    </mesh>
+  )
+}
+const faceProgramKey = () => 'face-mip-bias'
+
 type PremiumCubeProps = {
+  activeSectionId: FaceId
   animateGlints: boolean
   sections: ResolvedFace[]
   shadows: boolean
 }
 
-export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubeProps) {
+export function PremiumCube({ activeSectionId, animateGlints, sections, shadows }: PremiumCubeProps) {
   const faceTextures = useMemo(() => sections.map(createFaceTexture), [sections])
   const facePanels = [
     { position: [0, 0, 1.118] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
@@ -403,16 +456,7 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
       </RoundedBox>
 
       {facePanels.map((panel, index) => (
-        <mesh key={sections[index].id} position={panel.position} rotation={panel.rotation}>
-          <planeGeometry args={[2, 2]} />
-          <meshBasicMaterial
-            map={panel.texture}
-            transparent
-            opacity={0.92}
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </mesh>
+        <FacePanel key={sections[index].id} {...panel} shown={sections[index].id === activeSectionId} />
       ))}
 
       <ShineGlints animate={animateGlints} />

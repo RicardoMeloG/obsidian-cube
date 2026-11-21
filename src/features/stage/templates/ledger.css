@@ -146,6 +146,9 @@
 
   li[data-status='verified'] .le-status {
     background: color-mix(in srgb, var(--accent) 16%, transparent);
+    /* Over its own tint the accent measured 4.3:1 at 8.5 px; lifted toward
+       the ink it passes AA whatever the face's accent (2026-11-21). */
+    color: color-mix(in srgb, var(--accent) 72%, var(--color-ink-50));
   }
 
   li[data-status='implemented'] .le-status {
