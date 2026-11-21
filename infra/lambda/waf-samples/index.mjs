@@ -58,7 +58,10 @@ async function readHour(id, rules, nowMs) {
       const population = res.PopulationSize ?? samples.length
       const returnedTo = res.TimeWindow?.EndTime ? new Date(res.TimeWindow.EndTime).getTime() : slice.to
       slices.push({ ...entry, status: coverage({ population, sampled: samples.length, askedTo: slice.to, returnedTo }), population, sampled: samples.length })
-      for (const sample of samples) records.push(toRecord(sample, rule))
+      for (const sample of samples) {
+        const record = toRecord(sample, rule)
+        if (record) records.push(record)
+      }
     }
   }
   return { hour: id, slices, records }

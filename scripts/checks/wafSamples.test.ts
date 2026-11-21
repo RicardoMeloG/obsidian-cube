@@ -64,6 +64,10 @@ describe('a record (D-3)', () => {
     expect(pathOf('')).toBe('/')
   })
 
+  it('skips a sample without a readable time instead of failing the hour', () => {
+    expect(toRecord({ ...sample, Timestamp: undefined }, 'r')).toBeNull()
+  })
+
   it('reads the timestamp as the SDK gives it, or in seconds', () => {
     expect(toRecord({ ...sample, Timestamp: 1763695062 }, 'r').t).toBe('2025-11-21T03:10Z')
     expect(toRecord({ ...sample, Weight: 7, Request: { ...sample.Request, Country: '' } }, 'r')).toMatchObject({ w: 7, c: 'ZZ' })

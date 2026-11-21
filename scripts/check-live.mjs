@@ -24,7 +24,11 @@ import { chromium } from 'playwright'
 // sample collector tells the owner's checks from visitors (spec 020, D-6).
 // The mark is public: it only sorts, it never grants anything.
 const CHECK_MARK = 'obsidian-cube-check'
-const fetch = (url, init = {}) => globalThis.fetch(url, { ...init, headers: { 'user-agent': `node ${CHECK_MARK}`, ...init.headers } })
+const fetch = (url, init = {}) => {
+  const headers = new Headers(init.headers)
+  if (!headers.has('user-agent')) headers.set('user-agent', `node ${CHECK_MARK}`)
+  return globalThis.fetch(url, { ...init, headers })
+}
 
 const BASE = (process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'https://ricardomelog.com').replace(/\/$/, '')
 const ONLY = process.argv.find((arg) => arg.startsWith('--only='))?.slice(7).split(',')

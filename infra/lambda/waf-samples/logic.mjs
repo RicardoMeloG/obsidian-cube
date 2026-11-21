@@ -97,11 +97,14 @@ export function pathOf(uri) {
 const sliceStamp = (ms) => new Date(Math.floor(ms / (SLICE_MINUTES * 60_000)) * SLICE_MINUTES * 60_000).toISOString().slice(0, 16) + 'Z'
 
 // One sampled request to one record: no IP, no header, no query (D-3).
+// A sample without a readable time is skipped (null), so it cannot stop the
+// hour from being written.
 export function toRecord(sample, rule) {
   const request = sample.Request ?? {}
   const userAgent = (request.Headers ?? []).find((h) => String(h.Name).toLowerCase() === 'user-agent')?.Value
   const client = classify(userAgent)
   const ts = sample.Timestamp instanceof Date ? sample.Timestamp.getTime() : typeof sample.Timestamp === 'number' && sample.Timestamp < 1e11 ? sample.Timestamp * 1000 : Date.parse(sample.Timestamp)
+  if (!Number.isFinite(ts)) return null
   return {
     t: sliceStamp(ts),
     m: String(request.Method ?? '').toUpperCase(),

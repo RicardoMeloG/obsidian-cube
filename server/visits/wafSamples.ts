@@ -88,12 +88,19 @@ export function createWafTally(days: number, today: string): WafTally {
       for (const record of hour.records) {
         const day = record.t.slice(0, 10)
         const weight = record.w > 0 ? record.w : 1
-        // The owner's own checks are shown apart, never as visits or probes (D-6).
-        if (record.k === 'owner-test') {
+        // A rule in Count mode does not end the request: the same request is
+        // also sampled under the action that did (allowed or blocked).
+        if (record.a === 'COUNT') continue
+        // The owner's own checks are shown apart; but the mark is public, so a
+        // blocked request that carries it is still a probe (D-6).
+        if (record.k === 'owner-test' && record.a === 'ALLOW') {
           ownerTests += weight
           continue
         }
-        const page = record.a === 'ALLOW' && record.m === 'GET' ? pagePathOf(record.p) : null
+        const page = record.a === 'ALLOW' ? pagePathOf(record.p) : null
+        // Another method on a real page (a preflight, a form post) is neither
+        // a view nor a probe.
+        if (page !== null && record.m !== 'GET' && record.m !== 'HEAD') continue
         if (page !== null) {
           if (record.k === 'browser') {
             visits += weight

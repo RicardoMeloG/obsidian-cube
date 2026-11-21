@@ -48,7 +48,9 @@ export class WafSampleCollector extends Construct {
       handler: 'index.handler',
       code: lambda.Code.fromAsset(join(__dirname, '..', 'lambda', 'waf-samples')),
       memorySize: 128,
-      timeout: cdk.Duration.seconds(60),
+      // A run is 30 calls; a catch-up after failures, with retries, can be
+      // more than twice that.
+      timeout: cdk.Duration.seconds(180),
       logGroup,
       environment: { BUCKET: this.bucket.bucketName, WEB_ACL_ARN: props.webAclArn },
       // One run at a time; a failed run is caught up by the next, so no retry.
