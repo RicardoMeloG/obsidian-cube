@@ -1,7 +1,7 @@
 # 020: Visits and Probes From the Web ACL's Samples
 
 **Status:** built and deployed (2026-11-21): the owner took D-3 and D-5 («acepto tus recomendaciones») and approved the stack diff («sí, hazlo»); `wafSamples` is `true` in `infra/cdk.json`. The owner asked for a visit counter on 2026-11-21 and, after seeing what the console reports give, for where the bots try to get in.
-**Builds on:** spec 013 (the «Visitas» view in the local admin, its counting and its fixture), spec 014 (the flat-rate Free plan and its web ACL), spec 016 (layered security), the owner rules of `docs/live-use-cases.md` CU-11 (no cookies, no third-party script) and spec 013 (no IP stored).
+**Builds on:** spec 013 (the «Visitas» view in the local admin, its counting and its fixture), spec 014 (the flat-rate Free plan and its web ACL), spec 016 (layered security), the owner rules of `docs/live-use-cases.md` CU-11 (no cookies, no request to another host) and spec 013 (no IP stored).
 
 ## 1. Problem
 

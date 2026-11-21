@@ -20,7 +20,7 @@ A link that passes the publish rule (an `https:` scheme) may still not open for 
    - The browser keeps the address and the title in step with `history.replaceState`; there is no router. The bare `/` opens in the language the visitor last chose, otherwise in `navigator.language`.
    - The address bar never shows a query: review parameters are read on arrival and removed, development tools keep theirs only in development.
    - CloudFront serves each path from its file through a viewer-request function (`infra/lib/static-site-stack.ts`).
-3. **An artifact opens for a stranger.** `npm run report:objective` reads the published documents and the built pages, requests every artifact link without credentials and reports, per face, the host and the status, never the text; it also checks that the raw HTML names the person, the role, the keywords and the links, and that the description does not say "prototype". It is a local report, not a CI gate, because CI has no private content.
+3. **An artifact opens for a stranger.** `npm run report:objective` reads the published documents and the built pages, requests every artifact link without credentials and reports, per face, the host and the status, never the text; it also checks that the raw HTML names the person, the role, the keywords and the links, and that the description does not say "prototype". It is a local report, not a CI gate, because CI has no private content. (Since 2026-11-21 it is also a step of the deploy workflow, which fetches the published documents; `ci.yml` still has none.)
 
 ## Consequences
 
