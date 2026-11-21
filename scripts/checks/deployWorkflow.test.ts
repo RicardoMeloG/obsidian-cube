@@ -13,6 +13,13 @@ const s3Commands = workflow
   .split('\n')
   .filter((line) => line.includes('aws s3 '))
 const syncCommands = s3Commands.filter((line) => line.includes('aws s3 sync'))
+// One job's block of the workflow, from its key to the next job.
+const job = (name: string) => {
+  const text = workflow.replace(/\r/g, '')
+  const start = text.indexOf(`\n  ${name}:\n`)
+  const next = text.slice(start + 1).search(/\n {2}\w[\w-]*:\n/)
+  return next < 0 ? text.slice(start) : text.slice(start, start + 1 + next)
+}
 
 describe('deploy workflow', () => {
   it('deploys only on demand, never on its own (2026-10-16, until the release stage)', () => {
@@ -21,48 +28,36 @@ describe('deploy workflow', () => {
   })
 
   it('never removes, copies or moves anything onto content/ (audit-2 B-08)', () => {
-    expect(s3Commands.filter((line) => /aws s3 rm\b/.test(line))).toEqual([])
-    expect(s3Commands.filter((line) => /aws s3 mv\b/.test(line))).toEqual([])
+    expect(s3Commands.filter((line) => /aws s3 (rm|mv|cp)\b/.test(line))).toEqual([])
     expect(workflow).not.toMatch(/aws s3api\b/)
-    // A copy may read the bucket (the owner's content, to build the pages),
-    // never write it: the bucket is only ever the source, the word right
-    // after `cp`, and no other word of the command names it.
-    for (const command of s3Commands.filter((line) => /aws s3 cp\b/.test(line))) {
-      const words = command.slice(command.indexOf('aws s3 cp') + 'aws s3 cp'.length).match(/"[^"]+"|\S+/g)!
-      expect(words[0], command).toMatch(/s3:\/\//)
-      expect(words.slice(1).filter((word) => word.includes('s3://')), command).toEqual([])
-    }
   })
 
-  it('builds without AWS credentials and takes the role again to upload', () => {
-    const steps = workflow.replace(/\r/g, '')
-    const drop = steps.indexOf('Drop the credentials for the build')
-    const again = steps.indexOf('Configure AWS credentials again')
-    expect(drop).toBeGreaterThan(steps.indexOf('Fetch the published content'))
-    expect(drop).toBeLessThan(steps.indexOf('run: npm run build'))
-    expect(again).toBeGreaterThan(steps.indexOf('run: npm run report:objective'))
-    expect(again).toBeLessThan(steps.indexOf('Upload hashed assets'))
-    for (const name of ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN']) expect(steps).toContain(name)
+  it('builds from the published content of the live site, never the example (dp-04)', () => {
+    const build = job('build')
+    const fetch = build.indexOf('Fetch the published content')
+    expect(fetch).toBeGreaterThan(build.indexOf('run: npm ci'))
+    expect(fetch).toBeLessThan(build.indexOf('run: npm run build'))
+    // The documents the build reads (vite.config.ts): both languages of the
+    // site and the profile, and the visual document; a missing one fails.
+    expect(build).toMatch(/for doc in site\.en site\.es profile\.en profile\.es visual; do/)
+    expect(build).toContain('curl --fail')
+    expect(build).toContain('"https://ricardomelog.com/content/$doc.json" -o "public/content/$doc.json"')
+  })
+
+  it('only the upload job, in the production environment, can get an OIDC token', () => {
+    expect(workflow.replace(/\r/g, '').split('\njobs:')[0]).not.toContain('id-token')
+    expect(job('build')).not.toMatch(/id-token|environment:|aws /)
+    const upload = job('upload')
+    expect(upload).toMatch(/^ {4}environment: production$/m)
+    expect(upload).toMatch(/^ {6}id-token: write/m)
+    expect(upload).toMatch(/^ {4}needs: build$/m)
+    // It runs nothing from the repository: no checkout, no npm.
+    expect(upload).not.toMatch(/uses: actions\/checkout|run: npm/)
+    expect(job('build')).toMatch(/^ {4}if: github\.ref == 'refs\/heads\/main'$/m)
   })
 
   it('pins every action by commit', () => {
     for (const [, ref] of workflow.matchAll(/uses: [\w./-]+@(\S+)/g)) expect(ref).toMatch(/^[0-9a-f]{40}$/)
-  })
-
-  it('builds from the published content read from the bucket, never the example (dp-04)', () => {
-    const steps = workflow.replace(/\r/g, '')
-    const fetch = steps.indexOf('Fetch the published content')
-    expect(fetch).toBeGreaterThan(steps.indexOf('Configure AWS credentials'))
-    expect(fetch).toBeLessThan(steps.indexOf('run: npm run build'))
-    // The documents the build reads (vite.config.ts): both languages of the
-    // site and the profile, and the visual document.
-    expect(steps).toMatch(/for doc in site\.en site\.es profile\.en profile\.es visual; do/)
-    expect(steps).toContain('"s3://${{ vars.SITE_BUCKET }}/content/$doc.json" "public/content/$doc.json"')
-  })
-
-  it('runs only from main, in the production environment that asks the owner', () => {
-    expect(workflow).toMatch(/^\s+environment: production$/m)
-    expect(workflow).toMatch(/^\s+if: github\.ref == 'refs\/heads\/main'$/m)
   })
 
   it('syncs to S3', () => {

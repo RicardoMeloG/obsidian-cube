@@ -43,12 +43,11 @@ test('only the production environment of the repository can take the role', () =
   assert.equal(role.Properties.MaxSessionDuration, 3600)
 })
 
-test('it never writes or deletes the admin content, and reads only content', () => {
+test('it never writes or deletes the admin content, and reads no object', () => {
   const deny = statements.find((statement) => statement.Effect === 'Deny')
   assert.deepEqual([].concat(deny.Action).sort(), ['s3:DeleteObject', 's3:PutObject'])
   assert.match(objectsOf(deny), /\/content\/\*/)
-  const read = statements.find((statement) => [].concat(statement.Action).includes('s3:GetObject'))
-  assert.match(objectsOf(read), /\/content\/\*/)
+  assert.equal(statements.filter((statement) => [].concat(statement.Action).includes('s3:GetObject')).length, 0)
 })
 
 test('it touches only the site bucket and this distribution, with no wildcard action', () => {
@@ -58,5 +57,5 @@ test('it touches only the site bucket and this distribution, with no wildcard ac
     assert.match(objectsOf(statement), /SiteBucket|SiteDistribution/)
   }
   const actions = statements.filter((statement) => statement.Effect === 'Allow').flatMap((statement) => [].concat(statement.Action)).sort()
-  assert.deepEqual(actions, ['cloudfront:CreateInvalidation', 'cloudfront:GetInvalidation', 's3:DeleteObject', 's3:GetObject', 's3:ListBucket', 's3:PutObject'])
+  assert.deepEqual(actions, ['cloudfront:CreateInvalidation', 'cloudfront:GetInvalidation', 's3:DeleteObject', 's3:ListBucket', 's3:PutObject'])
 })

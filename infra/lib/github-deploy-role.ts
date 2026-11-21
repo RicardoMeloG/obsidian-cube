@@ -8,10 +8,10 @@ import { Construct } from 'constructs'
 // with a short-lived OIDC token, never stored keys. Only a run of the given
 // repository in its `production` environment can take the role, and that
 // environment asks the owner's approval before each deploy (configured in
-// GitHub). The role does what deploy.yml does and nothing else:
-//   - reads the published content documents (content/ belongs to the admin,
-//     ADR 004) so the build renders the owner's pages, not the example;
-//   - uploads and deletes the site's files, never under content/;
+// GitHub). The role does what deploy.yml's upload job does and nothing else:
+//   - lists the bucket, so `aws s3 sync` can compare;
+//   - uploads and deletes the site's files, never under content/ (it belongs
+//     to the admin, ADR 004; the build job reads it from the live site);
 //   - invalidates this distribution.
 export type GitHubDeployRoleProps = {
   bucket: s3.IBucket
@@ -58,7 +58,6 @@ export class GitHubDeployRole extends Construct {
 
     const content = bucket.arnForObjects('content/*')
     this.role.addToPolicy(new iam.PolicyStatement({ actions: ['s3:ListBucket'], resources: [bucket.bucketArn] }))
-    this.role.addToPolicy(new iam.PolicyStatement({ actions: ['s3:GetObject'], resources: [content] }))
     this.role.addToPolicy(new iam.PolicyStatement({ actions: ['s3:PutObject', 's3:DeleteObject'], resources: [bucket.arnForObjects('*')] }))
     // Explicit deny wins over the allow above: the code deploy never writes
     // or deletes the admin's content (deployWorkflow.test.ts checks the
