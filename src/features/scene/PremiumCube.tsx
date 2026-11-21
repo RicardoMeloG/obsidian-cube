@@ -426,6 +426,8 @@ type PremiumCubeProps = {
 
 export function PremiumCube({ activeSectionId, animateGlints, sections, shadows }: PremiumCubeProps) {
   const faceTextures = useMemo(() => sections.map(createFaceTexture), [sections])
+  // Six 1536 px canvases on the GPU: freed when the faces change or the cube leaves.
+  useEffect(() => () => faceTextures.forEach((texture) => texture?.dispose()), [faceTextures])
   const facePanels = [
     { position: [0, 0, 1.118] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
     { position: [1.118, 0, 0] as const, rotation: [0, Math.PI / 2, 0] as const, texture: faceTextures[1] },
