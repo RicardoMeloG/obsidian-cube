@@ -22,5 +22,6 @@ In order:
 - `017-art-mode/`: built and live (2026-11-14). The fullscreen art mode of ADR 001 («Contemplar»), desktop only.
 - `018-idle-scene-and-caching/`: built and live (2026-11-17). The scene draws at 30 frames a second after five seconds without input, the pedestal ticks merged by sector (224 draw calls to 36), and `Cache-Control` by path at the edge (load audit of 2026-11-14, C-2, C-5, M-3).
 - `019-performance-gate/`: draft (2026-11-19). `check:perf`, a ratchet per metric on the built site (name readable, first frame, main thread at rest and moving, frames at rest, draw calls), from the load audit's thresholds (M-4).
+- `020-waf-sample-collector/`: draft (2026-11-21). An hourly function copies the web ACL's request samples, without IP or headers, into a private bucket, so the local admin shows page views by country and the probes the web ACL saw (paths, rules, countries); no change to the public site.
 
 Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). GitHub Spec Kit was tried in June 2026 and not adopted.
