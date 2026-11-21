@@ -1,6 +1,6 @@
 # 009: Cube Intro and Rotate Invitation
 
-**Status:** in progress (branch `feature/cube-intro`)
+**Status:** built and live: merged into `main` on 2026-10-13 (pull request #3), in production since the first release (2026-11-12).
 **Date:** 2026-10-10
 
 ## Problem

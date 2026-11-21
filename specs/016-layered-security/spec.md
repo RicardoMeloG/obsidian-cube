@@ -8,7 +8,7 @@
 | Asset | Threat | Today's exposure |
 |---|---|---|
 | The account's money | Denial of wallet: requests that cost per call (Lambda, S3 PUT) or a resource billed outside the Free plan | The receiver (`/api/iron-bastion/*`) is the only path that executes code per request |
-| The site's integrity | Defacement through the bucket, the deploy role or the owner's accounts | Deploys run from the owner's machine with SSO (dp-04 moves them to GitHub OIDC) |
+| The site's integrity | Defacement through the bucket, the deploy role or the owner's accounts | Since 2026-11-21 deploys run from GitHub: an OIDC role only the `production` environment can take, after the owner's approval, unable to write `content/` (dp-04); the owner's machine with SSO is the fallback |
 | The visitor | Script injection through content (links, rich text), framing | The content comes from the owner's admin; the CSP is enforced |
 | The owner's identity and data | Personal data in the public repository; account takeover (GitHub, AWS, Cloudflare, the mail domain) | `check:privacy`, the push gate, 2FA on every account (dp-13) |
 | Match logs | Junk or oversized writes; personal data in what is stored | Anonymous telemetry, consent in the game, no IP stored |
@@ -21,7 +21,7 @@
 | Edge | IP rate rule, 300 requests in 5 minutes, block | console | 2026-11-14, by hand | Not checked automatically (dt-09 a); one rule for every path, since a path-scoped rule needs the Pro plan (dt-09 b) |
 | Edge | Managed rule groups (IP reputation, known bad inputs, common rule set) blocking, `SizeRestrictions_BODY` in Count | console | 2026-11-14 (`/.env.bak` blocked, 20 KB POST passes) | Same as above |
 | Edge | Security headers: CSP enforced (`'self'` only, no inline), HSTS 2 years, `frame-ancestors 'none'`, Permissions-Policy | `infra/security-headers.json`, `edgeHeaders.test.ts` | Observatory A+ (2026-11-12) | Not on error responses: the viewer-response function does not run when the origin answers 400 or more, so the S3 404 and the WAF 403 go out without these headers (dt-31). Accepted: both pages are static with no script, HSTS is already stored from the 200 responses, and `404.html` carries its own policy in a meta tag |
-| Receiver | Only CloudFront can call the function (function URL `AWS_IAM` + OAC SigV4) | `infra/lib/match-log-receiver.ts` | by design and synth; no recorded direct call | Spec 015's acceptance 4 (a direct call refused) has no dated record |
+| Receiver | Only CloudFront can call the function (function URL `AWS_IAM` + OAC SigV4) | `infra/lib/match-log-receiver.ts` | by design and synth; the function URL called directly answered 403 on 2026-11-14 (`specs/015-match-log-receiver/audit-2.md`) | — |
 | Receiver | Origin allow-list, JSON only, 512 KB cap, schema check, key is a UUID, nothing from the client in the path | `infra/lambda/match-log/logic.mjs`, `matchLog.test.ts` | unit tests | — |
 | Receiver | Reserved concurrency 3: a flood cannot take the account's pool from the cost guard | same stack (dt-10) | deployed 2026-11-15 | It caps parallelism, not the rate |
 | Money | Budget of 20 USD a month with an action that disables the distribution | `infra/lib/cost-guard-stack.ts` | 2026-11-14, fired and recovered in 3 minutes | Budget data lags by hours |
@@ -79,7 +79,6 @@ Following the owner's rule for audits (recommendations, staged: now, later, no):
 - Unit tests for the function's limit (P-1): the bucket refills, an instance refuses past its rate with 429 and writes nothing.
 - The web ACL comparison (P-2) reports no difference against the live web ACL, and reports one when an expected rule is changed in a copy.
 - The trip test (P-3) recorded with its date, count, block time and lift time.
-- A direct call to the function URL refused, recorded with its date (spec 015, acceptance 4).
 - SECURITY.md and `security.txt` published; `check:docs` passes; the security review of 2026-11-12 is re-run with ZAP after the change.
 
 ## 8. Found while writing this

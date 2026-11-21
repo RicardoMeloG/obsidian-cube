@@ -37,5 +37,5 @@ Three supporting rules follow from this framing:
 - Production cost per face is significantly higher than a generic shared background. This cost is accepted as part of the project's intended signal: the visual investment is itself evidence of judgment and craft.
 - Each new face background must be designed as autonomous spectacle and must justify its register against the other five. A redundant register requires a rework, not just an aesthetic adjustment.
 - The cube can never be removed from the composition without breaking the Polaris rule for any rotating-sky face.
-- Fullscreen art mode introduces a new interaction primitive (double-click on background); this needs implementation in `PremiumCubePrototype.tsx` and must be discoverable enough to find but quiet enough not to interfere with normal use.
+- Fullscreen art mode introduces a new interaction primitive (double-click on background) that must be discoverable enough to find but quiet enough not to interfere with normal use. Built by spec 017 (`src/app/ArtModeLayer.tsx`, desktop only, live since 2026-11-14).
 - Future ADRs may supersede individual register choices, but the funnel framing (retention → invitation → conversion) is the baseline assumption all subsequent visual decisions inherit.

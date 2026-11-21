@@ -1,6 +1,6 @@
 # 013: Visits Dashboard in the Local Admin
 
-**Status:** proposed (2026-11-13); spec audited before the build (`audit-1.md`, part 1), built on `feat/visits-dashboard`, not deployed. The infrastructure half is inert until the owner turns it on (D-6): nothing in AWS changes until he approves the stack diff and deploys it himself. The feature code was written by a local model (`qwen3.8:27b`) and reviewed by the agent (`build-log.md`).
+**Status:** built (2026-11-13 to 11-20) and merged into `main` on 2026-11-21, after audits by local models and, from 2026-11-19, by Claude Sonnet (`audit-1.md`). The visits view is part of the local admin. The infrastructure half is inert until the owner turns it on (D-6): nothing in AWS changes until he approves the stack diff and deploys it himself. The feature code was written by a local model (`qwen3.8:27b`) and reviewed by the agent (`build-log.md`).
 **Builds on:** `AGENTS.md` (admin rules, Working Method), spec 012 (gates), ADR 004 (the admin's cloud form; this spec does not change it).
 
 ## 1. Problem

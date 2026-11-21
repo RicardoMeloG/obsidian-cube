@@ -9,9 +9,11 @@ are **not** deployed here: they run locally (see `docker-compose.yml` /
 ## Architecture
 
 ```
-owner's machine (SSO) ──► S3 (private bucket) ──(OAC)──► CloudFront ──► viewers
-                                                          ▲
-                        DNS in Cloudflare (CNAMEs, grey cloud) ──┘
+GitHub Actions (OIDC role, after the owner's approval) ─┐
+owner's machine (SSO: content/, fallback deploys) ──────┴─► S3 (private bucket) ──(OAC)──► CloudFront ──► viewers
+                                                                                            │   ▲
+                         /api/iron-bastion/* ──(OAC)──► Lambda receiver ──► S3 (match logs) ┘   │
+                                          DNS in Cloudflare (CNAMEs, grey cloud) ───────────────┘
 ```
 
 - **S3**: private bucket (all public access blocked, SSE-S3, TLS enforced). Never
@@ -28,6 +30,15 @@ owner's machine (SSO) ──► S3 (private bucket) ──(OAC)──► CloudFr
   `/content/media/<sha256>.webp`), `no-cache` for everything else, so pages and
   content documents are revalidated with their ETag on every visit. It governs
   the browser only; the edge cache follows the cache policy.
+- **Match-log receiver** (spec 015, opt-in by the `matchLogOrigins` context):
+  `/api/iron-bastion/*` goes to a Lambda function URL that only CloudFront may
+  invoke (OAC, SigV4); it validates each match and writes one JSON into a
+  private bucket that expires objects at 12 months. Reserved concurrency 3.
+- **Deploy role** (`infra/lib/github-deploy-role.ts`, opt-in by the
+  `githubDeploySubject` context): GitHub's OIDC provider and a role that only
+  the `production` environment of this repository can take; it lists the
+  bucket, writes and deletes the site's files (never `content/`) and
+  invalidates the distribution. Output `DeployRoleArn`.
 - **Domain**: `ricardomelog.com` and `www`, registered and resolved in
   Cloudflare, not Route 53. The ACM certificate (us-east-1) was requested and
   validated by hand with CNAME records in Cloudflare; its ARN and the domains
@@ -55,17 +66,19 @@ Defined in `infra/` with the **AWS CDK (TypeScript)**.
    npm run deploy
    ```
    Note the outputs: `BucketName`, `DistributionId`, `DistributionDomain`.
-3. **Create a GitHub OIDC deploy role** in AWS (trust `token.actions.githubusercontent.com`,
-   scoped to this repo) with permissions to `s3:*` on the bucket and
-   `cloudfront:CreateInvalidation`.
-4. **Set repo configuration** (Settings → Secrets and variables → Actions):
-   - Secret `AWS_DEPLOY_ROLE_ARN` — the OIDC role ARN.
-   - Variables `AWS_REGION`, `SITE_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID` — from step 2.
+3. **The deploy role** comes with the stack when `githubDeploySubject` is in
+   `infra/cdk.json`: the subject prefix of the repository's OIDC tokens, as
+   `gh api repos/<owner>/<repo>/actions/oidc/customization/sub` reports it
+   (`sub_claim_prefix`; this repository uses GitHub's immutable subjects, with
+   the owner's and the repository's ids).
+4. **Create the `production` environment** in GitHub with the owner as
+   required reviewer and `main` as its only deployment branch, and set in it
+   the secret `AWS_DEPLOY_ROLE_ARN` (the output `DeployRoleArn`) and the
+   variables `AWS_REGION`, `SITE_BUCKET` and `CLOUDFRONT_DISTRIBUTION_ID`
+   (from step 2).
 
-After that, running the *Deploy static site* workflow publishes the site. It
-runs on demand only (2026-10-16): after every CI on `main` it failed for lack
-of the account; whether it runs on its own again is decided at the release
-stage (spec 010, D-6).
+After that, the *Deploy static site* workflow publishes the site, on demand,
+once the owner approves it (below). Done on 2026-11-21.
 
 ## Going to production from GitHub
 
@@ -182,5 +195,4 @@ npm run synth   # generates CloudFormation into cdk.out/ — fully offline
 
 ## Not yet included
 
-- Deploys from GitHub with the OIDC role (spec 010, D-6; steps 3 and 4 of the setup above).
 - Cognito-authenticated admin (HTTP API + Lambda + S3, no database in the cloud), decided in ADR 004.

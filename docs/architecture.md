@@ -2,23 +2,23 @@
 
 The living overview of how the code is organised and which rules are in force. Update it in the same change that moves a boundary. Reasoning lives in the ADRs (`docs/decisions/`) and in `specs/010-architecture/`; this page only states what is true now and what is next.
 
-**Migration status (2026-10-13):** done. P0 to P4 built, and the normalization stage of ADR 007 closed after the second independent audit (`specs/010-architecture/audit-2.md`, resolution in section 13 of the spec). The compositions stage (spec 011, ADR 008) is built and merged into `main` (2026-10-18): every screen shows the stage, one template per face read from the content (the hero on stacked screens), and the rails are gone; its last two acceptance criteria close with the content stage. Then content, security and the release.
+**Status (2026-11-21):** live since the first release on 2026-11-12 (https://ricardomelog.com). The stages of ADR 007 and ADR 008 are behind it: normalization (spec 010, closed 2026-10-13), compositions (spec 011, merged 2026-10-18), content and release; of the security stage only the contact form and the CV request remain, behind a captcha. Since 2026-11-21 code deploys run from GitHub after the owner's approval (`docs/deploy-aws.md`).
 
 ## System
 
 ```mermaid
 flowchart LR
-  V[Visitors: people, crawlers, link previews] -->|HTTPS| CF[CloudFront]
+  V[Visitors: people, crawlers, link previews] -->|HTTPS| CF[CloudFront + web ACL]
   CF --> S3S[(S3 site: built code)]
   CF --> S3C[(S3 content/: published JSON)]
-  O[Owner] -->|Cognito + TOTP| ADM[Admin UI /admin/]
-  ADM -->|JWT| API[HTTP API] --> L[Lambda admin-api]
-  L -->|validate with the kernel, write| S3C
-  L -->|render SEO into index.html, invalidate| CF
-  GH[GitHub Actions] -->|gates, deploy code only| S3S
+  G[Iron Bastion game] -->|/api/iron-bastion/*| CF
+  CF -->|OAC| RX[Lambda: match-log receiver] --> S3M[(S3 match logs)]
+  O[Owner] --> ADM[Local admin, 127.0.0.1]
+  ADM -->|publish by hand: copy, invalidate| S3C
+  GH[GitHub Actions: gates on every push] -->|deploy after the owner approves, OIDC role, never content/| S3S
 ```
 
-Today only the left half exists in AWS (S3 and CloudFront, `infra/`). The admin runs locally (`server/`, NestJS) and publishes to disk; the Cognito path is ADR 004, in progress.
+What exists in AWS (`infra/`): the distribution with its web ACL and functions, the site bucket, the match-log receiver (spec 015), the cost guard (spec 014) and the deploy role. The admin runs locally (`server/`, NestJS) and publishes to disk; its documents reach `content/` by hand (`docs/deploy-aws.md`). The Cognito admin of ADR 004 replaces that path later.
 
 Two layers: the repository holds code and example content; the owner's content is private, gitignored locally (`public/content/site.{en,es}.json`, `visual.json`) and reaches the site only through the admin.
 
@@ -102,7 +102,7 @@ The runtime content contracts use `zod/mini`; the admin server uses Zod's full J
 | Rule | Status | Gate |
 |---|---|---|
 | Personal data never in the repository | In force | `.gitignore`; `npm run check:privacy` in CI and pre-push (H-08a); `--history` (authors, messages and the content of every past version) before publishing a repository |
-| A push carries no ignored file, key or environment file and no secret value; code arrives audited by the two local models on its exact diff; a change to the contract or a gate names its spec or ADR | In force since 2026-11-13, local: the models run on the author's machine | `scripts/check-push.mjs` in the pre-push hook, enabled by `npm install` (spec 012); the rules tested by `scripts/checks/pushGate.test.ts` |
+| A push carries no ignored file, key or environment file and no secret value; code arrives audited on its exact diff; a change to the contract or a gate names its spec or ADR | In force since 2026-11-13, local. The auditors are the two local models by default; `AUDIT_MODELS=sonnet` names Claude Sonnet instead, the owner's choice since 2026-11-19 while the graphics card is busy | `scripts/check-push.mjs` in the pre-push hook, enabled by `npm install` (spec 012); the rules tested by `scripts/checks/pushGate.test.ts` |
 | No known dependency advisories in either package | In force since 2026-11-08; transitive fixes and the verified CDK archive are documented in `docs/dependency-security.md` | `npm audit --audit-level=low` after `npm ci` in the frontend and infrastructure CI jobs |
 | Build, lint and unit tests pass; tests are type-checked | In force | CI, on every push to any branch and on pull requests (audit-3 F-1; the trigger is tested by `scripts/checks/ciWorkflow.test.ts`); `tsconfig.test.json` in `tsc -b` |
 | CDK synthesises | In force | CI, when `infra/` changes (`.github/workflows/infra.yml`, 2026-10-16) |
@@ -115,7 +115,7 @@ The runtime content contracts use `zod/mini`; the admin server uses Zod's full J
 | Every text slot of a template reaches the page | In force | `src/features/stage/StageComposition.test.tsx` |
 | The admin's generated form round-trips every example document unchanged; lists, template switch, text, image upload and field errors write what they show | In force | `npm run check:admin` (spec 011, AD-04), against a stand-in API, so it needs neither Postgres nor a login |
 | The publish rules block only with `APP_ENV=production`; the project is in development until the owner says otherwise, and the content's shape blocks in both | In force since 2026-10-18 | `server/appEnv.test.ts` (unset is development, any other value refused); `ContentService.validate` applies it, tested by `server/content/content.service.test.ts` (audit-4 F-2); the server prints the mode when it starts |
-| The visits view counts page views without reading the viewer's IP; the log delivery carries seven chosen fields and never `c-ip`, `x-forwarded-for`, cookies or query strings | Built 2026-11-13, not deployed (spec 013) | `server/visits/visitLog.test.ts`, `scripts/checks/visitLogFields.test.ts`, `npm run check:admin` (the view against a stand-in API) |
+| The visits view counts page views without reading the viewer's IP; the log delivery carries seven chosen fields and never `c-ip`, `x-forwarded-for`, cookies or query strings | In `main` since 2026-11-21; the log delivery stays off (`visitLogs: false`) until the owner turns it on (spec 013) | `server/visits/visitLog.test.ts`, `scripts/checks/visitLogFields.test.ts`, `npm run check:admin` (the view against a stand-in API) |
 | Uploaded images are WebP within their size, stored by content hash; no path from the request reaches the disk | In force | `server/media/mediaStore.test.ts` |
 | The admin's routes need a full session (password and TOTP), except with the development bypass: `ADMIN_AUTH=off` with `APP_ENV=development`, only for requests made on this machine to the admin's own address with no foreign Origin; with production the server refuses to start. The admin never renders inside another page's frame (`X-Frame-Options: DENY`, `frame-ancestors 'none'` on every response, audit-4 F-1) | In force; the bypass since 2026-10-18 (owner: agentic work must not depend on the owner's login) | `AuthGuard` on every controller but the page and `form.js`; `server/auth/devBypass.test.ts` and `server/auth/auth.guard.test.ts` (the guard and `/auth/me`, audit-4 F-2); `server/noFraming.test.ts`; verified on 2026-10-18 (401 with a foreign Origin or Host; Chromium refuses the admin in a frame from another local port); the session path verified by hand on 2026-10-15 (401 without a session) |
 | Content within its layout budget fits every supported screen: every face field, every template slot and the top bar's name, role and keywords (audit-3 F-4) | In force, every template included (budgets measured 2026-10-15; the identity's on 2026-10-16) | `npm run check:layout -- --content=stress` (H-06b) renders the stress content twice, every slot at its budget and again without the optional blocks (audit-3 F-6); publish rules in `src/kernel/publishRules.ts`, tested by `scripts/checks/stressContent.test.ts` |
@@ -126,9 +126,9 @@ The runtime content contracts use `zod/mini`; the admin server uses Zod's full J
 | Accessibility: no axe violations | In force, no known failures | `npm run check:layout` (H-13) |
 | Security headers (CSP, HSTS, nosniff, frame and referrer policy); no inline code in `index.html`. Browser caching: hashed names a year and immutable, everything else revalidated (spec 018) | In force: enforced in `vite preview`, the layout check and CloudFront, where a viewer-response function sets them (spec 014, D-7; `Cache-Control` from spec 018, CloudFront only) | `infra/security-headers.json`; `scripts/checks/edgeHeaders.test.ts`; violations fail `npm run check:layout`; `scripts/checks/indexHtml.test.ts` |
 | First-view budget, ratchet that only goes down; built first-view files preloaded | In force, measured on the heaviest page of the site (ADR 009) | `npm run check:budget`, limit in `scripts/checks/budget.json` (H-07) |
-| Deploy never deletes content, and runs only on demand (since 2026-10-16; the release stage decides how deploys run, D-6) | In force | `scripts/checks/deployWorkflow.test.ts` (H-14) |
-| The account has a cost ceiling: the distribution on the CloudFront flat-rate Free plan, IP rate limiting in its web ACL, and a kill switch that disables the distribution when a 20 USD monthly budget is passed (spec 014) | Built 2026-11-13; plan subscription and deploy pending the owner | `infra/lib/cost-guard-stack.ts`; `scripts/checks/killSwitch.test.ts`; `docs/deploy-aws.md` (Cost guardrails) |
-| The match-log receiver of the Iron Bastion game is write-only and opt-in: `/api/iron-bastion/*` on the distribution, a Lambda function URL that only CloudFront may invoke (OAC), validation before writing, one JSON per match in a private bucket that expires objects at 12 months; it exists only when `matchLogOrigins` is in the CDK context (spec 015) | Code and synth on 2026-11-14; not deployed, pending the owner | `infra/lib/match-log-receiver.ts`; `infra/lambda/match-log/`; `scripts/checks/matchLog.test.ts` |
+| Deploy runs on demand from `main` only after the owner approves the `production` environment; the build job has no AWS access; the deploy role can never write or delete `content/` (spec 010, D-6; dp-04) | In force since 2026-11-21 | `scripts/checks/deployWorkflow.test.ts` (H-14); `infra/scripts/deploy-role.test.mjs`, in the infrastructure CI job |
+| The account has a cost ceiling: the distribution on the CloudFront flat-rate Free plan, IP rate limiting in its web ACL, and a kill switch that disables the distribution when a 20 USD monthly budget is passed (spec 014) | In force since 2026-11-14: plan subscribed, rate rule on, kill switch deployed and tested | `infra/lib/cost-guard-stack.ts`; `scripts/checks/killSwitch.test.ts`; `docs/deploy-aws.md` (Cost guardrails) |
+| The match-log receiver of the Iron Bastion game is write-only and opt-in: `/api/iron-bastion/*` on the distribution, a Lambda function URL that only CloudFront may invoke (OAC), validation before writing, one JSON per match in a private bucket that expires objects at 12 months; it exists only when `matchLogOrigins` is in the CDK context (spec 015) | Deployed 2026-11-14 (live checks in `specs/015-match-log-receiver/audit-2.md`); reserved concurrency 3 since 2026-11-15 | `infra/lib/match-log-receiver.ts`; `infra/lambda/match-log/`; `scripts/checks/matchLog.test.ts` |
 | Colours only from tokens (no default palette, no literals, no unused token); base type only from type roles | In force | `npm run check:tokens` (H-08b) |
 | Module boundaries; no locale comparisons or lazy loading in interface code | In force | `npm run lint`, rules tested by `scripts/checks/boundaries.test.ts` (H-04) |
 | DOM-layer files ≤ 250 lines | In force | `scripts/checks/fileSize.test.ts` (H-16) |

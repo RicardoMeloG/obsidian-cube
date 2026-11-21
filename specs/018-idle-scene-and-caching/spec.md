@@ -1,6 +1,6 @@
 # 018: Idle Scene and Browser Caching
 
-**Status:** built on `perf/idle-and-cache` (2026-11-16), not merged or deployed. The owner asked for it on 2026-11-16 (pending items dt-12 and dt-13), and set the intro (dt-11) aside: not a priority, not to be touched.
+**Status:** built on `perf/idle-and-cache` (2026-11-16), live since 2026-11-17 (the edge function by `cdk deploy`, the code by the deploy of that day). The owner asked for it on 2026-11-16 (pending items dt-12 and dt-13), and set the intro (dt-11) aside: not a priority, not to be touched.
 **Builds on:** the load audit of 2026-11-14 (findings C-2, C-5, M-3), spec 014 (the viewer-response function, D-7), spec 017 (D-6: contemplating never slows down), the pixel budget of dt-03.
 
 ## 1. Problem

@@ -1,6 +1,6 @@
 # 017: Fullscreen Art Mode
 
-**Status:** approved by the owner with the recommended answers (2026-11-14: no mobile, no gallery, «Contemplar»); built locally on `feat/art-mode`, not merged or deployed. Owner's words: the site is premium and must feel premium; optimize without losing quality; never change an artistic decision he did not ask to change.
+**Status:** approved by the owner with the recommended answers (2026-11-14: no mobile, no gallery, «Contemplar»); built on `feat/art-mode`, merged and live since 2026-11-14. Owner's words: the site is premium and must feel premium; optimize without losing quality; never change an artistic decision he did not ask to change.
 **Builds on:** ADR 001 point 3 (designed, never built for visitors), spec 011 (stage layout), the dev-only world showcase (`src/features/dev/VectorWorldShowcase.tsx`, `?bg=<world>`), the load audit of 2026-11-14 (`E:\Claude\obsidian-cube-verify\carga-inicial\`, finding C-2).
 
 ## 1. Problem

@@ -1,6 +1,6 @@
 # 015: Match Log Receiver for Iron Bastion
 
-**Status:** code written and synthesized on branch `feat/registro-partidas` (2026-11-14); **not deployed**. The deploy waits for the owner's approval (section 7).
+**Status:** deployed on 2026-11-14 with the owner's approval (section 7); acceptance 4 checked live the same day (`audit-2.md`: the function URL called directly answers 403). Reserved concurrency 3 since 2026-11-15 (pending item dt-10).
 **Builds on:** spec 014 (Free plan, web ACL, kill switch, the 20 USD ceiling), spec 010 (the static stack). **Serves:** the game's spec 003 (Iron Bastion 1.0), item M1: "match logging switched on", the only source of the survival curve and of the first-minute data.
 
 ## 1. Problem

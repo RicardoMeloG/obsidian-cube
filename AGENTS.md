@@ -9,14 +9,14 @@ The project is Ricardo Melo's portfolio, live at https://ricardomelog.com since 
 A review on 2026-10-09 found the engineering well ahead of the product: the site was not yet published and no face linked to a real artifact, so the priority moved from the container to the content. Full reasoning in `docs/decisions/002-evidence-before-spectacle.md`.
 
 - **Evidence before spectacle.** The cube is the invitation, not the proof. What makes the owner stand out is inspectable work: every face must link to at least one concrete artifact (repo, demo, write-up) with one line of result.
-- **Stages, in order; build nothing more until the release.** The path to the first public release is normalization, then compositions (`docs/decisions/008-compositions-before-content.md`), then content, then security, then release; a stage starts only when the previous one met its exit criteria, and its decisions are taken at its entry (`docs/decisions/007-staged-path-to-publishing.md`). Normalizing the existing code to the declared architecture is not building more: the public repository is evidence too. New features, infrastructure, admin functions or 3D worlds wait until the site is live, except what spec 011 lists (the admin forms and media for the compositions, the CONTACT world).
+- **Stages, in order, then the pending-work panel.** The path to the first public release was normalization, then compositions (`docs/decisions/008-compositions-before-content.md`), then content, then security, then release, each stage started only when the previous one met its exit criteria (`docs/decisions/007-staged-path-to-publishing.md`). The site is live since 2026-11-12. Since then work follows the pending-work panel's priorities and its stage labels; a feature, infrastructure or a new world starts with its spec, and the owner decides before it is built.
 - **The site is its own case study.** The methodology deep-dive explains how this site was built with agents: decisions, gates, what went wrong. It is the one page that aligns the cube with the positioning.
 - **Name first, message largest.** The owner's name and role are the first text a visitor reads: top-left, the page's `h1`, never covered, AA contrast. The face title stays the largest text, because two headlines of equal weight compete; the name wins by position and contrast, not size.
 - **Backgrounds must be perceivable.** A world that cannot be seen in a static frame behind the cube is not doing its retention job.
 
-**Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository. In production it reaches the site through the admin, which moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`); how it reaches production for the first release is decision D-6, taken at the entry of the release stage.
+**Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository. Today it reaches the site from the owner's local admin, copied by hand to the bucket's `content/`, and the code deploy reads it from the live site (spec 010, D-6); later the admin moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`).
 
-Stages (ADR 007, ADR 008): (1) normalization, spec 010 P2b–P4 and the developer-facing docs (closed); (2) compositions, spec 011; (3) content, one artifact per face and the real copy; (4) security, the contact form, the CV request behind a captcha and the security review; (5) release. After the release: methodology page (unless D-8 brings it into the release), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility. `docs/roadmap.md` carries the detail.
+Stages (ADR 007, ADR 008): (1) normalization, spec 010 (closed 2026-10-13); (2) compositions, spec 011 (merged 2026-10-18); (3) content; (4) security, of which the contact form and the CV request behind a captcha remain; (5) release, live on 2026-11-12. After the release: methodology page (decision D-8), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility. `docs/roadmap.md` carries the detail.
 
 ## Identity
 
@@ -69,7 +69,7 @@ Supporting rules:
 
 - Each background must occupy a **distinct physical register** (motion type, density, depth axis), not just a distinct geometry — to avoid spectacle fatigue across the six faces.
 - **Cube as Polaris:** any rotating element in a background must center its rotation on the cube. The cube is the still point of the rotating universe.
-- **Fullscreen art mode** (pending implementation): double-click on the background hides cube + panels + chrome, leaving only the visitor's name strap and the background. Lets visitors appreciate the piece without losing authorship.
+- **Fullscreen art mode** (spec 017, desktop): double-click on the background hides cube + panels + chrome, leaving only the visitor's name strap and the background. Lets visitors appreciate the piece without losing authorship.
 
 Full reasoning: `docs/decisions/001-spectacle-as-retention.md`.
 
@@ -120,9 +120,9 @@ Stack (do not change without a spec justifying it):
 - Three.js / @react-three/fiber for 3D
 - Tailwind v4 with project tokens (see `docs/visual-direction.md`; styling rules in ADR 006)
 - Zod for content schema validation — the same schemas are shared by the site and the admin
-- Admin in production (ADR 004, in progress): static page under `/admin/`, Amazon Cognito User Pool (TOTP MFA, managed login, code + PKCE), API Gateway HTTP API with a Cognito JWT authorizer, one Lambda, S3 for published content, drafts and versions. No database in the cloud.
+- Admin in production (ADR 004, after the release; not started): static page under `/admin/`, Amazon Cognito User Pool (TOTP MFA, managed login, code + PKCE), API Gateway HTTP API with a Cognito JWT authorizer, one Lambda, S3 for published content, drafts and versions. No database in the cloud.
 - Admin locally until ADR 004 is complete: NestJS API plus a vanilla admin page (`server/`), Postgres via `docker-compose.yml`; `npm run server` on `127.0.0.1:5182`. Retired once the Lambda path covers every operation.
-- AWS CDK (`infra/`): private S3 + CloudFront with OAC, deployed by GitHub Actions over OIDC (`docs/deploy-aws.md`)
+- AWS CDK (`infra/`): private S3 + CloudFront with OAC; the site deployed by GitHub Actions over OIDC after the owner approves the `production` environment (`docs/deploy-aws.md`)
 
 Before reporting a change complete (definition of done; items marked with a phase start when that phase of `specs/010-architecture` lands):
 
@@ -245,7 +245,7 @@ Phase 1 (status on 2026-11-12):
 - [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, the composition in one column, the dock fixed at the viewport bottom with the content padded above it (spec 011, S4).
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
-- [ ] At least one deep-dive page exists (methodology) reached from a composition CTA — there is no router yet. Whether it belongs to the first release is decision D-8 (release stage entry).
+- [ ] At least one deep-dive page exists (methodology) reached from a composition CTA. Whether it is built is decision D-8, still open.
 - [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (ADR 009). CI has no private content, so a CI deploy carries the example identity until ADR 004 slice 5 renders it at publish.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [x] Real identity live at a public URL (https://ricardomelog.com, 2026-11-12).

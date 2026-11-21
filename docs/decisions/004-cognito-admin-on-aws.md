@@ -39,3 +39,7 @@ The NestJS server and Postgres remain as the local tool until the Lambda path co
 - The custom MFA admin stops being evidence for the SECURITY face. The evidence becomes the decision itself: not running homegrown authentication in production, with this ADR as the reasoning. The custom implementation stays in git history.
 - Local development of the admin depends on a deployed dev stack (or invoking the Lambda handler locally). The Lambda's logic is kept in plain functions tested with Vitest against an S3 stub.
 - `AGENTS.md` (admin rules, engineering contract), `docs/roadmap.md` and `docs/deploy-aws.md` are updated to match. Federation with Google or Microsoft as identity providers remains possible later inside Cognito; it is not planned.
+
+## Exception taken at the release (spec 010, D-6)
+
+The first release (2026-11-12) did not wait for this admin: the owner's content was built and deployed from the owner's machine, and the local admin's published documents reach the bucket's `content/` by hand (`docs/deploy-aws.md`). Since 2026-11-21 code deploys run from GitHub, after the owner approves the `production` environment, and read the published documents from the live site, so the repository still holds only example content. This admin replaces the hand-copied content step; the decision above stands.

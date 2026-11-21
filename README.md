@@ -82,10 +82,10 @@ npm run check:tokens     # colours and type only from the tokens
 npm run check:layout     # layout, accessibility, contrast and CSP on a viewport matrix (Playwright)
 npm run check:layout -- --worlds   # also name and role over every world (software WebGL; on demand in CI)
 npm run check:live       # use cases against the published site (or --url=http://127.0.0.1:5181)
-npm run audit:change     # before pushing code: two local models audit the exact diff (Ollama)
+npm run audit:change     # before pushing code: two local models audit the exact diff (Ollama); AUDIT_MODELS=sonnet accepts a Claude Sonnet audit instead
 ```
 
-Private values for the privacy check go in `.privacy-denylist` (gitignored, one per line) and, in CI, in the `PRIVACY_DENYLIST` secret.
+Private values for the privacy check go in `.privacy-denylist` (gitignored, one per line) and, in CI, in the `PRIVACY_DENYLIST` secret; CI fails when the secret is missing, except on a fork's pull request or a Dependabot run, which only warn.
 
 AWS: see `docs/deploy-aws.md`. Nothing is provisioned by default; `cd infra && npm run prepare:cdk && npm ci && npm run synth` prepares the verified dependency and validates the stack; subsequent synths are offline. See `docs/dependency-security.md`.
 
@@ -112,9 +112,9 @@ Addresses and language: one page per language and face, English at the root (`/`
 
 Obsidian Interface System: dark, premium, technical, sober. Violet volumetric ambient is the signature; obsidian black is the surface. No `Bloom` in production, no auto-playing audio, no generic SaaS gradients. See `docs/visual-direction.md` for tokens, materials, motion, and layout rules.
 
-## Status (2026-11-15)
+## Status (2026-11-21)
 
-Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy, an A+ on Mozilla Observatory (2026-11-14) and an A+ on SSL Labs on all twelve edge addresses (2026-11-15). Since the first release (2026-11-12): the art mode and its gallery of worlds (spec 017), a lighter scene on dense and integrated-GPU screens, layered cost ceilings with a tested kill switch (spec 014), the WAF's managed rules blocking, the Iron Bastion match log receiver with a capped concurrency (spec 015), and real 404s; `npm run check:live` passes its twelve use cases on the live site. Still open (`docs/roadmap.md`): the scene's cost at rest and the intro that hides the name for a few seconds, cache headers, the contact form and the CV request of the security stage, and the Cognito admin of ADR 004.
+Published at https://ricardomelog.com on CloudFront and S3 (`infra/`), with an enforced content security policy, an A+ on Mozilla Observatory (2026-11-14) and an A+ on SSL Labs on all twelve edge addresses (2026-11-15). Since the first release (2026-11-12): the art mode and its gallery of worlds (spec 017), a lighter scene on dense and integrated-GPU screens, layered cost ceilings with a tested kill switch (spec 014), the WAF's managed rules blocking, the Iron Bastion match log receiver with a capped concurrency (spec 015), real 404s, the scene at 30 frames a second at rest with cache headers by path (spec 018), the AGENTIC plexus moved to the GPU, and the visits view in the local admin (spec 013, its log delivery still off). Code deploys run from GitHub since 2026-11-21, after the owner approves them. `npm run check:live` passes its twelve use cases on the live site. Still open (`docs/roadmap.md`): the intro that hides the name for a few seconds, the contact form and the CV request of the security stage, a performance gate (spec 019), and the Cognito admin of ADR 004.
 
 ## Orientation for Contributors
 
