@@ -30,6 +30,19 @@ describe('classify', () => {
     }
   })
 
+  it("the gates' tests and data, their libraries, the functions and the stack context are a large change (spec 021)", () => {
+    for (const path of ['scripts/checks/budget.json', 'scripts/checks/layout-known.json', 'scripts/checks/fileSize.test.ts', 'scripts/lib/web-acl.mjs', 'infra/scripts/forbidden-resources.test.mjs', 'infra/edge/clean-paths.cjs', 'infra/lambda/match-log/brakes.mjs', 'infra/cdk.json', 'infra/web-acl.expected.json', 'server/appEnv.ts']) {
+      expect(classify([path]).level, path).toBe('large change')
+    }
+  })
+
+  it('product code around them stays an ordinary change (spec 021)', () => {
+    for (const path of ['src/features/stage/StageView.tsx', 'server/admin/visits.js', 'server/visits/wafSamples.ts', 'scripts/backup-content.mjs', 'infra/package.json']) {
+      expect(classify([path]).level, path).toBe('change')
+    }
+    expect(classify(['public/content/site.example.en.json']).level).toBe('adjustment')
+  })
+
   it('a large change of documents only has no code to audit', () => {
     expect(classify(['AGENTS.md'])).toMatchObject({ level: 'large change', code: [] })
   })

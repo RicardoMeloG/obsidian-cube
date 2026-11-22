@@ -19,15 +19,25 @@ const CODE = [
   /^docker-compose\.ya?ml$/,
 ]
 // The contract and the gates: a change here also names its spec or ADR.
+// The gates' tests and data, their libraries, the edge and Lambda functions
+// and the stack's context count too (spec 021): otherwise a push could raise
+// budget.json or loosen a gate's test without naming a spec.
 const MAJOR = [
   /^src\/kernel\//,
   /^server\/auth\//,
+  /^server\/appEnv\.ts$/,
   /^infra\/lib\//,
+  /^infra\/scripts\//,
+  /^infra\/edge\//,
+  /^infra\/lambda\//,
+  /^infra\/cdk\.json$/,
   /^infra\/security-headers\.json$/,
+  /^infra\/web-acl\.expected\.json$/,
   /^\.githooks\//,
   /^\.github\/workflows\//,
   /^scripts\/check-[^/]+\.mjs$/,
-  /^scripts\/lib\/push-gate\.mjs$/,
+  /^scripts\/checks\//,
+  /^scripts\/lib\//,
   /^eslint\.config\.js$/,
   /^AGENTS\.md$/,
   /^docs\/decisions\//,
