@@ -18,6 +18,7 @@ import { WafSampleCollector } from './waf-sample-collector'
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- a CommonJS module shared with edgeHeaders.test.ts; a CommonJS package loads it with require
 const { headersFunctionCode } = require('../edge/security-headers.cjs') as { headersFunctionCode: (headers: unknown) => string }
 const { CLEAN_PATHS_CODE } = require('../edge/clean-paths.cjs') as { CLEAN_PATHS_CODE: string }
+const { VIEWER_IP_CODE } = require('../edge/viewer-ip.cjs') as { VIEWER_IP_CODE: string }
 const securityHeaders = JSON.parse(readFileSync(join(__dirname, '..', 'security-headers.json'), 'utf8')) as unknown
 
 // Static hosting for the public Obsidian Cube site: a private S3 bucket fronted
@@ -95,6 +96,12 @@ export class StaticSiteStack extends cdk.Stack {
     let matchLogBehavior: Record<string, unknown> = {}
     if (matchLogOrigins) {
       matchLog = new MatchLogReceiver(this, 'MatchLog', { allowedOrigins: matchLogOrigins })
+      // The viewer's address for the receiver's per-IP brake: infra/edge/viewer-ip.cjs.
+      const viewerIp = new cloudfront.Function(this, 'ViewerIp', {
+        comment: 'Passes the viewer address to the match log receiver (spec 016, D-1)',
+        runtime: cloudfront.FunctionRuntime.JS_2_0,
+        code: cloudfront.FunctionCode.fromInline(VIEWER_IP_CODE),
+      })
       matchLogBehavior = {
         additionalBehaviors: {
           '/api/iron-bastion/*': {
@@ -105,6 +112,7 @@ export class StaticSiteStack extends cdk.Stack {
             cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
             originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
             functionAssociations: [
+              { function: viewerIp, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
               { function: securityHeadersFunction, eventType: cloudfront.FunctionEventType.VIEWER_RESPONSE },
             ],
           },

@@ -1,15 +1,24 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
-import { createBrakes, forwardedCount, PER_IP_LIMIT, PER_IP_WINDOW_MS, PER_SECOND, viewerIp } from '../../infra/lambda/match-log/brakes.mjs'
+import { createRequire } from 'node:module'
+import { createBrakes, PER_IP_LIMIT, PER_IP_WINDOW_MS, PER_SECOND, viewerIp } from '../../infra/lambda/match-log/brakes.mjs'
+
+const require = createRequire(import.meta.url)
+const { VIEWER_IP_CODE, VIEWER_IP_HEADER } = require('../../infra/edge/viewer-ip.cjs') as { VIEWER_IP_CODE: string; VIEWER_IP_HEADER: string }
 
 // The match-log receiver's write brakes (spec 016, P-1; owner, 2026-11-21).
 describe('match log brakes', () => {
-  it('reads the viewer IP CloudFront appended, not what the client sent', () => {
-    expect(viewerIp({ 'x-forwarded-for': '203.0.113.9' }, '130.176.1.1')).toBe('203.0.113.9')
-    // A forged entry on the left, the viewer appended by CloudFront, then the edge.
-    expect(viewerIp({ 'X-Forwarded-For': '1.2.3.4, 203.0.113.9, 130.176.1.1' }, '130.176.1.1')).toBe('203.0.113.9')
-    expect(viewerIp({}, '130.176.1.1')).toBeNull()
-    expect(viewerIp({ 'x-forwarded-for': '130.176.1.1' }, '130.176.1.1')).toBeNull()
+  it('the edge writes the connection address over anything the client sent', () => {
+    const handler = new Function(`${VIEWER_IP_CODE}; return handler;`)() as (event: unknown) => { headers: Record<string, { value: string }> }
+    const out = handler({ viewer: { ip: '203.0.113.9' }, request: { headers: { [VIEWER_IP_HEADER]: { value: '192.0.2.1' }, 'x-forwarded-for': { value: '192.0.2.1' } } } })
+    expect(out.headers[VIEWER_IP_HEADER]?.value).toBe('203.0.113.9')
+  })
+
+  it('the receiver reads only that header, never X-Forwarded-For', () => {
+    expect(viewerIp({ [VIEWER_IP_HEADER]: '203.0.113.9', 'x-forwarded-for': '192.0.2.1' })).toBe('203.0.113.9')
+    expect(viewerIp({ 'X-Viewer-Ip': ' 2001:db8::1 ' })).toBe('2001:db8::1')
+    expect(viewerIp({ 'x-forwarded-for': '192.0.2.1' })).toBeNull()
+    expect(viewerIp({})).toBeNull()
   })
 
   it('lets one address store PER_IP_LIMIT logs in the window, then refuses until the oldest ages out', () => {
@@ -62,8 +71,4 @@ describe('match log brakes', () => {
     expect(brakes.take('fourth', 6)?.reason).toMatch(/this address/) // remembered
   })
 
-  it('counts the X-Forwarded-For entries for the log, without the addresses', () => {
-    expect(forwardedCount({ 'x-forwarded-for': '1.2.3.4, 203.0.113.9 ,130.176.1.1' })).toBe(3)
-    expect(forwardedCount({})).toBe(0)
-  })
 })

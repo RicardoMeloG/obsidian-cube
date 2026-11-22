@@ -2,7 +2,7 @@
 // @aws-sdk/client-s3 ships with the Node.js 22 runtime; nothing is bundled.
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { handleRequest } from './logic.mjs'
-import { createBrakes, forwardedCount, viewerIp } from './brakes.mjs'
+import { createBrakes, viewerIp } from './brakes.mjs'
 
 const s3 = new S3Client({})
 const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS ?? '[]')
@@ -22,9 +22,9 @@ export async function handler(event) {
   )
 
   if (result.status === 204) {
-    const ip = viewerIp(event.headers, event.requestContext?.http?.sourceIp)
+    const ip = viewerIp(event.headers)
     // Whether the brake found the viewer, never the address (spec 013, E-03).
-    const seen = `ip=${ip ? 'found' : 'none'} xff=${forwardedCount(event.headers)}`
+    const seen = `ip=${ip ? 'found' : 'none'}`
     const refusal = brakes.take(ip, Date.now())
     if (refusal) {
       console.log(`refused ${refusal.status} ${refusal.reason} ${seen}`)

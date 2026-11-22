@@ -18,23 +18,14 @@ export const PER_SECOND = 5
 // The map is bounded too, or a flood of distinct addresses would grow it.
 export const MAX_TRACKED_IPS = 5000
 
-/** The viewer's IP: the rightmost X-Forwarded-For entry that is not the
- *  CloudFront edge that called the function URL. Entries further left are
- *  whatever the client sent and are not trusted. Null when there is none. */
-export function viewerIp(headers, edgeIp) {
-  const forwarded = Object.entries(headers ?? {}).find(([name]) => name.toLowerCase() === 'x-forwarded-for')?.[1]
-  if (typeof forwarded !== 'string') return null
-  const entries = forwarded.split(',').map((entry) => entry.trim()).filter(Boolean)
-  for (let index = entries.length - 1; index >= 0; index -= 1) {
-    if (entries[index] !== edgeIp) return entries[index]
-  }
-  return null
-}
-
-/** How many entries X-Forwarded-For carries: logged instead of the address. */
-export function forwardedCount(headers) {
-  const forwarded = Object.entries(headers ?? {}).find(([name]) => name.toLowerCase() === 'x-forwarded-for')?.[1]
-  return typeof forwarded === 'string' ? forwarded.split(',').filter((entry) => entry.trim()).length : 0
+/** The viewer's IP, as the edge saw the connection: the header the
+ *  viewer-request function of the receiver's behaviour writes
+ *  (infra/edge/viewer-ip.cjs), replacing whatever a client sent under that
+ *  name. Not X-Forwarded-For: behind the function URL it arrives as the
+ *  client sent it, so it can be forged (2026-11-21). Null when absent. */
+export function viewerIp(headers) {
+  const value = Object.entries(headers ?? {}).find(([name]) => name.toLowerCase() === 'x-viewer-ip')?.[1]
+  return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
 export function createBrakes({ perIpLimit = PER_IP_LIMIT, perIpWindowMs = PER_IP_WINDOW_MS, perSecond = PER_SECOND, maxTrackedIps = MAX_TRACKED_IPS } = {}) {

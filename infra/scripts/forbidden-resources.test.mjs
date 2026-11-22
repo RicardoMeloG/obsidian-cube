@@ -93,3 +93,11 @@ test('www answers a redirect to the bare domain on the default behaviour (dt-34)
   const fn = resources.find((resource) => resource.Type === 'AWS::CloudFront::Function' && resource.id.startsWith('CleanPaths'))
   assert.match(fn.Properties.FunctionCode, /statusCode: 301/)
 })
+
+test('the match log behaviour passes the viewer address from the edge (spec 016 D-1)', () => {
+  const fn = resources.find((resource) => resource.Type === 'AWS::CloudFront::Function' && resource.id.startsWith('ViewerIp'))
+  assert.match(fn.Properties.FunctionCode, /event\.viewer\.ip/)
+  const distribution = resources.find((resource) => resource.Type === 'AWS::CloudFront::Distribution')
+  const api = distribution.Properties.DistributionConfig.CacheBehaviors.find((behavior) => behavior.PathPattern === '/api/iron-bastion/*')
+  assert.ok(api.FunctionAssociations.some((association) => association.EventType === 'viewer-request'), 'no viewer-request function on the receiver')
+})
