@@ -1,6 +1,6 @@
 # 019: A Performance Gate
 
-**Status:** draft (2026-11-19), not built. Asked for by pending item dt-14 (load audit of 2026-11-14, finding M-4). It adds a gate, so it is a large change (spec 012): this draft is audited by agents without prior context, revised, and the owner decides D-1 to D-4 before anything is built.
+**Status:** draft (2026-11-19), not built; decisions D-1 to D-4 taken by the owner on 2026-11-21; the draft audited on 2026-11-22 (`audit-1.md`) and to be revised before it is built. Asked for by pending item dt-14 (load audit of 2026-11-14, finding M-4). It adds a gate, so it is a large change (spec 012): this draft is audited by agents without prior context, revised, and the owner decides D-1 to D-4 before anything is built.
 **Builds on:** the load audit's thresholds (section 5) and scripts (`medir.mjs`, `reposo.mjs`), spec 018 (idle cadence, ticks by sector, caching), the GPU plexus of dt-12 (C-3), `check:budget` (spec 010, H-07).
 
 ## 1. Problem
