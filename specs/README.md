@@ -4,8 +4,7 @@ A product milestone is described here before it is built.
 
 The path to publishing ran in five stages, each closed before the next started (ADR 007, ADR 008): normalization (spec 010), compositions (spec 011), content, security and release. The first release went live on 2026-11-12 at https://ricardomelog.com; of the security stage only the contact form and the CV request remain, behind a captcha. Specs not yet written, numbered when they start:
 
-1. `methodology-deep-dive`, if decision D-8 keeps it: the site as its own case study (static SEO and JSON-LD already exist).
-2. `presentation-state`: the thesis or opening state of the site.
+1. `presentation-state`: the thesis or opening state of the site.
 
 The hardening of the local admin is not a spec: the admin stays on 127.0.0.1, and its cloud form is the Cognito admin of ADR 004 (spec 010, section 12).
 
@@ -24,5 +23,6 @@ In order:
 - `019-performance-gate/`: draft (2026-11-19). `check:perf`, a ratchet per metric on the built site (name readable, first frame, main thread at rest and moving, frames at rest, draw calls), from the load audit's thresholds (M-4).
 - `020-waf-sample-collector/`: built and deployed (2026-11-21). An hourly function copies the web ACL's request samples, without IP or headers, into a private bucket, so the local admin shows page views by country and the probes the web ACL saw (paths, rules, countries); no change to the public site.
 - `021-gate-coverage/`: accepted and built (2026-11-21). The large-change gate also covers the gates' tests and data, their libraries, the edge and Lambda functions, the stack's entry point and context, the expected web ACL, the visit log's fields, the audit scripts and `server/appEnv.ts` (dt-42).
+- `022-methodology-page/`: draft (2026-11-22). Two static pages, `/methodology` and `/es/metodologia`, rendered at build time from Markdown in the repository: the loop with its evidence, the proportional gates, where a person decides, what went wrong and what the method does not prove, with counts read from the repository (D-8, taken by the owner on 2026-11-21). The text's draft is `content-draft.md`.
 
 Specs are lightweight markdown (problem, outcome, non-goals, acceptance, validation). GitHub Spec Kit was tried in June 2026 and not adopted.
