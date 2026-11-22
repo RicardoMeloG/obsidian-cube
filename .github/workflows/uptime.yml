@@ -8,8 +8,10 @@ name: Uptime
 # No account elsewhere and no script on the site. The requests carry the
 # owner-test mark, so the visits view counts them apart (spec 020, D-6).
 #
-# GitHub pauses scheduled workflows after 60 days without activity on a
-# public repository; a push or a manual run starts it again.
+# GitHub pauses scheduled workflows after 60 days without a commit to a
+# public repository (its own runs do not count) and says so by e-mail; a
+# commit before then keeps it on, and once paused it is turned back on in
+# the Actions tab or with `gh workflow enable uptime.yml`.
 
 on:
   schedule:
@@ -25,7 +27,9 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # Five checks, each up to three tries a minute apart: a full outage takes
+    # about ten minutes to report every path.
+    timeout-minutes: 15
     steps:
       - name: The site answers
         env:
