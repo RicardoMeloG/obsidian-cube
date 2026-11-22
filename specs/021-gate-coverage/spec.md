@@ -16,7 +16,10 @@ The pre-push hook classifies a push by its paths (`scripts/lib/push-gate.mjs`). 
 | `infra/lambda/` | The functions: the public match log receiver, the kill switch, the sample collector | change |
 | `infra/cdk.json` | The stack's context: the web ACL, the certificate, the domains, the cost ceiling, the deploy subject | change |
 | `infra/web-acl.expected.json` | The expected web ACL that `check:waf` compares with the live one (spec 016, P-2) | change |
-| `server/appEnv.ts` | Decides development or production, and so whether the admin's login bypass is allowed | change |
+| `server/appEnv.ts` and its test | Decides development or production, and so whether the admin's login bypass is allowed | change |
+| `scripts/audit-*.mjs` | The change audit and the drift audit, the audit gate itself (they do not match `check-*.mjs`) | change |
+| `infra/bin/` | The stack's entry point, which wires the context | change |
+| `infra/visit-log-fields.json` | The fields the visit log may keep, guarded by `visitLogFields.test.ts` | change |
 
 So a push could raise the limit in `budget.json`, mark a layout failure as known, loosen the file-size test or the forbidden-resources test, or change the public receiver, without naming a spec. `scripts/check-budget.mjs` says its limit "only goes down unless a spec raises it", and nothing enforced that.
 
@@ -28,17 +31,19 @@ The cost is a line in a commit message. Every code change is already audited; a 
 
 ## 3. Design
 
-- `MAJOR` in `scripts/lib/push-gate.mjs` gains `^scripts\/checks\/`, `^scripts\/lib\/` (replacing the single `push-gate.mjs` entry), `^infra\/scripts\/`, `^infra\/edge\/`, `^infra\/lambda\/`, `^infra\/cdk\.json$`, `^infra\/web-acl\.expected\.json$` and `^server\/appEnv\.ts$`.
+- `MAJOR` in `scripts/lib/push-gate.mjs` gains `^scripts\/checks\/`, `^scripts\/lib\/` (replacing the single `push-gate.mjs` entry), `^infra\/scripts\/`, `^infra\/edge\/`, `^infra\/lambda\/`, `^infra\/cdk\.json$`, `^infra\/web-acl\.expected\.json$`, `^infra\/visit-log-fields\.json$`, `^infra\/bin\/`, `^scripts\/audit-[^/]+\.mjs$` and `^server\/appEnv(\.test)?\.ts$` (the last four added by the audit of the first build, `audit-1.md`).
 - `scripts/checks/pushGate.test.ts` proves each new path is a large change, and that the paths around them stay what they were: a page component, an admin script, a content example.
 - `AGENTS.md` (Working Method) and spec 012's table name the new paths.
 
 ## 4. Non-goals
 
 - Gating `src/features/` or `server/` beyond `appEnv.ts`: they are product code, audited as a change.
+- `package.json`, which wires the gate commands: a dependency bump touches it every time, and its scripts are read by every gate run, so a removed script fails loudly. It stays a change.
+- `infra/scripts/prepare-cdk.mjs` counts as a large change although it is a build step, not a test: it pins and patches the CDK source (supply chain), so the ceremony fits.
 - Moving the gates to CI: the hook can still be skipped with `--no-verify` (pending item dt-39, point 5); that is a separate decision.
 
 ## 5. Acceptance
 
 1. `npm test` passes with the new cases in `pushGate.test.ts`.
-2. A push that changes only `scripts/checks/budget.json` is classified as a large change by `node scripts/check-push.mjs` (checked by the test of `classify`, and once by hand on a scratch branch).
+2. A push that changes only `scripts/checks/budget.json` is classified as a large change: the test of `classify`, which `scripts/check-push.mjs` calls on the push's paths.
 3. The change audit of this spec's diff is recorded in `audit-1.md`, every finding verified.

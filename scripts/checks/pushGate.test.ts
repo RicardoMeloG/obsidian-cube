@@ -31,16 +31,19 @@ describe('classify', () => {
   })
 
   it("the gates' tests and data, their libraries, the functions and the stack context are a large change (spec 021)", () => {
-    for (const path of ['scripts/checks/budget.json', 'scripts/checks/layout-known.json', 'scripts/checks/fileSize.test.ts', 'scripts/lib/web-acl.mjs', 'infra/scripts/forbidden-resources.test.mjs', 'infra/edge/clean-paths.cjs', 'infra/lambda/match-log/brakes.mjs', 'infra/cdk.json', 'infra/web-acl.expected.json', 'server/appEnv.ts']) {
+    for (const path of ['scripts/checks/budget.json', 'scripts/checks/layout-known.json', 'scripts/checks/fileSize.test.ts', 'scripts/lib/web-acl.mjs', 'infra/scripts/forbidden-resources.test.mjs', 'infra/edge/clean-paths.cjs', 'infra/lambda/match-log/brakes.mjs', 'infra/cdk.json', 'infra/web-acl.expected.json', 'infra/visit-log-fields.json', 'infra/bin/infra.ts', 'scripts/audit-change.mjs', 'scripts/audit-drift.mjs', 'server/appEnv.ts', 'server/appEnv.test.ts']) {
       expect(classify([path]).level, path).toBe('large change')
     }
   })
 
   it('product code around them stays an ordinary change (spec 021)', () => {
-    for (const path of ['src/features/stage/StageView.tsx', 'server/admin/visits.js', 'server/visits/wafSamples.ts', 'scripts/backup-content.mjs', 'infra/package.json']) {
+    for (const path of ['src/features/stage/StageView.tsx', 'server/admin/visits.js', 'server/visits/wafSamples.ts', 'scripts/backup-content.mjs', 'infra/package.json', 'infra/tsconfig.json', 'server/main.ts']) {
       expect(classify([path]).level, path).toBe('change')
     }
     expect(classify(['public/content/site.example.en.json']).level).toBe('adjustment')
+    expect(classify(['infra/package-lock.json']).level).toBe('adjustment')
+    // A gated file with excluded generated data: still large, and the data is not audited.
+    expect(classify(['scripts/checks/budget.json', 'server/admin/world.json'])).toMatchObject({ level: 'large change', code: ['scripts/checks/budget.json'] })
   })
 
   it('a large change of documents only has no code to audit', () => {
