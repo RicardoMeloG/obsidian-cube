@@ -415,6 +415,11 @@
   .st-actions {
     display: flex;
     gap: 0.7em;
+
+    /* Two calls side by side do not fit a 320 px phone at its text size. */
+    @variant stacked {
+      flex-wrap: wrap;
+    }
   }
 
   .st-actions--stack {
@@ -597,7 +602,9 @@
       display: block;
       padding: 0 var(--edge) 9em;
       pointer-events: auto;
-      font-size: clamp(13px, 3.4vw, 16px);
+      /* 16 px on a 390 px phone, not 13: the text read in full stays at 12 px
+         or more (dt-43, owner 2026-11-21; Lighthouse counted 74% below it). */
+      font-size: clamp(16px, 4.1vw, 17px);
     }
   }
 
@@ -774,6 +781,37 @@
   .stage-dock__text small {
     @variant stacked {
       display: none;
+    }
+  }
+
+  /* The dock keeps the size it had before the phone text grew: its labels
+     are sized so the longest fits in full (dp-08), and they are not read
+     at length. */
+  .stage-dock {
+    @variant stacked {
+      font-size: clamp(13px, 3.4vw, 16px);
+    }
+  }
+
+  /* The uppercase labels are drawn small on purpose; on a phone they keep
+     11 px at least, so they stay legible (dt-43). */
+  .stage
+    :is(
+      .stage-content small,
+      .st-eyebrow,
+      .st-chips li,
+      .st-label span,
+      .sh-featured__label,
+      .cs-case span,
+      .le-status,
+      .le-console__bar span,
+      .rd-question__label,
+      .ca-facts dt,
+      .rd-distinctions dt,
+      .stage-identity__keywords
+    ) {
+    @variant stacked {
+      font-size: max(11px, 0.68em);
     }
   }
 }
