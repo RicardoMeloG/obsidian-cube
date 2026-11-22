@@ -600,7 +600,8 @@
       position: static;
       z-index: auto;
       display: block;
-      padding: 0 var(--edge) 9em;
+      /* Clears the fixed dock, whose size does not follow this one. */
+      padding: 0 var(--edge) 7.5em;
       pointer-events: auto;
       /* 16 px on a 390 px phone, not 13: the text read in full stays at 12 px
          or more (dt-43, owner 2026-11-21; Lighthouse counted 74% below it). */
@@ -793,22 +794,27 @@
     }
   }
 
-  /* The uppercase labels are drawn small on purpose; on a phone they keep
-     11 px at least, so they stay legible (dt-43). */
+  /* The labels drawn small on purpose keep 11 px at least on a phone, so
+     they stay legible (dt-43). Only the ones measured below it at 390 px
+     are listed: a label already larger keeps its size. */
   .stage
     :is(
-      .stage-content small,
       .st-eyebrow,
       .st-chips li,
       .st-label span,
+      .st-label small,
       .sh-featured__label,
+      .sh-proofs small,
       .cs-case span,
+      .cs-compare small,
+      .cs-steps small,
       .le-status,
       .le-console__bar span,
+      .le-callout small,
       .rd-question__label,
-      .ca-facts dt,
-      .rd-distinctions dt,
-      .stage-identity__keywords
+      .rd-chain small,
+      .rd-notes small,
+      .ca-facts dt
     ) {
     @variant stacked {
       font-size: max(11px, 0.68em);
