@@ -10,8 +10,10 @@ const { VIEWER_IP_CODE, VIEWER_IP_HEADER } = require('../../infra/edge/viewer-ip
 describe('match log brakes', () => {
   it('the edge writes the connection address over anything the client sent', () => {
     const handler = new Function(`${VIEWER_IP_CODE}; return handler;`)() as (event: unknown) => { headers: Record<string, { value: string }> }
-    const out = handler({ viewer: { ip: '203.0.113.9' }, request: { headers: { [VIEWER_IP_HEADER]: { value: '192.0.2.1' }, 'x-forwarded-for': { value: '192.0.2.1' } } } })
+    const forged = { value: '192.0.2.1', multiValue: [{ value: '192.0.2.1' }, { value: '192.0.2.2' }] }
+    const out = handler({ viewer: { ip: '203.0.113.9' }, request: { headers: { [VIEWER_IP_HEADER]: forged, 'x-forwarded-for': { value: '192.0.2.1' } } } }) as { headers: Record<string, { value: string; multiValue?: unknown }> }
     expect(out.headers[VIEWER_IP_HEADER]?.value).toBe('203.0.113.9')
+    expect(out.headers[VIEWER_IP_HEADER]?.multiValue).toBeUndefined() // a repeated header does not survive
   })
 
   it('the receiver reads only that header, never X-Forwarded-For', () => {
