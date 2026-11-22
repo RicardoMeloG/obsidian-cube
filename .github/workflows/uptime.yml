@@ -1,0 +1,56 @@
+name: Uptime
+
+# Is the site up? (dt-34, owner 2026-11-21.) Once an hour the live site is
+# asked for its home page, its machine-readable files and a published content
+# document. If any is down, the run fails and GitHub emails the owner, as it
+# does for any failed scheduled run. It catches the cost guard turning the
+# distribution off (spec 014), a broken deploy or a lapsed certificate.
+# No account elsewhere and no script on the site. The requests carry the
+# owner-test mark, so the visits view counts them apart (spec 020, D-6).
+#
+# GitHub pauses scheduled workflows after 60 days without activity on a
+# public repository; a push or a manual run starts it again.
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: The site answers
+        env:
+          SITE: https://ricardomelog.com
+          AGENT: "Mozilla/5.0 obsidian-cube-check uptime"
+        run: |
+          fail=0
+          check() {
+            path="$1"; want="$2"
+            # Three tries a minute apart: one dropped request is not an outage.
+            for try in 1 2 3; do
+              body=$(curl --silent --show-error --max-time 20 --user-agent "$AGENT" --write-out '\n%{http_code}' "$SITE$path") || body=$'\n000'
+              code=${body##*$'\n'}
+              if [ "$code" = "200" ] && grep -q -- "$want" <<<"${body%$'\n'*}"; then
+                echo "ok   $path ($code)"
+                return 0
+              fi
+              [ "$try" -lt 3 ] && sleep 60
+            done
+            echo "::error::$path answered $code or lacked «$want»"
+            fail=1
+          }
+          check / '<h1'
+          check /es/seguridad '<html lang="es"'
+          check /robots.txt 'Sitemap:'
+          check /sitemap.xml '<urlset'
+          check /content/site.en.json '"locale"'
+          exit $fail

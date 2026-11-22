@@ -56,6 +56,9 @@ owner's machine (SSO: content/, fallback deploys) ──────┴─► S3
   `main`, over a short-lived OIDC token, in a second job, for the role of
   `infra/lib/github-deploy-role.ts` (since 2026-11-21, dp-04). Only the `production` environment of this repository can take the
   role, and that environment waits for the owner's approval in GitHub.
+  `uptime.yml` asks the live site for its home page, a face, robots.txt, the
+  sitemap and a content document once an hour; a failed run is GitHub's
+  usual e-mail to the owner (dt-34).
 
 Defined in `infra/` with the **AWS CDK (TypeScript)**.
 
