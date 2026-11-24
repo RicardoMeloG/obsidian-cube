@@ -106,7 +106,7 @@ Surface rules (for the composition's panels, cards and pills):
 
 ## Deep-dive Pages (Secondary)
 
-None exist yet: today a face's long form opens in its detail dialog. If long-form content (the methodology behind a face, the project archive, the full research index) gets pages of its own (decision D-8, release stage, spec 010), they are reached from the face's calls to action and follow these rules.
+One exists: the methodology page (spec 022; `src/methodology/methodology.css`). A face's long form otherwise opens in its detail dialog. Any other (the project archive, the full research index) is its own decision. They are reached from the face's calls to action and follow these rules.
 
 - These pages may use the existing static obsidian page styling.
 - They are not part of the single-screen experience and may scroll.

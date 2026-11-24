@@ -1,10 +1,11 @@
 // robots.txt and sitemap.xml (ADR 009, after the first release): crawlers,
 // the AI ones by name, may read every page, and the sitemap lists the fourteen
-// pages with their alternate in the other language. Both need the site's
+// pages of the cube and the methodology pair (spec 022), each with its
+// alternate in the other language. Both need the site's
 // public address, so without it there is no sitemap and robots.txt does not
 // point at one. Pure and DOM-free, like renderMachine.ts.
 import type { SiteLocale } from '../siteContent'
-import { pagePath, sitePages } from '../sitePaths'
+import { METHODOLOGY_PATHS, methodologyPages, pagePath, sitePages } from '../sitePaths'
 import { absoluteUrl, escapeHtml } from './renderSeo'
 
 export const ROBOTS_FILE = 'robots.txt'
@@ -23,12 +24,15 @@ const OTHER: Record<SiteLocale, SiteLocale> = { en: 'es', es: 'en' }
 
 export function renderSitemap(siteUrl: string): string {
   const url = (path: string) => escapeHtml(absoluteUrl(path, siteUrl))
-  const entries = sitePages().map((page) => {
-    const english = page.locale === 'en' ? page.path : pagePath({ locale: 'en', face: page.face })
+  const pages = [
+    ...sitePages().map(({ locale, path, face }) => ({ locale, path, pathIn: (target: SiteLocale) => pagePath({ locale: target, face }) })),
+    ...methodologyPages().map(({ locale, path }) => ({ locale, path, pathIn: (target: SiteLocale) => METHODOLOGY_PATHS[target] })),
+  ]
+  const entries = pages.map((page) => {
     const alternates = [
       { lang: page.locale, href: page.path },
-      { lang: OTHER[page.locale], href: pagePath({ locale: OTHER[page.locale], face: page.face }) },
-      { lang: 'x-default', href: english },
+      { lang: OTHER[page.locale], href: page.pathIn(OTHER[page.locale]) },
+      { lang: 'x-default', href: page.pathIn('en') },
     ]
     return [
       '  <url>',

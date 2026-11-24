@@ -52,3 +52,11 @@ export function sitePages(): (SitePage & { path: string; file: string })[] {
     }),
   )
 }
+
+// The methodology page (spec 022), one per language: static, with no cube and
+// no face, so it is kept apart from the pages sitePages() lists.
+export const METHODOLOGY_PATHS: Record<SiteLocale, string> = { en: '/methodology', es: '/es/metodologia' }
+
+export function methodologyPages(): { locale: SiteLocale; path: string; file: string }[] {
+  return LOCALES.map((locale) => ({ locale, path: METHODOLOGY_PATHS[locale], file: `${METHODOLOGY_PATHS[locale].slice(1)}.html` }))
+}

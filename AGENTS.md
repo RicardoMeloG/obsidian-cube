@@ -16,7 +16,7 @@ A review on 2026-10-09 found the engineering well ahead of the product: the site
 
 **Two layers (2026-10-10).** The code is public; the owner's personal content never enters the repository. Today it reaches the site from the owner's local admin, copied by hand to the bucket's `content/`, and the code deploy reads it from the live site (spec 010, D-6); later the admin moves to AWS behind Cognito (`docs/decisions/004-cognito-admin-on-aws.md`).
 
-Stages (ADR 007, ADR 008): (1) normalization, spec 010 (closed 2026-10-13); (2) compositions, spec 011 (merged 2026-10-18); (3) content; (4) security, of which the contact form and the CV request behind a captcha remain; (5) release, live on 2026-11-12. After the release: methodology page (decision D-8), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility. `docs/roadmap.md` carries the detail.
+Stages (ADR 007, ADR 008): (1) normalization, spec 010 (closed 2026-10-13); (2) compositions, spec 011 (merged 2026-10-18); (3) content; (4) security, of which the contact form and the CV request behind a captcha remain; (5) release, live on 2026-11-12. After the release: methodology page (spec 022), thesis/presentation state, the Cognito admin (ADR 004), evidence items per face, world visibility. `docs/roadmap.md` carries the detail.
 
 ## Identity
 
@@ -166,6 +166,7 @@ The overview, the module map and the status of every rule (in force, or the phas
 - **Content budgets** (`src/kernel/layoutBudgets.json`, visible characters and item counts) and link rules are publish rules: in production the admin refuses content that would not fit or links nowhere; while the project is in development (`APP_ENV` in `.env`, read by `server/appEnv.ts`; development until the owner says it goes to production) they are warnings and the publish goes through. The content's shape blocks in both phases; the site renders with the tolerant schema. Change a budget only with a layout check run that proves the stress content still fits.
 - **Security headers** come from `infra/security-headers.json`: CloudFront serves them (the content security policy enforced since the first deploy, 2026-11-12; spec 016) and `vite preview` enforces them, so the layout check fails on any violation. No inline script or style in `index.html` (a test): the policy has no hashes.
 - **No blank page.** Without WebGL the scene is replaced by a still image (`hasWebGL`); a scene or world error is contained by `src/lib/ErrorBoundary`. The name, the composition and the dock are DOM and always stay.
+- **Methodology page.** Its text is `docs/methodology/methodology.{en,es}.md`, in a fixed Markdown subset that fails the build outside it; both languages cite the same links, and the counts are placeholders the build fills, never typed (spec 022).
 - **Interface copy** (labels, hints, `aria-label`s) comes from `src/features/content/copy.ts`; interface code never compares locales.
 - **Size.** DOM-layer TypeScript and JavaScript files have at most 250 lines (a test); a component that grows past it is doing more than one thing. Stylesheets and the admin's single HTML page are not measured.
 - **Unchecked rules** (review only) say so where they are written.
@@ -245,7 +246,7 @@ Phase 1 (status on 2026-11-12):
 - [x] The same composition adapts gracefully to narrow viewports — verified at 390px: cube hero, the composition in one column, the dock fixed at the viewport bottom with the content padded above it (spec 011, S4).
 - [x] Content is loaded from the structured bilingual content system.
 - [x] Public repo contains example content only; private content is supplied at deploy.
-- [ ] At least one deep-dive page exists (methodology) reached from a composition CTA. Whether it is built is decision D-8, still open.
+- [ ] At least one deep-dive page exists (methodology) reached from a composition CTA. Built (spec 022, 2026-11-24); done once it is live and the AGENTIC call to action points to it.
 - [x] Static SEO in every page, one per language and face (`<title>`, description, share preview, JSON-LD, plain-text fallback for non-JS crawlers) — rendered at build time from the site content by `src/kernel/seo/renderSeo.ts`; `llms.txt` and the plain profile pages beside it (ADR 009). `ci.yml` has no private content and builds the example identity; the deploy workflow first fetches the owner's published documents from the live site (`/content/`), so a deploy carries the real identity.
 - [x] README explains the agentic process and architecture (site, kernel, local admin, infra; decisions, gates, independent audits, stages).
 - [x] Real identity live at a public URL (https://ricardomelog.com, 2026-11-12).

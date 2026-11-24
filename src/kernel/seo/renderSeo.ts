@@ -9,8 +9,9 @@
 // config (Node) and in Vitest. The input is the content document the schema
 // validated (vite.config.ts parses it first).
 import type { FaceId } from '../faces'
+import { isAllowedHref } from '../links'
 import type { SiteContent, SiteLocale } from '../siteContent'
-import { pagePath } from '../sitePaths'
+import { METHODOLOGY_PATHS, pagePath } from '../sitePaths'
 import { LLMS_FILE, PROFILE_PAGES } from './machineFiles'
 
 export type SeoInput = SiteContent
@@ -54,17 +55,23 @@ function isPublicLink(href: string | undefined): href is string {
   return Boolean(href && /^https?:\/\//i.test(href))
 }
 
-// Only outside, absolute links are listed: in-page anchors and relative paths
-// mean nothing to a crawler reading a single page.
+// In-page anchors mean nothing to a crawler reading a single page; a path on
+// this site (spec 022) becomes absolute when the site's address is known.
+function listedHref(href: string | undefined, siteUrl?: string): string | undefined {
+  if (!href || isPublicLink(href)) return href
+  return (href as string).startsWith('/') && isAllowedHref(href) ? absoluteUrl(href, siteUrl) : undefined
+}
+
 function publicLinks(content: SeoInput): { label: string; href: string }[] {
   const seen = new Set<string>()
   const links: { label: string; href: string }[] = []
   for (const section of content.sections) {
     const candidates = [section.ctaPrimary, section.ctaSecondary, ...(section.detail?.links ?? [])]
     for (const link of candidates) {
-      if (!link || !isPublicLink(link.href) || seen.has(link.href)) continue
-      seen.add(link.href)
-      links.push({ label: link.label, href: link.href })
+      const href = listedHref(link?.href, content.seo.siteUrl)
+      if (!link || !href || seen.has(href)) continue
+      seen.add(href)
+      links.push({ label: link.label, href })
     }
   }
   return links
@@ -116,6 +123,7 @@ export function jsonForScript(value: unknown): string {
 }
 
 const OTHER_LOCALE: Record<SiteLocale, SiteLocale> = { en: 'es', es: 'en' }
+const METHODOLOGY_LABEL: Record<SiteLocale, string> = { en: 'How this site is built with agents', es: 'Cómo se construye este sitio con agentes' }
 const LANGUAGE_NAME: Record<SiteLocale, string> = { en: 'English', es: 'Español' }
 
 const faceSection = (content: SeoInput, face: FaceId | null) => (face ? content.sections.find((section) => section.id === face) : undefined)
@@ -132,10 +140,29 @@ function pageDescription(content: SeoInput, face: FaceId | null): string {
   return section ? toPlainText(section.summary) : content.seo.description
 }
 
+export type PageHead = {
+  title: string
+  description: string
+  ogType: 'website' | 'article'
+  /** The page's path in each language. */
+  path: (locale: SiteLocale) => string
+  jsonLd: Record<string, unknown>
+}
+
 export function renderHeadTags(content: SeoInput, face: FaceId | null = null): string {
+  return renderPageHead(content, {
+    title: pageTitle(content, face),
+    description: pageDescription(content, face),
+    ogType: 'website',
+    path: (locale) => pagePath({ locale, face }),
+    jsonLd: buildPersonJsonLd(content),
+  })
+}
+
+// The head every page shares: the cube's pages and the methodology (spec 022).
+export function renderPageHead(content: SeoInput, page: PageHead): string {
   const { identity, seo, locale } = content
-  const title = pageTitle(content, face)
-  const description = pageDescription(content, face)
+  const { title, description } = page
   const image = absoluteUrl(seo.image ?? DEFAULT_SHARE_IMAGE, seo.siteUrl)
   const ogLocale = content.locale === 'es' ? 'es_CL' : 'en_US'
   const ogAlternate = content.locale === 'es' ? 'en_US' : 'es_CL'
@@ -143,7 +170,7 @@ export function renderHeadTags(content: SeoInput, face: FaceId | null = null): s
     `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`
   // Search engines want this page's address, and its other language's, in
   // full: they wait for the site URL, like the canonical.
-  const url = (target: SiteLocale) => absoluteUrl(pagePath({ locale: target, face }), seo.siteUrl)
+  const url = (target: SiteLocale) => absoluteUrl(page.path(target), seo.siteUrl)
   const alternate = (hreflang: string, target: SiteLocale) => `<link rel="alternate" hreflang="${hreflang}" href="${escapeHtml(url(target))}" />`
   const addresses = seo.siteUrl
     ? [`<link rel="canonical" href="${escapeHtml(url(locale))}" />`, alternate('en', 'en'), alternate('es', 'es'), alternate('x-default', 'en')]
@@ -155,7 +182,7 @@ export function renderHeadTags(content: SeoInput, face: FaceId | null = null): s
     meta('name', 'author', identity.fullName),
     meta('name', 'theme-color', '#08050d'),
     ...addresses,
-    meta('property', 'og:type', 'website'),
+    meta('property', 'og:type', page.ogType),
     meta('property', 'og:title', title),
     meta('property', 'og:description', description),
     seo.siteUrl ? meta('property', 'og:url', url(locale)) : '',
@@ -169,7 +196,7 @@ export function renderHeadTags(content: SeoInput, face: FaceId | null = null): s
     meta('name', 'twitter:title', title),
     meta('name', 'twitter:description', description),
     meta('name', 'twitter:image', image),
-    `<script type="application/ld+json">${jsonForScript(buildPersonJsonLd(content))}</script>`,
+    `<script type="application/ld+json">${jsonForScript(page.jsonLd)}</script>`,
   ]
   return tags.filter(Boolean).join('\n    ')
 }
@@ -187,7 +214,7 @@ export function renderStaticBody(content: SeoInput, face: FaceId | null = null):
       (section) => `
         <section>
           <h2><a href="${pagePath({ locale, face: section.id })}">${escapeHtml(section.label)} — ${escapeHtml(toPlainText(section.title))}</a></h2>
-          <p>${escapeHtml(toPlainText(section.summary))}</p>
+          <p>${escapeHtml(toPlainText(section.summary))}</p>${section.id === 'agentic' ? `\n          <p><a href="${METHODOLOGY_PATHS[locale]}">${METHODOLOGY_LABEL[locale]}</a></p>` : ''}
         </section>`,
     )
     .join('')

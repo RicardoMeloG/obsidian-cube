@@ -46,7 +46,7 @@ I design the architecture, the rules and the gates; AI agents implement inside t
 - **Independent audits.** Stages close only after an audit by a reviewer with no context from the work (`specs/010-architecture/audit-1.md`, `audit-2.md`); every finding is fixed or recorded as a decision.
 - **Process in proportion to the change** (spec 012). The pre-push hook reads what a push changes: documentation passes with the usual gates, code needs an audit of its exact diff by two local models, and a change to the contract or a gate needs its spec or ADR. It also refuses ignored files, keys and secret values.
 - **Stages in order** (ADR 007, ADR 008): normalize the code, compositions, content, security, release.
-- **The published site is tested too.** `npm run check:live` walks fourteen visitor use cases against the live site and fails on any console error or warning (`docs/live-use-cases.md`).
+- **The published site is tested too.** `npm run check:live` walks fifteen visitor use cases against the live site and fails on any console error or warning (`docs/live-use-cases.md`).
 
 ## Getting Started
 

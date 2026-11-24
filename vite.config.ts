@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
@@ -8,12 +8,13 @@ import { ProfileContentSchema } from './src/kernel/profileContent.ts'
 import type { ProfileContent } from './src/kernel/profileContent.ts'
 import { LLMS_FILE, PROFILE_PAGES, renderMachineFiles } from './src/kernel/seo/renderMachine.ts'
 import { ROBOTS_FILE, SITEMAP_FILE } from './src/kernel/seo/crawlFiles.ts'
+import { countRecords, renderMethodologyBody, renderMethodologyHead } from './src/kernel/seo/renderMethodology.ts'
 import type { MachineInput } from './src/kernel/seo/renderMachine.ts'
 import { renderHeadTags, renderStaticBody } from './src/kernel/seo/renderSeo.ts'
 import type { SeoInput } from './src/kernel/seo/renderSeo.ts'
 import { SiteContentSchema } from './src/kernel/siteContent.ts'
 import type { SiteLocale } from './src/kernel/siteContent.ts'
-import { readPagePath, sitePages } from './src/kernel/sitePaths.ts'
+import { methodologyPages, readPagePath, sitePages } from './src/kernel/sitePaths.ts'
 import type { SitePage } from './src/kernel/sitePaths.ts'
 
 // Static SEO (src/kernel/seo/renderSeo.ts) and the layer for machines
@@ -70,6 +71,74 @@ function readMachineInput(locale: SiteLocale): MachineInput {
   return { ...content, profile }
 }
 
+// The methodology pages (spec 022): rendered from docs/methodology/*.md into
+// the second HTML entry, which brings the hashed stylesheet and font and no
+// script. The repository is public, so its address is not content.
+const METHODOLOGY_TEMPLATE = '/methodology.html'
+const REPOSITORY_URL = 'https://github.com/RicardoMeloG/obsidian-cube'
+const METHODOLOGY_HEAD = /<!-- methodology:head[\s\S]*?<!-- \/methodology:head -->/
+const METHODOLOGY_BODY = '<!-- methodology:body -->'
+
+function repositoryPaths(directory: string): string[] {
+  return readdirSync(new URL(`./${directory}/`, import.meta.url), { recursive: true, encoding: 'utf8' }).map((name) => `${directory}/${name.replaceAll('\\', '/')}`)
+}
+
+function renderMethodology(template: string, locale: SiteLocale): string {
+  if (!METHODOLOGY_HEAD.test(template) || !template.includes(METHODOLOGY_BODY) || !template.includes(HTML_TAG)) {
+    throw new Error('[methodology] methodology.html lost its <html lang="en"> or its placeholders')
+  }
+  const input = {
+    content: readContent(locale).content,
+    markdown: readFileSync(new URL(`./docs/methodology/methodology.${locale}.md`, import.meta.url), 'utf8'),
+    counts: countRecords([...repositoryPaths('specs'), ...repositoryPaths('docs/decisions')]),
+    repositoryUrl: REPOSITORY_URL,
+  }
+  // Functions, so a `$` in the text is not read as a replacement pattern.
+  return template
+    .replace(HTML_TAG, `<html lang="${locale}">`)
+    .replace(METHODOLOGY_HEAD, () => renderMethodologyHead(input))
+    .replace(METHODOLOGY_BODY, () => renderMethodologyBody(input))
+}
+
+function methodologyPage(): Plugin {
+  let others: { fileName: string; source: string }[] = []
+  return {
+    name: 'methodology-page',
+    enforce: 'post',
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        const url = request.url ?? ''
+        const page = methodologyPages().find(({ path }) => path === url.split('?')[0])
+        if (!page) return next()
+        try {
+          const template = readFileSync(new URL(`.${METHODOLOGY_TEMPLATE}`, import.meta.url), 'utf8')
+          response.setHeader('Content-Type', 'text/html; charset=utf-8')
+          response.end(await server.transformIndexHtml(METHODOLOGY_TEMPLATE, template, url))
+        } catch (error) {
+          next(error)
+        }
+      })
+    },
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, context) {
+        if (context.path !== METHODOLOGY_TEMPLATE) return
+        if (context.server) {
+          const path = new URL(context.originalUrl ?? '/', 'http://localhost').pathname
+          return renderMethodology(html, methodologyPages().find((page) => page.path === path)?.locale ?? 'en')
+        }
+        if (/<script/.test(html)) throw new Error('[methodology] the page gained a script: it must stay static')
+        const [english, ...rest] = methodologyPages()
+        others = rest.map((page) => ({ fileName: page.file, source: renderMethodology(html, page.locale) }))
+        return renderMethodology(html, english.locale)
+      },
+    },
+    generateBundle() {
+      for (const page of others) this.emitFile({ type: 'asset', ...page })
+    },
+  }
+}
+
 // One page per language and face (src/kernel/sitePaths.ts; ADR 009):
 // the built index.html, with the language, the share preview and the plain
 // body of that page. Rendered last, once Vite has written the scripts and
@@ -95,6 +164,7 @@ function seoPages(): Plugin {
     transformIndexHtml: {
       order: 'post',
       handler(html, context) {
+        if (context.path === METHODOLOGY_TEMPLATE) return
         if (!SEO_HEAD.test(html) || !html.includes(SEO_BODY) || !html.includes(HTML_TAG)) {
           throw new Error('[seo] index.html lost its <html lang="en"> or its seo:head / seo:body placeholders')
         }
@@ -160,13 +230,21 @@ function preloadLatinFont(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), seoPages(), machineLayer(), preloadLatinFont()],
+  plugins: [react(), tailwindcss(), seoPages(), methodologyPage(), machineLayer(), preloadLatinFont()],
   // `@/` is src/: imports across top-level modules use it (ADR 006).
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // iOS Safari before 16.4 ignores range media queries (width <= 720px), so
   // every width refinement was lost on those phones (pending item dt-33).
   // Targeting Safari 16.0 makes the CSS minifier write min-/max-width.
-  build: { cssTarget: ['chrome111', 'edge111', 'firefox114', 'safari16'] },
+  build: {
+    cssTarget: ['chrome111', 'edge111', 'firefox114', 'safari16'],
+    rolldownOptions: {
+      input: {
+        index: fileURLToPath(new URL('./index.html', import.meta.url)),
+        methodology: fileURLToPath(new URL('./methodology.html', import.meta.url)),
+      },
+    },
+  },
   // A port of its own, so it does not clash with other projects on 5173;
   // strictPort fails instead of moving silently to another port.
   server: {

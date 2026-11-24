@@ -1,8 +1,8 @@
 # 022: The Methodology Page
 
-**Status:** draft, revised after its audit (2026-11-22). Written by Claude for the owner to correct. The owner took decision D-8 of spec 010 on 2026-11-21: the page exists (pending-work panel, item dt-44, point 18). Once built it is a large change, since it touches the kernel, the build and the visit log, so it is built only after the owner decides §7.
+**Status:** accepted (2026-11-24) and built; the deploy and the link from AGENTIC (stage 4) remain. Drafted and audited on 2026-11-22. The owner took decision D-8 of spec 010 on 2026-11-21: the page exists (pending-work panel, item dt-44, point 18). It is a large change, since it touches the kernel, the build and the visit log. The owner took D-1 to D-8 of §8 as recommended on 2026-11-24.
 **Builds on:** ADR 002 (evidence before spectacle; "the site is its own case study"), ADR 005 (a pure kernel), ADR 009 (clean addresses, the layer for machines), spec 010 §5.9 (routes, AD-08), `docs/visual-direction.md` (Deep-dive Pages).
-**Audit:** `audit-1.md`, the audit of this draft by an agent without context, with the verdict on each finding. **Text:** `content-draft.md`, in Spanish and English.
+**Audit:** `audit-1.md`, the audit of this draft by an agent without context, with the verdict on each finding. **Text:** `docs/methodology/`, from `content-draft.md`.
 
 ## 1. Problem
 
@@ -18,7 +18,7 @@ Two static pages, `/methodology` and `/es/metodologia`. A person reads them in a
 2. **Proportional gates:** adjustment, change and large change; what decides the level; and which gates run where (before the push, in CI, after a deploy).
 3. **Where a person decides.** Each item names whether it is enforced (and where) or a working rule.
 4. **What went wrong:** the five cases of `content-draft.md`, each with its public commit.
-5. **What it does not prove**, stated plainly. This includes the gaps between the stated loop and the record: two early specs have no audit file, and the owner can skip the hook.
+5. **What it does not prove**, stated plainly. This includes the gaps between the stated loop and the record: specs 009 and 016 have no audit file, and the owner can skip the hook.
 6. **Numbers counted at build time, never typed:** specs, audit records and ADRs (§3.2). A typed count went stale on a card (dt-37, point 4).
 
 The AGENTIC face's calls to action point to the page, and so does the proof "Audits without context" (D-3).
@@ -40,7 +40,7 @@ The text describes the method, and every claim links to a file in this repositor
   - `**bold**`, `` `code` `` and links.
 
   Raw HTML is not part of the subset and fails the build. A third-party Markdown parser is the alternative, rejected: it needs a kernel exception (an ADR 005 amendment), a dependency and its audit, for a dozen syntax rules.
-- **Links.** A link relative to the repository becomes an absolute GitHub link on `main`: `/blob/` for a file, `/tree/` for a folder. A link to a site path stays relative. Every link passes `isAllowedHref` (`src/kernel/links.ts`).
+- **Links.** A link is written relative to the Markdown file (`../../`), so it also works where GitHub shows it, and becomes an absolute GitHub link on `main`: `/blob/` for a file, `/tree/` for a folder. A link to a site path stays relative. Every link passes `isAllowedHref` (`src/kernel/links.ts`).
 - **The page goes through Vite** (D-6). `methodology.html` is a second HTML entry of the build (`build.rollupOptions.input`). It links a stylesheet, `src/methodology/methodology.css`, that imports `tokens.css` and Inter's latin file. Vite emits both hashed, as for the app, so the page shares the palette and the font through the same files and `check:tokens` needs no exemption. The entry has no module script; the build fails if the emitted page has a `<script>` other than JSON-LD. The Spanish page is written in `generateBundle` from the same processed template.
 - **Head.** Each page has the same head as the face pages:
   - title, description and canonical;
@@ -59,7 +59,9 @@ The text describes the method, and every claim links to a file in this repositor
 
 | File | Change | Level (spec 012) |
 |---|---|---|
-| `src/kernel/seo/renderMethodology.ts` and its test | new: Markdown subset, head, diagram | large (kernel) |
+| `src/kernel/seo/renderMethodology.ts`, `methodologyMarkdown.ts`, `methodologyFigure.ts` and their test | new: head and body, Markdown subset, diagram | large (kernel) |
+| `methodology.html` | new: the second entry's template | change |
+| `scripts/checks/methodology.test.ts` | new: the links exist, both languages match, no typed count | large (a check) |
 | `src/kernel/sitePaths.ts` | `methodologyPages()`: the two paths and files, a second export kept apart from `sitePages()`, so `check:layout` and `check:budget` do not open them as cube pages | large |
 | `src/kernel/seo/crawlFiles.ts` and its test | the sitemap adds the pair, with its own `hreflang` alternates | large |
 | `src/kernel/seo/renderMachine.ts` | `llms.txt` lists the page | large |
@@ -68,7 +70,7 @@ The text describes the method, and every claim links to a file in this repositor
 | `vite.config.ts` | the second entry, the Spanish page, the counts, the dev middleware | change |
 | `src/methodology/methodology.css` | new | change |
 | `docs/methodology/*.md` | new: the text | adjustment |
-| `docs/live-use-cases.md`, `scripts/check-live.mjs` | a new case: both addresses answer 200, `text/html`, with the security headers | large (a check) |
+| `docs/live-use-cases.md`, `scripts/check-live.mjs` | a new case, CU-15: both addresses answer 200, `text/html`, with the security headers. CU-13 counts the sitemap's pages: sixteen, not fourteen | large (a check) |
 | Docs | spec 010 D-8 (taken); `AGENTS.md` (D-8 no longer open); `visual-direction.md` ("none exist yet"); `docs/architecture.md`; ADR 009 and `crawlFiles.ts` ("fourteen pages") | adjustment, except `AGENTS.md` (large) |
 
 The edge needs no change: `clean-paths.cjs` already serves `/methodology` from `methodology.html`, and the deploy's `sync` uploads every built file except `content/` and `assets/` already present.
@@ -93,7 +95,7 @@ The AGENTIC face's calls to action and the proof "Audits without context" are co
 
 ## 6. Stages
 
-1. **Decisions and text:** the owner decides §7 and corrects `content-draft.md`. It becomes the two Markdown files.
+1. **Decisions and text:** the owner decides §8 and corrects `content-draft.md`. It becomes the two Markdown files.
 2. **Renderer and page:** the files of §3.3, with their tests. Visual check at 320, 768, 1366 and 1920 px.
 3. **Documents:** the amendments of §3.3.
 4. **Link:** the owner points the AGENTIC calls to action to the page in the admin. It ships in the next grouped deploy.
@@ -112,6 +114,14 @@ The AGENTIC face's calls to action and the proof "Audits without context" are co
 10. The change audit of the built diff is recorded in `audit-2.md`.
 
 ## 8. Decisions for the owner
+
+Taken on 2026-11-24: all eight as recommended. The text was corrected where the record contradicted the draft (`content-draft.md` stays as drafted):
+
+- "finds them before they reach anyone": cases 1 and 5 were found in production;
+- "two early specs": they are 009 and 016, and 016 is of 2026-11-19;
+- an audit "judges against its goal, not against the code": the audits read the code too;
+- "layout at every screen size" in CI: the full matrix runs on demand only;
+- production: the approval in GitHub covers the code; content and infrastructure go out from the owner's machine.
 
 | Id | Decision | Options | Recommendation |
 |---|---|---|---|

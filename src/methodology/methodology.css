@@ -1,0 +1,195 @@
+/* The methodology pages (spec 022): the site's tokens and font, no script. A
+   sheet of its own, because the app's locks the body to one screen. Elements
+   are styled by name: the article comes from Markdown and has no classes. The
+   empty utilities import makes Tailwind emit the tokens used here. */
+@import '@fontsource-variable/inter/wght.css';
+@import 'tailwindcss/utilities.css' source(none);
+@import '../styles/tokens.css';
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: var(--color-page);
+    color: var(--color-ink-300);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    line-height: 1.65;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(var(--color-abyss-glow), var(--color-page) 32rem) no-repeat;
+  }
+
+  a {
+    color: var(--color-violet-200);
+    text-underline-offset: 0.2em;
+  }
+
+  a:hover {
+    color: var(--color-ink-50);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-violet-300);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .method-bar,
+  .method,
+  .method-foot {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding-inline: var(--spacing-edge);
+  }
+
+  .method-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding-block: var(--spacing-edge-top);
+    font-size: 0.875rem;
+  }
+
+  .method-name {
+    color: var(--color-ink-50);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+  }
+
+  .method-name span {
+    display: block;
+    color: var(--color-ink-300);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .method {
+    padding-block: clamp(1.5rem, 5vw, 3.5rem) 2rem;
+    overflow-wrap: anywhere;
+  }
+
+  .method h1 {
+    margin: 0 0 1.5rem;
+    color: var(--color-ink-50);
+    font-size: clamp(2rem, 6vw, 3.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    overflow-wrap: normal;
+  }
+
+  .method h2 {
+    margin: 3.25rem 0 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-night-700);
+    color: var(--color-ink-50);
+    font-size: 1.4rem;
+    line-height: 1.25;
+  }
+
+  .method h3 {
+    margin: 2rem 0 0.5rem;
+    color: var(--color-ink-100);
+    font-size: 1.1rem;
+  }
+
+  .method p {
+    margin: 0 0 1rem;
+  }
+
+  .method h1 + p {
+    color: var(--color-ink-100);
+    font-size: 1.125rem;
+  }
+
+  .method ol,
+  .method ul {
+    margin: 0 0 1rem;
+    padding-left: 1.5rem;
+  }
+
+  .method li {
+    margin-bottom: 0.75rem;
+    padding-left: 0.25rem;
+  }
+
+  .method li::marker {
+    color: var(--color-violet-300);
+    font-weight: 600;
+  }
+
+  .method strong {
+    color: var(--color-ink-50);
+    font-weight: 600;
+  }
+
+  /* Two families: with `monospace` alone browsers shrink the text to 13 px. */
+  .method code {
+    font-family: ui-monospace, monospace;
+    font-size: 0.9em;
+  }
+
+  /* One column at about its drawn size: the text stays readable on a phone. */
+  .loop {
+    max-width: 24rem;
+    margin: 1.5rem auto 2rem;
+  }
+
+  .loop svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .loop-box {
+    fill: var(--color-night-800);
+    stroke: var(--color-violet-500);
+  }
+
+  .loop-line {
+    fill: none;
+    stroke: var(--color-violet-300);
+    stroke-width: 1.25;
+  }
+
+  .loop-head {
+    fill: var(--color-violet-300);
+  }
+
+  .loop-text,
+  .loop-note {
+    fill: var(--color-ink-100);
+    font-size: 15px;
+    text-anchor: middle;
+  }
+
+  .loop-note {
+    fill: var(--color-ink-300);
+    font-size: 14px;
+  }
+
+  .method-foot {
+    padding-block: 1.5rem 3rem;
+    font-size: 0.9375rem;
+  }
+
+  .method-foot nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-night-700);
+  }
+}

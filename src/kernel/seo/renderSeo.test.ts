@@ -145,6 +145,21 @@ describe('renderStaticBody', () => {
     expect(renderStaticBody({ ...base, locale: 'es' }, null)).toContain('<a href="/" hreflang="en" lang="en">English</a>')
   })
 
+  it('lists a path on this site as an absolute link, and never as a profile (spec 022)', () => {
+    const [face] = base.sections
+    const content = { ...base, seo: { ...base.seo, siteUrl: 'https://ada.example' }, sections: [{ ...face, ctaSecondary: { label: 'How', href: '/methodology' } }] }
+    expect(renderStaticBody(content)).toContain('<a href="https://ada.example/methodology">How</a>')
+    expect(buildPersonJsonLd(content).sameAs).toEqual(['https://github.com/ada', 'https://www.linkedin.com/in/ada-example/'])
+    const hostile = { ...content, sections: [{ ...face, ctaSecondary: { label: 'How', href: '//evil.example' } }] }
+    expect(renderStaticBody(hostile)).not.toContain('evil.example')
+  })
+
+  it('links the methodology page from the AGENTIC face, in its language (spec 022)', () => {
+    expect(renderStaticBody(example).match(/href="\/methodology"/g)).toHaveLength(1)
+    expect(renderStaticBody({ ...example, locale: 'es' })).toContain('href="/es/metodologia"')
+    expect(renderStaticBody(base)).not.toContain('href="/methodology"')
+  })
+
   it('lists the primary call to action, the one every face shows (audit-2 B-03)', () => {
     const body = renderStaticBody(base)
     expect(body).toContain('href="https://github.com/ada/tool"')

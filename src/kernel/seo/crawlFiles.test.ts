@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { AI_CRAWLERS, renderRobotsTxt, renderSitemap } from './crawlFiles'
-import { sitePages } from '../sitePaths'
+import { methodologyPages, sitePages } from '../sitePaths'
 
 const SITE = 'https://example.org'
 
@@ -22,8 +22,8 @@ describe('sitemap.xml', () => {
 
   it('lists every page once, on its absolute clean address', () => {
     const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
-    expect(locs).toEqual(sitePages().map((page) => `${SITE}${page.path}`))
-    expect(locs).toHaveLength(14)
+    expect(locs).toEqual([...sitePages(), ...methodologyPages()].map((page) => `${SITE}${page.path}`))
+    expect(locs).toHaveLength(16)
   })
 
   it('gives each page its alternate in the other language and an English x-default', () => {
@@ -31,6 +31,13 @@ describe('sitemap.xml', () => {
     expect(security).toContain(`hreflang="es" href="${SITE}/es/seguridad"`)
     expect(security).toContain(`hreflang="en" href="${SITE}/security"`)
     expect(security).toContain(`hreflang="x-default" href="${SITE}/security"`)
+  })
+
+  it('pairs the two methodology pages (spec 022)', () => {
+    const entry = xml.split('<url>').find((part) => part.includes(`<loc>${SITE}/es/metodologia</loc>`))!
+    expect(entry).toContain(`hreflang="es" href="${SITE}/es/metodologia"`)
+    expect(entry).toContain(`hreflang="en" href="${SITE}/methodology"`)
+    expect(entry).toContain(`hreflang="x-default" href="${SITE}/methodology"`)
   })
 
   it('is a sitemap document with the xhtml namespace for the alternates', () => {

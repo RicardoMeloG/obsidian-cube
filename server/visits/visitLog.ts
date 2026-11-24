@@ -1,7 +1,7 @@
 // Counts human and crawler page views from CloudFront access logs.
 // Only the whitelisted keys are read; no IP or other PII is ever copied.
 
-import { pagePath, readPagePath } from '../../src/kernel/sitePaths'
+import { METHODOLOGY_PATHS, pagePath, readPagePath } from '../../src/kernel/sitePaths'
 
 export type Agent = 'human' | 'crawler'
 export type PageView = { date: string; country: string; page: string; agent: Agent }
@@ -10,7 +10,7 @@ export type LineResult =
   | { kind: 'other-path'; date: string }
   | { kind: 'ignored' }
 
-const MACHINE_PAGES: ReadonlySet<string> = new Set(['/llms.txt', '/profile', '/profile.es'])
+const MACHINE_PAGES: ReadonlySet<string> = new Set(['/llms.txt', '/profile', '/profile.es', ...Object.values(METHODOLOGY_PATHS)])
 const ASSET_PREFIXES: readonly string[] = ['/assets/', '/content/', '/environments/', '/examples/']
 const ASSET_EXTENSIONS: readonly string[] = [
   '.js', '.mjs', '.css', '.map', '.svg', '.png', '.jpg', '.jpeg',

@@ -434,10 +434,10 @@ try {
     const sitemap = await fetch(`${BASE}/sitemap.xml`)
     const locs = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
     expect(problems, sitemap.status === 200 && /xml/.test(sitemap.headers.get('content-type') ?? ''), `sitemap.xml answered ${sitemap.status} ${sitemap.headers.get('content-type')}`)
-    for (const path of ['/', '/agentic', '/contact', '/es', '/es/seguridad', '/es/contacto']) {
+    for (const path of ['/', '/agentic', '/contact', '/es', '/es/seguridad', '/es/contacto', '/methodology', '/es/metodologia']) {
       expect(problems, locs.includes(`${origin}${path}`), `sitemap.xml does not list ${path}`)
     }
-    expect(problems, locs.length === 14, `sitemap.xml lists ${locs.length} pages, not 14 (7 faces in 2 languages)`)
+    expect(problems, locs.length === 16, `sitemap.xml lists ${locs.length} pages, not 16 (the cube and 6 faces, and the methodology, in 2 languages)`)
     // The edge function sets these (spec 018): vite preview does not.
     if (LIVE) {
       const asset = (await (await fetch(`${BASE}/`)).text()).match(/\/assets\/[^"']+\.js/)?.[0]
@@ -489,6 +489,27 @@ try {
       expect(problems, left, 'Esc did not leave art mode')
       await page.waitForFunction(() => getComputedStyle(document.querySelector('.stage-content')).visibility !== 'hidden', null, { timeout: 10000 }).catch(() => {})
       expect(problems, await visible(page, '.stage-content'), 'the stage did not come back after art mode')
+    }
+    await close()
+  })
+
+  // CU-15: a technical reviewer reads the methodology (spec 022).
+  await useCase('CU-15', 'The methodology reads without JavaScript, in both languages, on a small phone', async (problems) => {
+    const { page, close } = await watchedPage(noWebglBrowser, problems, { viewport: { width: 320, height: 640 } })
+    for (const [path, lang, other] of [['/methodology', 'en', '/es/metodologia'], ['/es/metodologia', 'es', '/methodology']]) {
+      const raw = await fetch(`${BASE}${path}`)
+      const html = await raw.text()
+      const header = (name) => raw.headers.get(name) ?? ''
+      expect(problems, raw.status === 200 && /^text\/html/.test(header('content-type')), `${path} answered ${raw.status} ${header('content-type')}`)
+      expect(problems, /default-src 'self'/.test(header('content-security-policy')) && header('x-frame-options') === 'DENY', `${path} lacks the security headers`)
+      expect(problems, html.includes(`<html lang="${lang}">`), `${path} is not served in ${lang}`)
+      expect(problems, !/<script(?! type="application\/ld\+json")/.test(html), `${path} carries a script`)
+      expect(problems, /<main class="method">\s*<h1>/.test(html), `${path} lacks its text in the raw HTML`)
+      await page.goto(`${BASE}${path}`)
+      expect(problems, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${path} scrolls sideways at 320 px`)
+      expect(problems, (await page.locator(`a[href="${other}"]`).count()) > 0, `${path} does not link ${other}`)
+      // The sheet is applied: the figure is drawn and the font is the site's.
+      expect(problems, await page.evaluate(() => getComputedStyle(document.querySelector('.loop-box')).fill !== 'rgb(0, 0, 0)'), `${path} is not styled`)
     }
     await close()
   })

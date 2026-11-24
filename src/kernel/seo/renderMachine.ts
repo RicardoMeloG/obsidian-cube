@@ -9,7 +9,7 @@
 import { isAllowedHref } from '../links'
 import type { ProfileContent } from '../profileContent'
 import type { SiteContent, SiteLocale } from '../siteContent'
-import { pagePath } from '../sitePaths'
+import { METHODOLOGY_PATHS, pagePath } from '../sitePaths'
 import { faceLinks, faceText } from './faceText'
 import type { FaceLink, FaceText, TextEntry } from './faceText'
 import { renderRobotsTxt, renderSitemap, ROBOTS_FILE, SITEMAP_FILE } from './crawlFiles'
@@ -21,7 +21,7 @@ export { LLMS_FILE, PROFILE_PAGES }
 // A language's site document with its profile, when the owner wrote one.
 export type MachineInput = SiteContent & { profile?: ProfileContent }
 
-const LABELS: Record<SiteLocale, Record<'keywords' | 'location' | 'languages' | 'titles' | 'skills' | 'roles' | 'education' | 'research' | 'profiles' | 'site' | 'other' | 'profilePage', string>> = {
+const LABELS: Record<SiteLocale, Record<'keywords' | 'location' | 'languages' | 'titles' | 'skills' | 'roles' | 'education' | 'research' | 'profiles' | 'site' | 'other' | 'profilePage' | 'methodology', string>> = {
   en: {
     keywords: 'Keywords',
     location: 'Location',
@@ -35,6 +35,7 @@ const LABELS: Record<SiteLocale, Record<'keywords' | 'location' | 'languages' | 
     site: 'Interactive site',
     other: 'Versión en español',
     profilePage: 'Profile page',
+    methodology: 'Methodology (how this site is built with agents)',
   },
   es: {
     keywords: 'Palabras clave',
@@ -49,6 +50,7 @@ const LABELS: Record<SiteLocale, Record<'keywords' | 'location' | 'languages' | 
     site: 'Sitio interactivo',
     other: 'English version',
     profilePage: 'Página de perfil',
+    methodology: 'Metodología (cómo se construye este sitio con agentes)',
   },
 }
 
@@ -201,6 +203,8 @@ export function renderLlmsTxt(content: MachineInput): string {
   if (profile?.languages?.length) lines.push(`- ${label.languages}: ${profile.languages.join(', ')}`)
   if (seo.siteUrl) lines.push(`- ${label.site}: ${seo.siteUrl}`)
   lines.push(`- ${label.profilePage}: [${locale}](${page(locale)}) · [${OTHER_LOCALE[locale]}](${page(OTHER_LOCALE[locale])})`)
+  const methodology = (target: SiteLocale) => `[${target}](${absoluteUrl(METHODOLOGY_PATHS[target], seo.siteUrl)})`
+  lines.push(`- ${label.methodology}: ${methodology(locale)} · ${methodology(OTHER_LOCALE[locale])}`)
 
   const list = (heading: string, items: string[]) => {
     if (items.length > 0) lines.push('', `## ${heading}`, '', ...items.map((item) => `- ${item}`))

@@ -36,6 +36,12 @@ describe('pagePathOf', () => {
     expect(pagePathOf('/profile.es.html')).toBe('/profile.es')
   })
 
+  it('counts the methodology page in both languages (spec 022)', () => {
+    expect(pagePathOf('/methodology')).toBe('/methodology')
+    expect(pagePathOf('/methodology.html')).toBe('/methodology')
+    expect(pagePathOf('/es/metodologia/')).toBe('/es/metodologia')
+  })
+
   it('returns null for /wp-login.php', () => {
     expect(pagePathOf('/wp-login.php')).toBeNull()
   })
