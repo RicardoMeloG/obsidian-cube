@@ -123,6 +123,8 @@ Taken on 2026-11-24: all eight as recommended. The text was corrected where the 
 - "layout at every screen size" in CI: the full matrix runs on demand only;
 - production: the approval in GitHub covers the code; content and infrastructure go out from the owner's machine.
 
+The audit of the built diff (`audit-2.md`) corrected six more phrases and added one, the private panel.
+
 | Id | Decision | Options | Recommendation |
 |---|---|---|---|
 | D-1 | Where the text lives | (a) Markdown in the repository; (b) a content document in the admin | (a): it cites the repository and changes with it |
