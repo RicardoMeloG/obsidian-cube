@@ -87,10 +87,12 @@ function renderMethodology(template: string, locale: SiteLocale): string {
   if (!METHODOLOGY_HEAD.test(template) || !template.includes(METHODOLOGY_BODY) || !template.includes(HTML_TAG)) {
     throw new Error('[methodology] methodology.html lost its <html lang="en"> or its placeholders')
   }
+  const counts = countRecords([...repositoryPaths('specs'), ...repositoryPaths('docs/decisions')])
+  if (Object.values(counts).includes(0)) throw new Error(`[methodology] a count is zero: ${JSON.stringify(counts)}`)
   const input = {
     content: readContent(locale).content,
     markdown: readFileSync(new URL(`./docs/methodology/methodology.${locale}.md`, import.meta.url), 'utf8'),
-    counts: countRecords([...repositoryPaths('specs'), ...repositoryPaths('docs/decisions')]),
+    counts,
     repositoryUrl: REPOSITORY_URL,
   }
   // Functions, so a `$` in the text is not read as a replacement pattern.
@@ -133,7 +135,16 @@ function methodologyPage(): Plugin {
         return renderMethodology(html, english.locale)
       },
     },
-    generateBundle() {
+    // What ships is checked, not only the template: a skipped render would
+    // publish an empty page, and a script of another plugin would run on it.
+    generateBundle(_options, bundle) {
+      const built = bundle[methodologyPages()[0].file]
+      const english = built?.type === 'asset' ? { fileName: built.fileName, source: String(built.source) } : undefined
+      for (const page of [english, ...others]) {
+        if (!page?.source.includes('<main class="method">')) throw new Error('[methodology] a built page lacks its text')
+        if (/<script(?! type="application\/ld\+json")/.test(page.source)) throw new Error(`[methodology] ${page.fileName} has a script: it must stay static`)
+      }
+      if (others.length !== methodologyPages().length - 1) throw new Error('[methodology] a language was not rendered')
       for (const page of others) this.emitFile({ type: 'asset', ...page })
     },
   }

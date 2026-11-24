@@ -37,6 +37,11 @@ describe('llms.txt', () => {
     expect(text).not.toMatch(/<[a-z][^>]*>/i)
   })
 
+  it('points at the methodology page of both languages (spec 022)', () => {
+    expect(text).toContain('(/methodology)')
+    expect(text).toContain('(/es/metodologia)')
+  })
+
   it('points at both profile pages', () => {
     expect(text).toContain(`(/${PROFILE_PAGES.en})`)
     expect(text).toContain(`(/${PROFILE_PAGES.es})`)
