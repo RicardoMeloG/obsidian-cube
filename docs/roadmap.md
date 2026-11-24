@@ -25,7 +25,7 @@ Loaded on demand. The stages to the first release, what is open after it, and th
 2. A performance gate (spec 019, draft) and the scene's remaining cost (the additive rings of the load audit's C-5).
 3. Layered security shown with evidence (spec 016, analysis): the owner decides its proposals.
 4. The Cognito admin (ADR 004), slices below.
-5. The methodology page (spec 022, built on 2026-11-24; its deploy and the link from AGENTIC remain) and world visibility (ADR 002, point 5).
+5. The methodology page (spec 022, live on 2026-11-24; the link from the AGENTIC call to action remains) and world visibility (ADR 002, point 5).
 
 ### The Cognito admin (ADR 004)
 

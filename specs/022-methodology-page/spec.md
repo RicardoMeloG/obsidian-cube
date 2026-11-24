@@ -1,6 +1,6 @@
 # 022: The Methodology Page
 
-**Status:** accepted (2026-11-24) and built; the deploy and the link from AGENTIC (stage 4) remain. Drafted and audited on 2026-11-22. The owner took decision D-8 of spec 010 on 2026-11-21: the page exists (pending-work panel, item dt-44, point 18). It is a large change, since it touches the kernel, the build and the visit log. The owner took D-1 to D-8 of §8 as recommended on 2026-11-24.
+**Status:** accepted, built and live (2026-11-24; `check:live` 15 of 15); the link from AGENTIC (stage 4) remains. Drafted and audited on 2026-11-22. The owner took decision D-8 of spec 010 on 2026-11-21: the page exists (pending-work panel, item dt-44, point 18). It is a large change, since it touches the kernel, the build and the visit log. The owner took D-1 to D-8 of §8 as recommended on 2026-11-24.
 **Builds on:** ADR 002 (evidence before spectacle; "the site is its own case study"), ADR 005 (a pure kernel), ADR 009 (clean addresses, the layer for machines), spec 010 §5.9 (routes, AD-08), `docs/visual-direction.md` (Deep-dive Pages).
 **Audit:** `audit-1.md`, the audit of this draft by an agent without context, with the verdict on each finding. **Text:** `docs/methodology/`, from `content-draft.md`.
 
